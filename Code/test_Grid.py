@@ -24,4 +24,10 @@ def test_Standard_Dipole_Grid():
     g = Standard_Dipole_Grid(L=30,w=10,h=0.5,R=5)
     g.plot_empty_grid()
     
-test_Standard_Dipole_Grid()
+def test_Standard_Dipole_Grid_charge_location():
+    G = Standard_Dipole_Grid(10,10,0.1,2)
+    print("right = ", G.right_charge) #should be 1
+    print("left = ", G.left_charge) #should be -1
+
+test_Standard_Dipole_Grid() #pass
+test_Standard_Dipole_Grid_charge_location() #pass

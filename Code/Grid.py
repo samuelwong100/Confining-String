@@ -90,12 +90,14 @@ class Grid():
         fig.suptitle("Empty Grid",fontsize=20)
         
 class Grid_Dipole(Grid):
-    #assumes zero is at the center
+    #WARNING: assumes zero is at the horizontal center of the grid
     def __init__(self,z0,zf,y0,yf,h,R_fraction):
         self._validate_R_fraction(R_fraction) #check validity of R_fraction
+        #check that the grid has the y axis at its horizontal center
+        self._validate_center(z0,zf)
         Grid.__init__(self,z0,zf,y0,yf,h) #call parent class constructor
-        self.R_fraction = R_fraction #fraction of distance of dipole over horizontal length
-        self.R = R_fraction*(zf-z0) #actual distance between dipoles
+        #fraction of distance of dipole over horizontal length
+        self.R_fraction = R_fraction
         self.right_charge = R_fraction*(zf-z0)/2 #location of right charge
         self.left_charge = -self.right_charge #location of left charge
         #axis number of right charge
@@ -106,6 +108,10 @@ class Grid_Dipole(Grid):
     def _validate_R_fraction(self,R_fraction):
         if R_fraction >= 1:
             raise Exception("R_fraction cannot be greater than or equal to 1.")
+            
+    def _validate_center(self,z0,zf):
+        if not np.abs(zf+z0) < 0.00001: #make sure 0 is the center (approx)
+            raise Exception("z_0 must be equal to -z_f")
             
     def plot_empty_grid(self):
         """
@@ -169,5 +175,6 @@ class Standard_Dipole_Grid(Grid_Dipole):
     def __init__(self,L,w,h,R):
         self.L = L
         self.w = w
+        self.R = R
         Grid_Dipole.__init__(self,-L/2,L/2,-w/2,w/2,h,R/L)
         
