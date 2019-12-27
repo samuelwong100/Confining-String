@@ -4,6 +4,8 @@ File Name: test_Grid.py
 Purpose:  test Grid class.
 Author: Samuel Wong
 """
+import sys
+sys.path.append("../Tools")
 from Grid import Grid, Grid_Dipole, Standard_Dipole_Grid
 
 def test_Grid():
@@ -29,5 +31,5 @@ def test_Standard_Dipole_Grid_charge_location():
     print("right = ", G.right_charge) #should be 1
     print("left = ", G.left_charge) #should be -1
 
-test_Standard_Dipole_Grid() #pass
-test_Standard_Dipole_Grid_charge_location() #pass
+#test_Standard_Dipole_Grid() #pass
+#test_Standard_Dipole_Grid_charge_location() #pass

@@ -4,6 +4,8 @@ File Name: test_math.py
 Purpose: test
 Author: Samuel Wong
 """
+import sys
+sys.path.append("../Tools")
 from Math import SU, Superpotential
 import numpy as np
 from numpy import sqrt,pi,sin,cos
