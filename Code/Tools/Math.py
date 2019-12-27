@@ -310,6 +310,18 @@ class Superpotential():
         return summation
     
     def sum_over_dWdxa_ddWdxbdxa_conj(self,x,b):
+        """        
+        Input
+        -------------------------------------------
+        x (array) = the value of the field at m points;an array of shape
+                    (m,N-1); where m is number of points,
+                    N-1 is number of field components
+        b (int) = index of field
+    
+        Output
+        --------------------------------------------
+        row vector of dW dotted ddW (array) = an array of shape (m,)
+        """
         #each row of dw_list is gradient of a point
         #each column is each partial derivative component
         dW_list = self.dWdx(x)
@@ -322,6 +334,8 @@ class Superpotential():
         ddW_list = np.array(ddW_list).T
         #multiply component wise and sum over the columns
         #now each row should be the answer we want for each point
+        #but then the sum function reduces the dimension and transposes it
+        #so now it is a row vector
         return np.sum(dW_list*ddW_list,axis=1)
     
     def sum_over_dWdxa_ddWdxbdxa_conj_on_grid(self,x):
