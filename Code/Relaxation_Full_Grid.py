@@ -144,13 +144,7 @@ class Relaxation_Full_Grid():
                               x[:,row,col-1] + x[:,row,col+1]
                               - source_term[:,row,col]*(self.grid.h)**2)/4
         # since we skipped over the edge, the Dirichlet boundary is automatically
-        #enforced. If we want Nuemann boundary, then we alter edge values
-        if self.bound is None:
-            #set the boundary such that normal derivative is zero
-            x[:,0,:]=x[:,1,:]
-            x[:,-1,:]=x[:,-2,:]
-            x[:,:,0]=x[:,:,1]
-            x[:,:,-1]=x[:,:,-2]
+        #enforced.
         return x
     
     def _get_error(self,x_new,x):
