@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 File Name: Relaxation_Full_Grid.py
-Purpose: General relaxation class for 2 dimensions
+Purpose: Relaxation for the full-grid method
 Author: Samuel Wong
 """
 import numpy as np
@@ -10,14 +10,11 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from Math import SU
 
-class Relaxation_2D():
+class Relaxation_Full_Grid():
     """
     Solve the boundary value problem of a complex Poisson equation with m
-    components using relaxation method.
-    
-    Supports two kinds of boundary conditions:
-        1. Dirichlet boundary with the boundary values being constant
-        2. Neumann boundary with zero normal derivative in each edge
+    components using relaxation method and full-grid. Uses Dirichlet boundary
+    condition with the boundary values being constant.
     
     The PDE has to be of the form
     (d^2/dz^2 + d^2/dy^2) f = g(f,z,y)
@@ -26,10 +23,9 @@ class Relaxation_2D():
     Variables
     ----------------------------------------
     grid (Grid) = a Grid object that stores the grid parameters
-    m (int) = number of fields
-    bound (array/None) = an array of shape (m,) that defines the boundary value
-                        of the m-component field; if None, this means the
-                        problem is a zero normal derivative Neumann problem
+    m (int) = number of fields (i.e. components)
+    bound (array) = an array of shape (m,) that defines the boundary (vector) 
+                    value of the m-component field
     laplacian (function) = the Laplacian function, also called source function.
                     Mathematically, it has the form, g(f,z,y)
                     Here, g takes a m-vector grid and returns a new grid of
@@ -39,7 +35,8 @@ class Relaxation_2D():
     max_loop (int) = maximum number of loops allowed; the relaxation loop will
                     stop once this is exceeded
     x0 (str) = key word for the initial grid:
-               if x0 == None, then the initial grid is uniformly 1+i 
+               if x0 == None, then the initial grid is uniformly equal to bound
+               if x0 == "one-one", then the initial grid is uniformly 1+i 
                if x0 == "zero", then the initial grid is uniformly 0
     diagnose (bool) = whether to display progress as the code is running
     x (array) = the final solution
@@ -70,7 +67,7 @@ class Relaxation_2D():
         """
         Solve the euqation and save result within the object.
         """
-        x = self._set_x0() #initialized the vector grid
+        x = self._set_x0() #initialize the vector grid
         x = self._relaxation(x) #solve using relaxation method
         self.x = x #save x into the class
     
@@ -82,12 +79,18 @@ class Relaxation_2D():
         #The next two index refers to the coordinate on the rectangle grid
         x0 = np.ones(shape=(self.m,self.grid.num_y,self.grid.num_z),
                          dtype=complex)
+        #the default initial grid is equal to boundary everywhere
         if self.x0 is None:
-            x0 *= complex(1,1)
-        if self.x0 == "zero":
-            x0 *= complex(0,0)
-        if self.bound is not None: #no boundary values for Neumann problem
-            x0 = self._apply_bound(x0) #force the boundary condition
+            for i in range(self.m):
+                x0[i,:,:] *= np.bound[i]
+        else:
+            #preset the initial grid options that do not depend on bound values
+            if self.x0 == "one-one":
+                x0 *= complex(1,1)
+            elif self.x0 == "zero":
+                x0 *= complex(0,0)
+            #enforce the boundary condition
+            x0 = self._apply_bound(x0)
         return x0
     
     def _apply_bound(self,x_old):
@@ -169,5 +172,3 @@ class Relaxation_2D():
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
                 plt.colorbar()
                 plt.show()
-
-            
