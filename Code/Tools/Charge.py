@@ -9,6 +9,8 @@ from Math import SU
 
 class Charge():
     """
+    A class that handles the vector and string name of the charge of quarks
+    in the form of fundamental weights.
     
     Variables
     ----------------------------------------
