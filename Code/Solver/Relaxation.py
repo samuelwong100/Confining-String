@@ -94,7 +94,7 @@ class Relaxation():
         #the default initial grid is equal to boundary everywhere
         if self.x0 is None:
             for i in range(self.m):
-                x0[i,:,:] *= np.bound[i]
+                x0[i,:,:] *= self.bound[i]
         else:
             #preset the initial grid options that do not depend on bound values
             if self.x0 == "one-one":
