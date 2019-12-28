@@ -172,11 +172,13 @@ class Relaxation():
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x[i,:,:]))
                 plt.colorbar()
+                plt.title("$\phi$"+str(i))
                 plt.show()
 
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
                 plt.colorbar()
+                plt.title("$\sigma$"+str(i))
                 plt.show()
 
     def _full_grid_EOM(self,x):
