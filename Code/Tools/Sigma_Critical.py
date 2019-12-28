@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-File Name: Sigma_Space_Critical_Points.py
+File Name: Sigma_Critical.py
 Purpose: A class that stores critical points in sigma space and handles 
         their names in string. This includes both charge and field vaccua.
 Author: Samuel Wong
@@ -10,6 +10,7 @@ from Math import SU, Superpotential
 
 class Sigma_Critical():
     """
+    Full name: Sigma Space Crictical Points
     A class that handles the vector and string name of general ciritical points
     of superpotential. This includes the charge of quarks in the form of linear
     comdinations of fundamental weights and field vaccua, which can be sum of 
