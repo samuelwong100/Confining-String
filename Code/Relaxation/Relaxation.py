@@ -29,7 +29,8 @@ class Relaxation():
     m (int) = number of fields (i.e. components)
     bound (array) = an array of shape (m,) that defines the boundary (vector) 
                     value of the m-component field
-    charge () = 
+    charge (array) = an array of shape (m,) that describes the charge (usually
+                     a linear combo of fundamental weights)
     laplacian (function) = the Laplacian function, also called source function.
                     Default to be the full-grid EOM.
                     Mathematically, it has the form, g(f,z,y)
@@ -199,7 +200,7 @@ class Relaxation():
         #multiply everything by charge (outside relevant rows, everything is
         #zero anyway)
         for i in range(self.N-1):
-            result[i,:,:] *= self.charge.vector[i]
+            result[i,:,:] *= self.charge[i]
         #overall coefficient
         coeff = 1j*2*pi
         result = coeff*result
