@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-File Name: Relaxation_Full_Grid.py
-Purpose: Relaxation for the full-grid method
+File Name: Relaxation.py
+Purpose: Relaxation algorithm for solving Poisson BVP
 Author: Samuel Wong
 """
+import sys
+sys.path.append("../Tools")
 import numpy as np
 from numpy import pi
 from copy import deepcopy
 import matplotlib.pyplot as plt
-from Math import SU
+from Math import Superpotential
 
-class Relaxation_Full_Grid():
+class Relaxation():
     """
     Solve the boundary value problem of a complex Poisson equation with m
     components using relaxation method and full-grid. Uses Dirichlet boundary
@@ -23,15 +25,19 @@ class Relaxation_Full_Grid():
     Variables
     ----------------------------------------
     grid (Grid) = a Grid object that stores the grid parameters
+    N (int) = number of color
     m (int) = number of fields (i.e. components)
     bound (array) = an array of shape (m,) that defines the boundary (vector) 
                     value of the m-component field
+    charge () = 
     laplacian (function) = the Laplacian function, also called source function.
+                    Default to be the full-grid EOM.
                     Mathematically, it has the form, g(f,z,y)
                     Here, g takes a m-vector grid and returns a new grid of
                     the same shape. We assume that g returns an 
-                    (m,num_y,num_z) array
-    tol (float) = tolerance of error
+                    (m,num_y,num_z) array.
+    tol (float) = tolerance of error; the relaxation loop will stop once the
+                  error becomes smaller than the tolerance
     max_loop (int) = maximum number of loops allowed; the relaxation loop will
                     stop once this is exceeded
     x0 (str) = key word for the initial grid:
@@ -49,15 +55,20 @@ class Relaxation_Full_Grid():
     loop (int) = number of loops actually ran;
                  if equation has not been solved yet, loop = 0
     """
-    def __init__(self,grid,m,bound,laplacian,tol,max_loop,x0,diagnose):
+    def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
         self.grid = grid
-        self.m = m
+        self.N = N
+        self.m = N-1
         self.bound = bound
-        self.laplacian = laplacian
+        self.charge = charge
         self.tol = tol
         self.max_loop = max_loop
         self.x0 = x0
         self.diagnose = diagnose
+        self.W = Superpotential(N)
+        #default laplacian function is the full-grid EOM (equation of motion)
+        #this can be altered by creating a child class
+        self.laplacian = self._full_grid_EOM
         #initialize solution before equation is solved
         self.x = None
         self.error = []
@@ -166,3 +177,30 @@ class Relaxation_Full_Grid():
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
                 plt.colorbar()
                 plt.show()
+
+    def _full_grid_EOM(self,x):
+        return self._source_term(x) + self._potential_term(x)
+    
+    def _potential_term(self,x):
+        return self.W.potential_term_on_grid(x)
+    
+    def _source_term(self,x):
+        # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'
+        result = np.zeros(shape=x.shape,dtype=complex)
+        #the derivative of delta function in y gives something close to infinity
+        #for y just below 0 and somthing close to -infinity for y just above 0
+        #here, we have x(y = 0^{-}) = 1/h^2 and x(y=0^{+})= -1/h^2
+        #note that the lower row correspond to higher y
+        result[:,self.grid.z_axis-1,:] = -1/(self.grid.h**2)
+        result[:,self.grid.z_axis,:] = 1/(self.grid.h**2)
+        #set grid to 0 unless it is on z_axis and between -R/2 and R/2
+        result[:,:,0:self.grid.left_axis]=0
+        result[:,:,self.grid.right_axis+1:]=0
+        #multiply everything by charge (outside relevant rows, everything is
+        #zero anyway)
+        for i in range(self.N-1):
+            result[i,:,:] *= self.charge.vector[i]
+        #overall coefficient
+        coeff = 1j*2*pi
+        result = coeff*result
+        return result
