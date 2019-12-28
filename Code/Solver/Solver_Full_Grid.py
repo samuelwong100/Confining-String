@@ -24,4 +24,4 @@ def Solver_Full_Grid(N,charge_arg,L,w,h,R,tol,max_loop,x0=None,diagnose=False):
     return x
 
 if __name__ == "__main__":
-    x = Solver_Full_Grid(2,"w1",5,5,0.05,2,1E-30,500,diagnose = True)
+    x = Solver_Full_Grid(2,"w1",5,5,0.05,1,1E-30,500,diagnose = True)
