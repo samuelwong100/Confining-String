@@ -55,7 +55,7 @@ class Sigma_Critical():
                     raise Exception("Unacceptable sigma crticial points \
                                     specification.")
             else:
-                raise Exception(("Unacceptable sigma crticial points \
+                raise Exception("Unacceptable sigma crticial points \
                                     specification.")
         return summation
         
