@@ -59,10 +59,12 @@ class Sigma_Critical():
                 k = int(term[1])
                 if term[0] == 'w':
                     #the usual w is already real
+                    #the zeroth w corresponds to w1, need a shift
                     summation += sign*np.real(self.S.w[k-1,:])
                 elif term[0] == 'x':
                     #the usual x_min is stored as purely imaginary
                     #want to convert to a real vector
+                    #the zeroth x_min corresponds to x0, so no shift
                     summation += sign*np.imag(self.W.x_min[k,:])
                 else:
                     raise Exception("Unacceptable sigma crticial points \
