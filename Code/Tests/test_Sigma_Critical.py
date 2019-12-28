@@ -7,7 +7,7 @@ Author: Samuel Wong
 import sys
 sys.path.append("../Tools")
 import numpy as np
-from Sigma_Space_Critical_Points import Sigma_Critical
+from Sigma_Critical import Sigma_Critical
 from Math import SU, Superpotential
 
 def test_Charge():
