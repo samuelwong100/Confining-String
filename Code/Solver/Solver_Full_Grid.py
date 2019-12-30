@@ -6,6 +6,7 @@ Author: Samuel Wong
 """
 import sys
 sys.path.append("../Tools")
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from Grid import Standard_Dipole_Grid
@@ -18,7 +19,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
     prefix = "../Results/Solutions/"
     title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
                       "full grid")
-    if sys.path.exists(title):
+    if os.path.exists(title):
         sol = Solution_Viewer(title)
     else:
         charge = Sigma_Critical(N,charge_arg)
@@ -29,8 +30,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
         relax.solve()
         store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
                        x0,"full grid")
-        
-        sol = Solution_Viewer(title,[grid,relax.x,relax.error,relax.loop])
+        sol = Solution_Viewer(title)
     sol.display_all()
 
 if __name__ == "__main__":
