@@ -26,4 +26,3 @@ def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
 #    pickle_in = open(title+"core_dict.pickle","rb")
 #    core_dict = pickle.load(pickle_in)
     
-    
