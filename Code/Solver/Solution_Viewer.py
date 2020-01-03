@@ -43,7 +43,7 @@ class Solution_Viewer():
             self.h = core_dict["h"]
             self.R = core_dict["R"]
             self.grid = Standard_Dipole_Grid(self.L,self.w,self.h,self.R)
-            self.title = title
+            self.folder_title = title
         else:
             raise Exception("Solution file does not exist.")
             
@@ -90,7 +90,7 @@ class Solution_Viewer():
         n (int) = the component of the vector field
         """
         self._quick_plot(self.get_phi_n(n),
-                         "$\phi_{}$".format(str(n)))
+                         "$\phi_{}$".format(str(n)), "phi_"+str(n))
         
     def plot_sigma_n(self,n):
         """
@@ -101,15 +101,16 @@ class Solution_Viewer():
         n (int) = the component of the vector field
         """
         self._quick_plot(self.get_sigma_n(n),
-                         "$\sigma_{}$".format(str(n)))
+                         "$\sigma_{}$".format(str(n)), "sigma_"+str(n))
     
-    def _quick_plot(self,field,title):
+    def _quick_plot(self,field,title,file_title):
         plt.figure()
         plt.pcolormesh(self.grid.zv,self.grid.yv,field)
         plt.colorbar()
         plt.title(title)
+        plt.savefig(self.folder_title+file_title+".png")
         plt.show()
-        
+
     def plot_error(self):
         """
         Plot the error.
@@ -117,6 +118,7 @@ class Solution_Viewer():
         plt.figure()
         plt.plot(np.arange(0,self.loop,1),self.error)
         plt.title("Error")
+        plt.savefig(self.folder_title+"Error.png")
         plt.show()
     
 #
