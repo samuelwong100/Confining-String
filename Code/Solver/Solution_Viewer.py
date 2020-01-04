@@ -108,6 +108,11 @@ class Solution_Viewer():
         """
         self._quick_plot(self.get_sigma_n(n),
                          "$\sigma_{}$".format(str(n)), "sigma_"+str(n))
+        
+    def plot_x_all(self):
+        for n in range(self.m):
+            self.plot_phi_n(n)
+            self.plot_sigma_n(n)
     
     def _quick_plot(self,field,title,file_title,save=True):
         plt.figure()
