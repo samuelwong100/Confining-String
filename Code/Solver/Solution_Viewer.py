@@ -167,30 +167,33 @@ class Solution_Viewer():
         lap_num = self.get_laplacian()
         lap_theo = self._get_lap_theo()
         for n in range(self.m):
-            #row= real & imag of fields; col= numeric vs theoretic
-            fig, axs = plt.subplots(2, 2) 
-            fig.subplots_adjust(hspace=0.7)
-            fig.subplots_adjust(wspace=0.7)
-            self._quick_plot_laplacian(np.real(lap_num[n,:,:]),axs[0, 0],
-                            "$\\nabla^2 \phi_{}$ numeric".format(str(n+1)),
-                                       fig)
-            self._quick_plot_laplacian(np.real(lap_theo[n,:,:]),axs[0,1],
-                            "$\\nabla^2 \phi_{}$ theoretic".format(str(n+1)),
-                                       fig)
-            self._quick_plot_laplacian(np.imag(lap_num[n,:,:]),axs[1, 0],
-                                    "$\\nabla^2 \sigma_{}$ numeric".format(str(n+1)),
-                                       fig)
-            self._quick_plot_laplacian(np.imag(lap_theo[n,:,:]),axs[1,1],
-                                "$\\nabla^2 \sigma_{}$ theoretic".format(str(n+1)),
-                                fig)
-            #add axis label such that repeated are avoided
-            #for ax in axs.flat:
-                #ax.set(xlabel='z', ylabel='y')
-            # Hide x labels and tick labels for top plots and y ticks for right plots.
-            #for ax in axs.flat:
-                #ax.label_outer()
-            fig.savefig(self.folder_title+"Laplacian_{}.png".format(str(n+1)))
+            self._plot_laplacian_n(n,lap_num,lap_theo)
             
+    def _plot_laplacian_n(self,n,lap_num,lap_theo):
+        #row= real & imag of fields; col= numeric vs theoretic
+        fig, axs = plt.subplots(2, 2) 
+        fig.subplots_adjust(hspace=0.7)
+        fig.subplots_adjust(wspace=0.7)
+        self._quick_plot_laplacian(np.real(lap_num[n,:,:]),axs[0, 0],
+                        "$\\nabla^2 \phi_{}$ numeric".format(str(n+1)),
+                                   fig)
+        self._quick_plot_laplacian(np.real(lap_theo[n,:,:]),axs[0,1],
+                        "$\\nabla^2 \phi_{}$ theoretic".format(str(n+1)),
+                                   fig)
+        self._quick_plot_laplacian(np.imag(lap_num[n,:,:]),axs[1, 0],
+                        "$\\nabla^2 \sigma_{}$ numeric".format(str(n+1)),
+                                   fig)
+        self._quick_plot_laplacian(np.imag(lap_theo[n,:,:]),axs[1,1],
+                        "$\\nabla^2 \sigma_{}$ theoretic".format(str(n+1)),
+                            fig)
+        #add axis label such that repeated are avoided
+        #for ax in axs.flat:
+            #ax.set(xlabel='z', ylabel='y')
+        # Hide x labels and tick labels for top plots and y ticks for right plots.
+        #for ax in axs.flat:
+            #ax.label_outer()
+        fig.savefig(self.folder_title+"Laplacian_{}.png".format(str(n+1)))
+        
     def _quick_plot_laplacian(self,field,ax,title,fig):
         im = ax.pcolormesh(self.grid.zv,self.grid.yv,field)
         ax.set_title(title)
