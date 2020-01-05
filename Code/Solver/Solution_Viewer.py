@@ -96,7 +96,7 @@ class Solution_Viewer():
         n (int) = the component of the vector field
         """
         self._quick_plot(self.get_phi_n(n),
-                         "$\phi_{}$".format(str(n)), "phi_"+str(n))
+                         "$\phi_{}$".format(str(n+1)), "phi_"+str(n+1))
         
     def plot_sigma_n(self,n):
         """
@@ -107,20 +107,19 @@ class Solution_Viewer():
         n (int) = the component of the vector field
         """
         self._quick_plot(self.get_sigma_n(n),
-                         "$\sigma_{}$".format(str(n)), "sigma_"+str(n))
+                         "$\sigma_{}$".format(str(n+1)), "sigma_"+str(n+1))
         
     def plot_x_all(self):
         for n in range(self.m):
             self.plot_phi_n(n)
             self.plot_sigma_n(n)
     
-    def _quick_plot(self,field,title,file_title,save=True):
+    def _quick_plot(self,field,title,file_title):
         plt.figure()
         plt.pcolormesh(self.grid.zv,self.grid.yv,field)
         plt.colorbar()
         plt.title(title)
-        if save:
-            plt.savefig(self.folder_title+file_title+".png")
+        plt.savefig(self.folder_title+file_title+".png")
         plt.show()
 
     def plot_error(self):
@@ -169,6 +168,10 @@ class Solution_Viewer():
         return result
 
     def plot_laplacian_all(self):
+        """
+        Plot and compare the numerical and theoretical Laplacian to verify
+        that the solution actually solves the PDE
+        """
         lap_num = self.get_laplacian()
         lap_theo = self._get_lap_theo()
         for n in range(self.m):
@@ -212,6 +215,79 @@ class Solution_Viewer():
                            charge.real_vector,self.tol,self.max_loop,x0=None,
                            diagnose=False)
         return relax._full_grid_EOM(self.x)
+    
+    def get_gradient_energy_density(self):
+        """
+        Return the energy density from gradient of the field
+        
+        Output
+        --------------------------------------------
+        energy_density (array) = the energy density from gradient of the field;
+                                 an array of shape (grid.num_y,grid.num_z).
+        """
+        dxdz,dxdy = self._get_derivative() #derivative in each direction
+        dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
+        gradient_energy_density = dx_squared.sum(axis=0) #sum over components
+        return gradient_energy_density
+
+    def get_gradient_energy(self):
+        """
+        Return the value of the gradient energy
+        
+        Output
+        --------------------------------------------
+        gradient_energy (float) = the total gradient energy
+        """
+        #integrate to get energy
+        gradient_energy = simps(simps(self.get_gradient_energy_density(), 
+                             self.grid.z),self.grid.y)
+        return gradient_energy
+    
+    def plot_gradient_energy_density(self):
+        """
+        Plot the gradient energy density.
+        """
+        plt.figure()
+        plt.pcolormesh(self.grid.zv,self.grid.yv,
+                       self.get_gradient_energy_density(),cmap='jet')
+        plt.colorbar()
+        plt.title("Gradient Energy Density")
+        plt.savefig(self.folder_title+"Gradient_Energy_Density.png")
+        plt.show()
+    
+    def _get_derivative(self):
+        #initialize derivative in each direction
+        dxdz = np.zeros(shape=self.x.shape,dtype=complex)
+        dxdy = np.zeros(shape=self.x.shape,dtype=complex)
+        for i in range(self.m): #loop over each layer
+            for j in range(self.grid.num_y): #loop over each row
+                for k in range(self.grid.num_z): #loop over each column
+                    dxdz[i][j][k] = self._get_dxdz_ijk(i,j,k)
+                    dxdy[i][j][k] = self._get_dxdy_ijk(i,j,k)
+        return dxdz, dxdy
+
+    def _get_dxdz_ijk(self,i,j,k):
+        if k == 0: #one sided derivative on the edge
+            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
+        elif k==self.grid.num_z-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j][k+1] - self.x[i][j][k-1])/(2*self.grid.h)
+        return result
+    
+    def _get_dxdy_ijk(self,i,j,k):
+        if j == 0: #one sided derivative on the edge
+            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
+        elif j==self.grid.num_y-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
+        #monodromy
+        elif j==self.grid.z_axis-1 and self.grid.left_axis<= k <=self.grid.right_axis:
+            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
+        elif j==self.grid.z_axis and self.grid.left_axis<= k <=self.grid.right_axis:
+            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j+1][k] - self.x[i][j-1][k])/(2*self.grid.h)
+        return result
 
 #class Solution_Viewer0():
 #    """
@@ -250,92 +326,6 @@ class Solution_Viewer():
 #        print("energy = " + str(self._energy))
 #        print()
 #        
-
-#    def get_gradient_energy_density(self):
-#        """
-#        Return the energy density from gradient of the field
-#        
-#        Output
-#        --------------------------------------------
-#        energy_density (array) = the energy density from gradient of the field;
-#                                 an array of shape (grid.num_y,grid.num_z).
-#        """
-#        if self._energy_density == "Not calculated yet":
-#            #compute the derivative in each direction
-#            dxdz,dxdy = self._get_derivative()
-#            #compute the square of the gradient
-#            dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2
-#            #add up energy over each component of field
-#            energy_density = dx_squared.sum(axis=0)
-#            #save result
-#            self._energy_density = energy_density
-#            self.save()
-#        else:
-#            energy_density = self._energy_density
-#        return energy_density
-#
-#    def get_gradient_energy(self):
-#        """
-#        Return the value of the gradient energy
-#        
-#        Output
-#        --------------------------------------------
-#        energy (float) = the total gradient energy
-#        """
-#        if self._energy == "Not calculated yet":
-#            #integrate to get energy
-#            energy = simps(simps(self.get_gradient_energy_density(), 
-#                                 self.grid.z),self.grid.y)
-#            self._energy = energy #save into object
-#            self.save()
-#        else:
-#            energy = self._energy
-#        return energy
-#    
-#    def plot_gradient_energy_density(self,save=False):
-#        """
-#        Plot the gradient energy density.
-#        """
-#        plt.figure()
-#        plt.pcolormesh(self.grid.zv,self.grid.yv,
-#                       self.get_gradient_energy_density(),cmap='jet')
-#        plt.colorbar()
-#        #plt.title("Gradient Energy Density")
-#        if save:
-#            plt.savefig(self.title+" Gradient Energy Density.png")
-#        plt.show()
-#    
-
-
-#        
-#    def _get_derivative(self):
-#        #initialize derivative in each direction
-#        dxdz = np.zeros(shape=self.x.shape,dtype=complex)
-#        dxdy = np.zeros(shape=self.x.shape,dtype=complex)
-#        for i in range(self.m): #loop over each layer
-#            for j in range(self.grid.num_y): #loop over each row
-#                for k in range(self.grid.num_z): #loop over each column
-#                    dxdz[i][j][k] = self._get_dxdz_ijk(i,j,k)
-#                    dxdy[i][j][k] = self._get_dxdy_ijk(i,j,k)
-#        return dxdz, dxdy
-#    
-#    def _get_dxdz_ijk(self,i,j,k):
-#        if k == 0: #one sided derivative on the edge
-#            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
-#        elif k==self.grid.num_z-1: #one sided derivative on the edge
-#            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
-#        else: #two sided derivative elsewhere
-#            result = (self.x[i][j][k+1] - self.x[i][j][k-1])/(2*self.grid.h)
-#        return result
-#    
-#    def _get_dxdy_ijk(self,i,j,k):
-#        if j == 0: #one sided derivative on the edge
-#            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
-#        elif j==self.grid.num_y-1: #one sided derivative on the edge
-#            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
-#        else: #two sided derivative elsewhere
-#            result = (self.x[i][j+1][k] - self.x[i][j-1][k])/(2*self.grid.h)
-#        return result
 #    
 #class Deconfinement_Solution(Field_Solution):
 #    """
