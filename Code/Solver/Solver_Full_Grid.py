@@ -32,7 +32,3 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
         sol = Solution_Viewer(title)
     sol.display_all()
     return sol
-
-if __name__ == "__main__":
-    sol = Solver_Full_Grid(N=2,charge_arg="w1",bound_arg="x0",L=5,w=5,h=0.05,
-                           R=1,tol=1E-30,max_loop=500,diagnose=True)
