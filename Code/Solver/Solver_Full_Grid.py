@@ -11,6 +11,7 @@ from Grid import Standard_Dipole_Grid
 from Sigma_Critical import Sigma_Critical
 from Relaxation import Relaxation
 from Solver_Helpers import get_title, store_solution
+from Solution_Viewer import Solution_Viewer
 
 def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
                      diagnose=False):
@@ -30,8 +31,8 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
                        x0,"full grid")
         sol = Solution_Viewer(title)
     sol.display_all()
-    return x
+    return sol
 
 if __name__ == "__main__":
-    x = Solver_Full_Grid(N=2,charge_arg="w1",bound_arg="x0",L=5,w=5,h=0.05,R=1,
-                         tol=1E-30,max_loop=500,diagnose=True)
+    sol = Solver_Full_Grid(N=2,charge_arg="w1",bound_arg="x0",L=5,w=5,h=0.05,
+                           R=1,tol=1E-30,max_loop=500,diagnose=True)
