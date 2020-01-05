@@ -35,6 +35,7 @@ class Solution_Viewer():
         if os.path.exists(title+"core_dict"):
             pickle_in = open(title+"core_dict","rb")
             core_dict = pickle.load(pickle_in)
+            self.core_dict = core_dict
             self.N = core_dict["N"]
             self.x = core_dict["field"]
             self.m = self.x.shape[0]
@@ -61,6 +62,7 @@ class Solution_Viewer():
         self.plot_gradient_energy_density()
         self.plot_potential_energy_density()
         self.plot_energy_density()
+        self.store_energy()
             
     def print_attributes(self):
         print()
@@ -226,6 +228,12 @@ class Solution_Viewer():
                
     def get_energy(self):
         return simps(simps(self.get_energy_density(),self.grid.z),self.grid.y)
+    
+    def store_energy(self):
+        with open(self.folder_title+"core_dict","wb") as file:
+            self.core_dict["energy"] = self.get_energy()
+            pickle.dump(self.core_dict, file)
+        
     
     def plot_energy_density(self):
         self._quick_plot(self.get_energy_density(),
