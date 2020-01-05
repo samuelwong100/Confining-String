@@ -197,8 +197,8 @@ class Relaxation():
         result[:,self.grid.z_axis-1,:] = -1/(self.grid.h**2)
         result[:,self.grid.z_axis,:] = 1/(self.grid.h**2)
         #set grid to 0 unless it is on z_axis and between -R/2 and R/2
-        result[:,:,0:self.grid.left_axis]=0
-        result[:,:,self.grid.right_axis+1:]=0
+        result[:,:,0:self.grid.left_axis]=0 #left_axis included in source
+        result[:,:,self.grid.right_axis+1:]=0 #right_axis included in source
         #multiply everything by charge (outside relevant rows, everything is
         #zero anyway)
         for i in range(self.N-1):
