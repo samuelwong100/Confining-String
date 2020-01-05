@@ -53,6 +53,32 @@ class Solution_Viewer():
         else:
             raise Exception("Solution file does not exist.")
             
+    def display_all(self):
+        self.print_attributes()
+        self.plot_error()
+        self.plot_x_all()
+        self.plot_laplacian_all()
+        self.plot_gradient_energy_density()
+        self.plot_potential_energy_density()
+        self.plot_energy_density()
+            
+    def print_attributes(self):
+        print()
+        print("Attributes:")
+        print("N = " + str(self.N))
+        print("charge_arg = " + self.charge_arg)
+        print("bound_arg = " + self.bound_arg)
+        print("max loop = " + str(self.max_loop))
+        print("tolerance = "+str(self.tol))
+        print("L = " + str(self.grid.L))
+        print("w = " + str(self.grid.w))
+        print("h = " + str(self.grid.h))
+        print("R = " + str(self.grid.R))
+        print("loop = " + str(self.loop))
+        print("error = " + str(self.error[-1]))
+        print("energy = " + str(self.get_energy()))
+        print()
+            
     def get_phi_n(self,n):
         """
         Return the real part of the nth component of the vector field.
@@ -173,20 +199,43 @@ class Solution_Viewer():
         return gradient_energy
     
     def plot_gradient_energy_density(self):
-        """
-        Plot the gradient energy density.
-        """
-        plt.figure()
-        plt.pcolormesh(self.grid.zv,self.grid.yv,
-                       self.get_gradient_energy_density(),cmap='jet')
-        plt.colorbar()
-        plt.title("Gradient Energy Density")
-        plt.savefig(self.folder_title+"Gradient_Energy_Density.png")
-        plt.show()
+        self._quick_plot(self.get_gradient_energy_density(),
+                         "Gradient Energy Density",
+                         "Gradient_Energy_Density",
+                         cmap='jet')
+
+    def get_potential_energy_density(self):
+        W = Superpotential(self.N)
+        ped = (1/4)*W.dWdx_absolute_square_on_grid(self.x)
+        ped = np.real(ped) #it is real anyway
+        return ped
+               
+    def get_potential_energy(self):
+        return simps(simps(self.get_potential_energy_density(),self.grid.z),
+                     self.grid.y)
     
-    def _quick_plot(self,field,title,file_title):
+    def plot_potential_energy_density(self):
+        self._quick_plot(self.get_potential_energy_density(),
+                         "Potential Energy Density",
+                         "Potential_Energy_Density",
+                         cmap='jet')
+        
+    def get_energy_density(self):
+        return self.get_potential_energy_density() \
+               + self.get_gradient_energy_density()
+               
+    def get_energy(self):
+        return simps(simps(self.get_energy_density(),self.grid.z),self.grid.y)
+    
+    def plot_energy_density(self):
+        self._quick_plot(self.get_energy_density(),
+                         "Energy Density",
+                         "Energy_Density",
+                         cmap='jet')
+
+    def _quick_plot(self,field,title,file_title,cmap=None):
         plt.figure()
-        plt.pcolormesh(self.grid.zv,self.grid.yv,field)
+        plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
         plt.colorbar()
         plt.title(title)
         plt.savefig(self.folder_title+file_title+".png")
@@ -289,173 +338,3 @@ class Solution_Viewer():
                       self.x[i][j-1][k])/(self.grid.h**2)
         return result
     
-#    def get_potential_energy_density(self):
-#        W = Superpotential(self.N)
-#        ped = (1/4)*W.dWdx_absolute_square_on_grid(self.x)
-#        ped = np.real(ped) #it is real anyway
-#        return ped
-#               
-#    def get_potential_energy(self):
-#        return simps(simps(self.get_potential_energy_density(),self.grid.z),self.grid.y)
-#    
-#    def plot_potential_energy_density(self,save=False):
-#        """
-#        Plot the potential energy density.
-#        """
-#        plt.figure()
-#        plt.pcolormesh(self.grid.zv,self.grid.yv,
-#                       self.get_potential_energy_density(),cmap='jet')
-#        plt.colorbar()
-#        #plt.title("Potential Energy Density")
-#        if save:
-#            plt.savefig(self.title+" Potential Energy Density.png")
-#        plt.show()
-#
-
-#class Solution_Viewer0():
-#    """
-#    Analyzing and displaying the field solution.
-#    
-#    Variables
-#    ----------------------------------------
-#    grid (Standard_Dipole_Grid)
-#    x (array) = the solution array with complex data type and with shape
-#                (m,grid.num_y,grid.num_z)
-#    m (int) = the number of dimensions of the solution field
-#    error (array) = the list of error
-#    loop (int) = number of loops actually ran
-#    title (str) = title of file to be saved
-#    """
-#    def __init__(self,grid,x,error,loop,title):
-#        self.grid = grid
-#        self.x = x
-#        self.m = x.shape[0]
-#        self.error = error
-#        self.loop = loop
-#        self._energy = "Not calculated yet"
-#        self._energy_density = "Not calculated yet"
-#        self.title = title
-#        self.save()
-#        
-#    def print_attributes(self):
-#        print()
-#        print("Attributes:")
-#        print("L = " + str(self.grid.L))
-#        print("w = " + str(self.grid.w))
-#        print("h = " + str(self.grid.h))
-#        print("R = " + str(self.grid.R))
-#        print("loop = " + str(self.loop))
-#        print("error = " + str(self.error[-1]))
-#        print("energy = " + str(self._energy))
-#        print()
-#        
-#    
-#class Deconfinement_Solution(Field_Solution):
-#    """
-#    Deconfinement picture.
-#    
-#    Attributes
-#    ----------------------------------------
-#    grid (Grid) = a Grid object
-#    x (array) = the solution array with complex data type and with shape
-#                (m,grid.num_y,grid.num_z)
-#    m (int) = the number of dimensions of the solution field
-#    error (array) = the list of error
-#    loop (int) = number of loops actually ran
-#    """
-#    def __init__(self,N,bound_side,bound_middle,bound_bottom,grid,x,error,loop,
-#                 title):
-#        self.N = N
-#        self.bound_side = bound_side
-#        self.bound_middle = bound_middle
-#        self.bound_bottom = bound_bottom
-#        Field_Solution.__init__(self,grid,x,error,loop,title)
-#        
-#    def print_attributes(self):
-#        print()
-#        print("Attributes:")
-#        print("N = " + str(self.N))
-#        print("bound_side =" + str(self.bound_side))
-#        print("bound_middle =" + str(self.bound_middle))
-#        print("bound_bottom =" + str(self.bound_bottom))
-#        print("L = " + str(self.grid.L))
-#        print("w = " + str(self.grid.w))
-#        print("R = " + str(self.grid.R))
-#        print("R/L = " + str(self.grid.R_fraction))
-#        print("h = " + str(self.grid.h))
-#        print("loop = " + str(self.loop))
-#        print("error = " + str(self.error[-1]))
-#        print("energy = " + str(self._energy))
-#        print()
-#        
-#    def plot_imag_nth_component(self,n):
-#        """
-#        Plot the imaginary part of the nth component of the vector field.
-#        
-#        Input
-#        -------------------------------------------
-#        n (int) = the component of the vector field
-#        """
-#        plt.figure()
-#        plt.pcolormesh(self.grid.zv,self.grid.yv,self.get_imag_nth_component(n))
-#        plt.colorbar()
-#        #the actual field is 1 larger due to counting
-#        plt.title("$\sigma_{}$".format(n+1)) 
-#        plt.show()
-#        
-#    def plot_real_nth_component(self,n):
-#        """
-#        Plot the real part of the nth component of the vector field.
-#        
-#        Input
-#        -------------------------------------------
-#        n (int) = the component of the vector field
-#        """
-#        plt.figure()
-#        plt.pcolormesh(self.grid.zv,self.grid.yv,self.get_real_nth_component(n))
-#        plt.colorbar()
-#        plt.title("$\phi_{}$".format(n+1))
-#        plt.show()
-#
-#    """
-#    When computing the gradient energy density for the deconfinement solution,
-#    the problem of the monodromy of sigma arises. We get around it by
-#    ignoring the energy in the jump across verticle axes across monodromy.
-#    This is achieved by modifying the derivative function that is
-#    called while calculating gradient energy density.
-#    """
-#    def _get_dxdz_ijk(self,i,j,k):
-#        if k == 0: #one sided derivative on the edge
-#            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
-#        elif k==self.grid.num_z-1: #one sided derivative on the edge
-#            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
-#        #monodromy
-#        elif (k==self.grid.left_axis-1) or (k==self.grid.right_axis-1):
-#            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
-#        elif (k==self.grid.left_axis) or (k==self.grid.right_axis):
-#            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
-#        else: #two sided derivative elsewhere
-#            result = (self.x[i][j][k+1] - self.x[i][j][k-1])/(2*self.grid.h)
-#        return result
-#    
-
-#    def get_energy_density(self):
-#        return self.get_potential_energy_density() \
-#               + self.get_gradient_energy_density()
-#               
-#    def get_energy(self):
-#        return simps(simps(self.get_energy_density(),self.grid.z),self.grid.y)
-#    
-#    def plot_energy_density(self,save=False):
-#        """
-#        Plot the energy density.
-#        """
-#        plt.figure()
-#        plt.pcolormesh(self.grid.zv,self.grid.yv,
-#                       self.get_energy_density(), cmap='jet')
-#        plt.colorbar()
-#        #plt.title("Energy Density")
-#        if save:
-#            plt.savefig(self.title+" Energy Density.png")
-#        plt.show()
-#        
