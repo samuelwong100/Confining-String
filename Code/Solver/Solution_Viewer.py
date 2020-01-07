@@ -147,7 +147,8 @@ class Solution_Viewer():
         Plot the error.
         """
         plt.figure()
-        plt.plot(np.arange(0,self.loop,1),self.error)
+        plt.plot(np.arange(0,self.loop,1),np.log(self.error))
+        plt.ylabel("log(error)")
         plt.title("Error")
         plt.savefig(self.folder_title+"Error.png")
         plt.show()
