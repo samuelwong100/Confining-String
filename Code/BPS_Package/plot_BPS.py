@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Math import derivative_sample
 
-def plot_BPS(N,z,f,B,h,folder):
+def plot_BPS(N,z,f,B,h,folder,vac0,vacf):
     phi = []
     sigma = []
     for i in range(N-1):
@@ -60,4 +60,6 @@ def plot_BPS(N,z,f,B,h,folder):
     
     fig.subplots_adjust(wspace=0.7)
     
-    fig.savefig(folder+"BPS.png", dpi=300)
+    title="BPS (N={}, {} to {})".format(str(N),vac0,vacf)
+    fig.suptitle(title)
+    fig.savefig(folder+title+".png", dpi=300)
