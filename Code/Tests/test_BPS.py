@@ -1,8 +1,8 @@
 import sys
-sys.path.append("../Tools")
+sys.path.append("../BPS_Package")
 from Sigma_Critical import Sigma_Critical
 import numpy as np
-from BPS import BPS, SU, Superpotential, grad
+from BPS import BPS, SU, Superpotential
 
 s = SU(3)
 w = Superpotential(3)
@@ -34,6 +34,6 @@ def test_BPS_ddx():
     print("my ddx(1+3j,2+4j) =", b.ddx(x))
     print()
     
-#test_BPS_dx_boundary() #passed
-#test_BPS_dx() #passed
-#test_BPS_ddx() #passed
+test_BPS_dx_boundary() #passed
+test_BPS_dx() #passed
+test_BPS_ddx() #passed
