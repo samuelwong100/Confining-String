@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-File Name: Relaxation.py
+File Name: Relaxation_1D.py
 Purpose: General class for solving second order ODE by relaxation method
 Author: Samuel Wong
 """
@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
-class Relaxation():
+class Relaxation_1D():
     """
     Solve the boundary value problem of a set of coupled, second order,
     ordinary differential equation with m components using relaxation method.
