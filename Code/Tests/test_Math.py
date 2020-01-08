@@ -261,7 +261,15 @@ def test_dWdx_absolute_square_on_grid():
  [24.02876087+0.j 24.02876087+0.j 24.02876087+0.j]\
  [ 0.        +0.j  0.        +0.j  0.        +0.j]]")
     print("result: ",W.dWdx_absolute_square_on_grid(x))
-
+    
+def test_slow():
+    x = np.ones(shape=(2,2,2),dtype=complex)
+    x[0][0][0] = 2+3j #make some points different from rest of grid
+    W=Superpotential(3)
+    print(W.potential_term_on_grid(x))
+    print()
+    print(W._potential_term_on_grid_slow(x))
+    
 #test_SU_nu() #pass
 #test_SU_alpha() #pass
 #test_SU_w() #pass
@@ -276,3 +284,4 @@ def test_dWdx_absolute_square_on_grid():
 #test_sum_over_dWdxa_ddWdxbdxa_conj_on_grid2() #pass
 #test_dWdx_absolute_squared() #pass
 #test_dWdx_absolute_square_on_grid() #pass
+#test_slow() #pass

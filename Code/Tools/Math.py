@@ -355,3 +355,31 @@ class Superpotential():
     def potential_term_on_grid(self,x):
         return (1/4)*self.sum_over_dWdxa_ddWdxbdxa_conj_on_grid(x)
     
+    def _potential_term_on_grid_slow(self,x):
+        layers,row_num,col_num = x.shape
+        result = np.ones(shape=x.shape,dtype=complex)
+        for r in range(row_num):
+            for c in range(col_num):
+                x_vec= x[:,r,c]
+                result[:,r,c] = self._sum_slow(x_vec)
+        return result
+            
+    def _sum_slow(self,x_vec):
+        vec = np.zeros(self.N-1,dtype=complex)
+        for a in range(self.N-1):
+            vec[a] = self._sum_a_slow(x_vec,a)
+        return vec
+    
+    def _sum_a_slow(self,x_vec,a):
+        summation = 0j
+        x_vec_conj = np.conjugate(x_vec)
+        for b in range(self.N-1):
+            for k in range(self.N):
+                for l in range(self.N):
+                   coeff = self.s.alpha[k][a]*self.s.alpha[k][b]*self.s.alpha[l][b]
+                   dot_prod_1 = np.dot(self.s.alpha[k],x_vec_conj)
+                   dot_prod_2 = np.dot(self.s.alpha[l],x_vec)
+                   summation += coeff*np.exp(dot_prod_1 + dot_prod_2)
+        return summation/4
+                            
+    
