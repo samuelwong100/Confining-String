@@ -12,7 +12,7 @@ from BPS import BPS
 from plot_BPS import plot_BPS
 
 def solve_BPS(N,vac0_arg,vacf_arg,z0,zf,h,folder):
-    num = (zf-z0)/h
+    num = int((zf-z0)/h)
     vac0 = Sigma_Critical(N,vac0_arg)
     vacf = Sigma_Critical(N,vacf_arg)
     B=BPS(N,vac0.imaginary_vector,vacf.imaginary_vector)
