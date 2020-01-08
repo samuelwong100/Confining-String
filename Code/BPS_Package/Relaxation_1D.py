@@ -80,7 +80,7 @@ class Relaxation_1D():
         f0[-1]= self.boundf
         return f0
         
-    def solve(self,num,tol=0.001,f0=None,diagnose=False):
+    def solve(self,num,tol=1e-5,f0=None,diagnose=True):
         """
         num = number of points in grid
         tol = tolerance of error
