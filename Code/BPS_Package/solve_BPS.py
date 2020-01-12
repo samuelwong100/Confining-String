@@ -6,6 +6,7 @@ Author: Samuel Wong
 """
 import sys
 sys.path.append("../Tools")
+from numpy import pi
 from Sigma_Critical import Sigma_Critical
 from Relaxation_1D import Relaxation_1D
 from BPS import BPS
@@ -13,10 +14,17 @@ from plot_BPS import plot_BPS
 
 def solve_BPS(N,vac0_arg,vacf_arg,z0,zf,h,folder,tol):
     num = int((zf-z0)/h)
+    #if vacua0 is one of "x_k", then the sigma critical includes 2pi already
+    #if it is one of "w_k", then the sigma cirtical does not include 2pi
+    #note vacf is assume to be always one of "x_k"
     vac0 = Sigma_Critical(N,vac0_arg)
+    if vac0_arg[0] == "w":
+        vac0_vec = vac0.imaginary_vector*2*pi
+    else:
+        vac0_vec = vac0.imaginary_vector
     vacf = Sigma_Critical(N,vacf_arg)
-    B=BPS(N,vac0.imaginary_vector,vacf.imaginary_vector)
-    R = Relaxation_1D(B.ddx,z0,zf,vac0.imaginary_vector,vacf.imaginary_vector)
+    B=BPS(N,vac0_vec,vacf.imaginary_vector)
+    R = Relaxation_1D(B.ddx,z0,zf,vac0_vec,vacf.imaginary_vector)
     R.solve(num,tol=tol,f0="special kink",diagnose=False)
     z = R.sol_z
     x = R.sol_f        
