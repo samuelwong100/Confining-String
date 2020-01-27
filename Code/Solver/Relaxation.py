@@ -64,6 +64,8 @@ class Relaxation():
         self.m = N-1
         self.bound = bound
         self.charge = charge
+        self.bound_vec = bound.imaginary_vector
+        self.charge_vec = charge.real_vector
         self.tol = tol
         self.max_loop = max_loop
         self.x0 = x0
@@ -96,7 +98,7 @@ class Relaxation():
         #the default initial grid is equal to boundary everywhere
         if self.x0 is None:
             for i in range(self.m):
-                x0[i,:,:] *= self.bound[i]
+                x0[i,:,:] *= self.bound_vec[i]
         else:
             #preset the initial grid options that do not depend on bound values
             if self.x0 == "one-one":
@@ -110,7 +112,7 @@ class Relaxation():
                 #Confining string solutions are stored in the form of (m,y,z),
                 #where the layers m are the field, the rows y are the vertical,
                 #the columns z are the horizontal
-                y_half,x_half = solve_BPS(N=self.N,vac0_arg=self.bound_arg,
+                y_half,x_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                                           vacf_arg="x1",z0=self.grid.y0,
                                           zf=int(self.grid.yf/2),h=self.grid.h,
                                           folder="example/",tol=1e-5)
@@ -123,7 +125,7 @@ class Relaxation():
                 x_slice[:,int(self.grid.yf/2):-1] = np.flip(x_half_transpose,1)
                 #first set x0 entirely equal to boundary values
                 for i in range(self.m):
-                    x0[i,:,:] *= self.bound[i]
+                    x0[i,:,:] *= self.bound_vec[i]
                 #for the 2 columns between the two charges, set to x_slice
                 for j in range(self.grid.num_z):
                     if self.grid.left_axis <= j <= self.grid.right_axis:
@@ -138,7 +140,7 @@ class Relaxation():
         #take all component (first index); for each component, take all rows
         #(second index); take the first/left column (third index); set it to
         #bound
-        bound_2d = np.array([self.bound])
+        bound_2d = np.array([self.bound_vec])
         x[:,:,0] = np.repeat(bound_2d,self.grid.num_y,axis=0).T
         #repeat for bounds in other directions
         x[:,:,-1] = np.repeat(bound_2d,self.grid.num_y,axis=0).T
@@ -229,7 +231,7 @@ class Relaxation():
         #multiply everything by charge (outside relevant rows, everything is
         #zero anyway)
         for i in range(self.N-1):
-            result[i,:,:] *= self.charge[i]
+            result[i,:,:] *= self.charge_vec[i]
         #overall coefficient
         coeff = 1j*2*pi
         result = coeff*result

@@ -284,9 +284,8 @@ class Solution_Viewer():
         #return theoretical laplacian
         charge = Sigma_Critical(self.N,self.charge_arg)
         bound = Sigma_Critical(self.N,self.bound_arg)
-        relax = Relaxation(self.grid,self.N,bound.imaginary_vector,
-                           charge.real_vector,self.tol,self.max_loop,x0=None,
-                           diagnose=False)
+        relax = Relaxation(self.grid,self.N,bound,charge,self.tol,
+                           self.max_loop,x0=None,diagnose=False)
         return relax._full_grid_EOM(self.x)
     
     def _get_derivative(self):
