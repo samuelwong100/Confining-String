@@ -6,11 +6,13 @@ Author: Samuel Wong
 """
 import sys
 sys.path.append("../Tools")
+sys.path.append("../BPS_Package")
 import numpy as np
 from numpy import pi
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from Math import Superpotential
+from solve_BPS import solve_BPS
 
 class Relaxation():
     """
@@ -101,6 +103,31 @@ class Relaxation():
                 x0 *= complex(1,1)
             elif self.x0 == "zero":
                 x0 *= complex(0,0)
+            elif self.x0 == 'BPS':
+                #need some numpy shape gymnastic here
+                #BPS solution is stored in the form of (y,m), where the rows y
+                #are the points, and the columns, m, are the fields
+                #Confining string solutions are stored in the form of (m,y,z),
+                #where the layers m are the field, the rows y are the vertical,
+                #the columns z are the horizontal
+                y_half,x_half = solve_BPS(N=self.N,vac0_arg=self.bound_arg,
+                                          vacf_arg="x1",z0=self.grid.y0,
+                                          zf=int(self.grid.yf/2),h=self.grid.h,
+                                          folder="example/",tol=1e-5)
+                #x_half_transpose has shape (m,y)
+                x_half_transpose = x_half.T
+                #a verticle slice of x should be two reversed BPS walls merged
+                #together, going from boundary to inner vacua and back
+                x_slice = np.zeros(shape=(self.m,self.grid.num_y))
+                x_slice[:,0:int(self.grid.yf/2)] = x_half_transpose
+                x_slice[:,int(self.grid.yf/2):-1] = np.flip(x_half_transpose,1)
+                #first set x0 entirely equal to boundary values
+                for i in range(self.m):
+                    x0[i,:,:] *= self.bound[i]
+                #for the 2 columns between the two charges, set to x_slice
+                for j in range(self.grid.num_z):
+                    if self.grid.left_axis <= j <= self.grid.right_axis:
+                        x0[:,j,:] = x_slice
             #enforce the boundary condition
             x0 = self._apply_bound(x0)
         return x0
