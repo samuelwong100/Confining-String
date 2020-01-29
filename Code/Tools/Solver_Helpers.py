@@ -27,6 +27,8 @@ def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
         core_dict["BPS_y"] = relax.y_half
         core_dict["BPS_slice"] = relax.BPS_slice
         core_dict["initial_grid"] = relax.initial_grid
+        core_dict["B_top"] = relax.B_top #store BPS objects
+        core_dict["B_bottom"] = relax.B_bottom
     #create directory for new folder if it doesn't exist
     if not os.path.exists(title):
         os.makedirs(title)

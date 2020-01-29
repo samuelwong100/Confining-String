@@ -24,7 +24,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,z0,zf,h,folder,tol,save_plot=True):
     z = R.sol_z
     x = R.sol_f        
     plot_BPS(N,z,x,B,h,folder,vac0,vacf,save_plot)
-    return z,x
+    return z,x,B
 
 def _take_care_of_2pi(N,vac_arg):
     vac = Sigma_Critical(N,vac_arg)

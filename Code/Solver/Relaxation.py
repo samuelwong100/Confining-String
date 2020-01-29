@@ -130,7 +130,7 @@ class Relaxation():
         #should be 2 BPS, one being the negative anti-kink of the other
         #In general, this is too complicated
         if self.N == 2 and str(self.bound)== "x0":
-            y_half,x_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+            y_half,x_half,B = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                                       vacf_arg="x1",z0=self.grid.y0,
                                       zf=0,h=self.grid.h,folder="",
                                       tol=1e-5,save_plot=False)
@@ -158,11 +158,11 @@ class Relaxation():
                 if self.grid.left_axis <= k <= self.grid.right_axis:
                     x0[:,:,k] = x_slice
         elif self.N ==3 and str(self.bound) == "x1":
-            y_half,x_top_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+            y_half,x_top_half,B_top = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                           vacf_arg="x0",z0=self.grid.y0,
                           zf=0,h=self.grid.h,folder="",
                           tol=1e-5,save_plot=False)
-            y_half,x_bottom_half = solve_BPS(N=self.N,vac0_arg=str(self.charge),
+            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,vac0_arg=str(self.charge),
                           vacf_arg=str(self.bound),z0=self.grid.y0,
                           zf=0,h=self.grid.h,folder="",
                           tol=1e-5,save_plot=False)
@@ -180,6 +180,8 @@ class Relaxation():
                 if self.grid.left_axis <= k <= self.grid.right_axis:
                     x0[:,:,k] = x_slice
         #save BPS and initial grid
+        self.B_top = B_top #store BPS object
+        self.B_bottom = B_bottom
         self.top_BPS = x_top_half
         self.bottom_BPS = x_bottom_half
         self.y_half = y_half

@@ -61,6 +61,8 @@ class Solution_Viewer():
                 self.y_half = core_dict["BPS_y"]
                 self.BPS_slice = core_dict["BPS_slice"]
                 self.initial_grid = core_dict["initial_grid"]
+                self.B_top = core_dict["B_top"]
+                self.B_bottom = core_dict["B_bottom"]
         else:
             raise Exception("Solution file does not exist.")
             
@@ -76,7 +78,7 @@ class Solution_Viewer():
         if self.x0 == "BPS":
             self.plot_initial_grid()
             self.plot_BPS()
-            self.compare_slice_with_BPS()
+            #self.compare_slice_with_BPS()
             
     def print_attributes(self):
         print()
@@ -256,16 +258,14 @@ class Solution_Viewer():
                          cmap='jet')
 
     def plot_BPS(self):
-        #a temporary BPS object whose boundary doesn't matter; only using its
-        #differential equation capability
-        B=BPS(N=self.N,vac0_vec=np.array([0]),vacf_vec=np.array([0]))
         #the following only works if the boundary is x1
-        external_plot_BPS(N=self.N,z=self.y_half,f=self.top_BPS,B=B,h=self.h,
-                          folder=self.folder_title,vac0=self.bound_arg,
-                          vacf="x0",save_plot=True)
-        external_plot_BPS(N=self.N,z=self.y_half,f=self.bottom_BPS,B=B,h=self.h,
-                          folder=self.folder_title,vac0=self.charge_arg,
-                          vacf=self.bound_arg,save_plot=True)
+        external_plot_BPS(N=self.N,z=self.y_half,f=self.top_BPS,B=self.B_top,
+                          h=self.h,folder=self.folder_title,
+                          vac0=self.bound_arg,vacf="x0",save_plot=True)
+        external_plot_BPS(N=self.N,z=self.y_half,f=self.bottom_BPS,
+                          B=self.B_bottom,h=self.h,folder=self.folder_title,
+                          vac0=self.charge_arg,vacf=self.bound_arg,
+                          save_plot=True)
         
     def plot_initial_grid(self):
         for n in range(self.m):
