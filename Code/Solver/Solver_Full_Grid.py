@@ -13,7 +13,7 @@ from Relaxation import Relaxation
 from Solver_Helpers import get_title, store_solution
 from Solution_Viewer import Solution_Viewer
 
-def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
+def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
                      diagnose=False):
     prefix = "../Results/Solutions/"
     title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
