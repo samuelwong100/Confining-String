@@ -109,6 +109,7 @@ class Relaxation():
                 x0 = self._BPS_x0(x0)
             #enforce the boundary condition
             x0 = self._apply_bound(x0)
+            print("Plot initial grid")
             for i in range(self.m):
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x0[i,:,:]))
@@ -255,13 +256,13 @@ class Relaxation():
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x[i,:,:]))
                 plt.colorbar()
-                plt.title("$\phi$"+str(i))
+                plt.title("$\phi$"+str(i+1))
                 plt.show()
 
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
                 plt.colorbar()
-                plt.title("$\sigma$"+str(i))
+                plt.title("$\sigma$"+str(i+1))
                 plt.show()
 
     def _full_grid_EOM(self,x):
