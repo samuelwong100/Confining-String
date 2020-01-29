@@ -109,6 +109,7 @@ class Relaxation():
                 x0 = self._BPS_x0(x0)
             #enforce the boundary condition
             x0 = self._apply_bound(x0)
+            print("Plot initial grid")
             for i in range(self.m):
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x0[i,:,:]))
@@ -255,13 +256,13 @@ class Relaxation():
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x[i,:,:]))
                 plt.colorbar()
-                plt.title("$\phi$"+str(i))
+                plt.title("$\phi$"+str(i+1))
                 plt.show()
 
                 plt.figure()
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
                 plt.colorbar()
-                plt.title("$\sigma$"+str(i))
+                plt.title("$\sigma$"+str(i+1))
                 plt.show()
 
     def _full_grid_EOM(self,x):
@@ -290,3 +291,31 @@ class Relaxation():
         coeff = 1j*2*pi
         result = coeff*result
         return result
+    
+class Continue_Relaxation(Relaxation):
+    def __init__(self,old_sol,new_max_loop,charge,bound,diagnose):
+        super().__init__(old_sol.grid, old_sol.N, bound,charge, old_sol.tol,
+             new_max_loop, old_sol.x0, diagnose)
+        #the loop and error do not start at 0 and empty list!
+        self.loop = old_sol.loop
+        self.error = list(old_sol.error) #change error from array back to list
+        #initialize solution to old field
+        self.x = old_sol.x
+        #store BPS related object if original field solution started with BPS
+        if self.x0 == 'BPS':
+            self.B_top = old_sol.B_top
+            self.B_bottom = old_sol.B_bottom
+            self.top_BPS = old_sol.top_BPS
+            self.bottom_BPS = old_sol.bottom_BPS
+            self.y_half = old_sol.y_half
+            self.BPS_slice = old_sol.BPS_slice
+            #the initial grid here denotes the initial grid of the old soluiton
+            #of course, the continue relaxation initial grid is the final 
+            #grid of the old solution, but that is store is self.x
+            #Here, it is as if we started with some BPS and just ran longer
+            self.initial_grid = old_sol.initial_grid
+        
+    def _set_x0(self):
+        #overide initial field function to be self.x, which was set to old
+        #field already in the init
+        return self.x
