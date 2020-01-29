@@ -6,6 +6,7 @@ Author: Samuel Wong
 """
 import sys
 sys.path.append("../Tools")
+sys.path.append("../BPS_Package")
 import os
 import numpy as np
 import pickle
@@ -15,6 +16,8 @@ from Math import Superpotential
 from Grid import Standard_Dipole_Grid
 from Relaxation import Relaxation
 from Sigma_Critical import Sigma_Critical
+from plot_BPS import plot_BPS as external_plot_BPS
+from BPS import BPS
 
 class Solution_Viewer():
     """
@@ -51,6 +54,13 @@ class Solution_Viewer():
             self.bound_arg = core_dict["bound_arg"]
             self.charge_arg = core_dict["charge_arg"]
             self.folder_title = title
+            self.x0 = core_dict["x0"]
+            if self.x0 == "BPS":
+                self.top_BPS = core_dict["BPS_top"]
+                self.bottom_BPS = core_dict["BPS_bottom"]
+                self.y_half = core_dict["BPS_y"]
+                self.BPS_slice = core_dict["BPS_slice"]
+                self.initial_grid = core_dict["initial_grid"]
         else:
             raise Exception("Solution file does not exist.")
             
@@ -63,6 +73,10 @@ class Solution_Viewer():
         self.plot_potential_energy_density()
         self.plot_energy_density()
         self.store_energy()
+        if self.x0 == "BPS":
+            self.plot_initial_grid()
+            self.plot_BPS()
+            self.compare_slice_with_BPS()
             
     def print_attributes(self):
         print()
@@ -234,13 +248,33 @@ class Solution_Viewer():
         with open(self.folder_title+"core_dict","wb") as file:
             self.core_dict["energy"] = self.get_energy()
             pickle.dump(self.core_dict, file)
-        
     
     def plot_energy_density(self):
         self._quick_plot(self.get_energy_density(),
                          "Energy Density",
                          "Energy_Density",
                          cmap='jet')
+
+    def plot_BPS(self):
+        #a temporary BPS object whose boundary doesn't matter; only using its
+        #differential equation capability
+        B=BPS(N=self.N,vac0_vec=np.array([0]),vacf_vec=np.array([0]))
+        #the following only works if the boundary is x1
+        external_plot_BPS(N=self.N,z=self.y_half,f=self.top_BPS,B=B,h=self.h,
+                          folder=self.folder_title,vac0=self.bound_arg,
+                          vacf="x0",save_plot=True)
+        external_plot_BPS(N=self.N,z=self.y_half,f=self.bottom_BPS,B=B,h=self.h,
+                          folder=self.folder_title,vac0=self.charge_arg,
+                          vacf=self.bound_arg,save_plot=True)
+        
+    def plot_initial_grid(self):
+        for n in range(self.m):
+            phi_n = np.real(self.initial_grid[n,:,:])
+            sigma_n = np.imag(self.initial_grid[n,:,:])
+            self._quick_plot(phi_n,"initial phi_{}".format(str(n+1)),
+                             "initial_phi_{}".format(str(n+1)))
+            self._quick_plot(sigma_n,"initial sigma_{}".format(str(n+1)),
+                             "initial_sigma_{}".format(str(n+1)))
 
     def _quick_plot(self,field,title,file_title,cmap=None):
         plt.figure()
@@ -254,7 +288,7 @@ class Solution_Viewer():
         im = ax.pcolormesh(self.grid.zv,self.grid.yv,field)
         ax.set_title(title)
         fig.colorbar(im,ax=ax)
-
+        
     def _plot_laplacian_n(self,n,lap_num,lap_theo):
         #row= real & imag of fields; col= numeric vs theoretic
         fig, axs = plt.subplots(2, 2) 

@@ -132,7 +132,8 @@ class Relaxation():
         if self.N == 2 and str(self.bound)== "x0":
             y_half,x_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                                       vacf_arg="x1",z0=self.grid.y0,
-                                      zf=0,h=self.grid.h,tol=1e-5)
+                                      zf=0,h=self.grid.h,folder="",
+                                      tol=1e-5,save_plot=False)
             #need some numpy shape gymnastic here
             #BPS solution is stored in the form of (y,m), where the rows y
             #are the points, and the columns, m, are the fields
@@ -159,10 +160,12 @@ class Relaxation():
         elif self.N ==3 and str(self.bound) == "x1":
             y_half,x_top_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                           vacf_arg="x0",z0=self.grid.y0,
-                          zf=0,h=self.grid.h,tol=1e-5)
+                          zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
             y_half,x_bottom_half = solve_BPS(N=self.N,vac0_arg=str(self.charge),
                           vacf_arg=str(self.bound),z0=self.grid.y0,
-                          zf=0,h=self.grid.h,tol=1e-5)
+                          zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
             x_top_half_trans = x_top_half.T
             x_bottom_half_trans = x_bottom_half.T
             half_num = x_top_half_trans.shape[1]
@@ -176,6 +179,12 @@ class Relaxation():
             for k in range(self.grid.num_z):
                 if self.grid.left_axis <= k <= self.grid.right_axis:
                     x0[:,:,k] = x_slice
+        #save BPS and initial grid
+        self.top_BPS = x_top_half
+        self.bottom_BPS = x_bottom_half
+        self.y_half = y_half
+        self.BPS_slice = x_slice
+        self.initial_grid = x0
         return x0
     
     def _apply_bound(self,x_old):
