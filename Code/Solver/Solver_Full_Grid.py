@@ -24,7 +24,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
         charge = Sigma_Critical(N,charge_arg)
         bound = Sigma_Critical(N,bound_arg)
         grid = Standard_Dipole_Grid(L,w,h,R)
-        relax = Relaxation(grid,N,bound,charge,tol,max_loop,x0,diagnose)
+        relax = Relaxation(grid,N,bound,charge,tol,max_loop,x0,diagnose,title)
         relax.solve()
         store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
                        x0,"full grid")
