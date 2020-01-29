@@ -120,7 +120,6 @@ class Relaxation():
                 plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x0[i,:,:]))
                 plt.colorbar()
                 plt.title("$\sigma$"+str(i+1))
-                plt.savefig("SU(3),bound=x1,charge=w1,initial_grid.png")
                 plt.show()
         return x0
 

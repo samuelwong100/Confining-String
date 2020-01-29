@@ -17,7 +17,6 @@ from Grid import Standard_Dipole_Grid
 from Relaxation import Relaxation
 from Sigma_Critical import Sigma_Critical
 from plot_BPS import plot_BPS as external_plot_BPS
-from BPS import BPS
 
 class Solution_Viewer():
     """
@@ -78,7 +77,7 @@ class Solution_Viewer():
         if self.x0 == "BPS":
             self.plot_initial_grid()
             self.plot_BPS()
-            #self.compare_slice_with_BPS()
+            self.compare_slice_with_BPS()
             
     def print_attributes(self):
         print()
@@ -275,6 +274,33 @@ class Solution_Viewer():
                              "initial_phi_{}".format(str(n+1)))
             self._quick_plot(sigma_n,"initial sigma_{}".format(str(n+1)),
                              "initial_sigma_{}".format(str(n+1)))
+            
+    def compare_slice_with_BPS(self):
+        for n in range(self.m):
+            plt.figure()
+            #take a vertical slice through middle
+            middle_col = int(self.grid.num_z/2)
+            plt.plot(self.grid.y, self.get_phi_n(n)[:,middle_col],
+                     label="final $\phi_{}$".format(str(n+1)))
+            plt.plot(self.grid.y, np.real(self.BPS_slice[n,:]),
+                     label="BPS $\phi_{}$".format(str(n+1)))
+            plt.legend()
+            plt.title("compare slice with BPS phi_{}".format(str(n+1)))
+            plt.savefig(self.folder_title +
+                        "compare_slice_with_BPS_phi_{}.png".format(str(n+1)))
+            plt.show()
+            
+            plt.figure()
+            plt.plot(self.grid.y, self.get_sigma_n(n)[:,middle_col],
+                     label="final $\sigma_{}$".format(str(n+1)))
+            plt.plot(self.grid.y, np.imag(self.BPS_slice[n,:]),
+                     label="BPS $\sigma_{}$".format(str(n+1)))
+            plt.legend()
+            plt.title("compare slice with BPS sigma_{}".format(str(n+1)))
+            plt.savefig(self.folder_title +
+                    "compare_slice_with_BPS_sigma_{}.png".format(str(n+1)))
+            plt.show()
+            
 
     def _quick_plot(self,field,title,file_title,cmap=None):
         plt.figure()
