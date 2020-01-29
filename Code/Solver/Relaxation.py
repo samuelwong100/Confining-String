@@ -298,7 +298,7 @@ class Continue_Relaxation(Relaxation):
              new_max_loop, old_sol.x0, diagnose)
         #the loop and error do not start at 0 and empty list!
         self.loop = old_sol.loop
-        self.error = old_sol.error
+        self.error = list(old_sol.error) #change error from array back to list
         #initialize solution to old field
         self.x = old_sol.x
         #store BPS related object if original field solution started with BPS
