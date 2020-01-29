@@ -32,7 +32,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
     sol.display_all()
     return sol
 
-def Continue_Solving_Full_Grid(old_title,max_loop,diagnose=True):
+def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
     new_title = _get_new_from_old_title(old_title,max_loop)
     #get old title into a format used by solution viewer
     old_title = "../Results/Solutions/" + old_title + "/"
@@ -43,12 +43,14 @@ def Continue_Solving_Full_Grid(old_title,max_loop,diagnose=True):
     x0 = old_sol.x0
     charge_arg = old_sol.charge_arg
     bound_arg = old_sol.bound_arg
+    charge = Sigma_Critical(N,charge_arg)
+    bound = Sigma_Critical(N,bound_arg)
     L = old_sol.L
     w = old_sol.w
     h = old_sol.h
     R = old_sol.R
     #create a continuing relaxation object, which starts with old field
-    relax = Continue_Relaxation(old_sol, max_loop, diagnose)
+    relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
     relax.solve()
     store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
                    x0,"full grid")

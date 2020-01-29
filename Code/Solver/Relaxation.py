@@ -293,10 +293,9 @@ class Relaxation():
         return result
     
 class Continue_Relaxation(Relaxation):
-    def __init__(self,old_sol,new_max_loop,diagnose):
-        super().__init__(old_sol.grid, old_sol.N, old_sol.bound,
-                            old_sol.charge, old_sol.tol, new_max_loop, 
-                            old_sol.x0, diagnose)
+    def __init__(self,old_sol,new_max_loop,charge,bound,diagnose):
+        super().__init__(old_sol.grid, old_sol.N, bound,charge, old_sol.tol,
+             new_max_loop, old_sol.x0, diagnose)
         #the loop and error do not start at 0 and empty list!
         self.loop = old_sol.loop
         self.error = old_sol.error
