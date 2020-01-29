@@ -106,32 +106,79 @@ class Relaxation():
             elif self.x0 == "zero":
                 x0 *= complex(0,0)
             elif self.x0 == 'BPS':
-                #need some numpy shape gymnastic here
-                #BPS solution is stored in the form of (y,m), where the rows y
-                #are the points, and the columns, m, are the fields
-                #Confining string solutions are stored in the form of (m,y,z),
-                #where the layers m are the field, the rows y are the vertical,
-                #the columns z are the horizontal
-                y_half,x_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
-                                          vacf_arg="x1",z0=self.grid.y0,
-                                          zf=int(self.grid.yf/2),h=self.grid.h,
-                                          folder="example/",tol=1e-5)
-                #x_half_transpose has shape (m,y)
-                x_half_transpose = x_half.T
-                #a verticle slice of x should be two reversed BPS walls merged
-                #together, going from boundary to inner vacua and back
-                x_slice = np.zeros(shape=(self.m,self.grid.num_y))
-                x_slice[:,0:int(self.grid.yf/2)] = x_half_transpose
-                x_slice[:,int(self.grid.yf/2):-1] = np.flip(x_half_transpose,1)
-                #first set x0 entirely equal to boundary values
-                for i in range(self.m):
-                    x0[i,:,:] *= self.bound_vec[i]
-                #for the 2 columns between the two charges, set to x_slice
-                for j in range(self.grid.num_z):
-                    if self.grid.left_axis <= j <= self.grid.right_axis:
-                        x0[:,j,:] = x_slice
+                x0 = self._BPS_x0(x0)
             #enforce the boundary condition
             x0 = self._apply_bound(x0)
+            for i in range(self.m):
+                plt.figure()
+                plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x0[i,:,:]))
+                plt.colorbar()
+                plt.title("$\phi$"+str(i+1))
+                plt.show()
+
+                plt.figure()
+                plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x0[i,:,:]))
+                plt.colorbar()
+                plt.title("$\sigma$"+str(i+1))
+                plt.savefig("SU(3),bound=x1,charge=w1,initial_grid.png")
+                plt.show()
+        return x0
+
+    def _BPS_x0(self,x0):
+        #the following BPS only works in SU(2) and boundary is 0
+        #then the inside vacua is +/- x_1 across origin. So the initial grid
+        #should be 2 BPS, one being the negative anti-kink of the other
+        #In general, this is too complicated
+        if self.N == 2 and str(self.bound)== "x0":
+            y_half,x_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+                                      vacf_arg="x1",z0=self.grid.y0,
+                                      zf=0,h=self.grid.h,
+                                      folder="",tol=1e-5)
+            #need some numpy shape gymnastic here
+            #BPS solution is stored in the form of (y,m), where the rows y
+            #are the points, and the columns, m, are the fields
+            #Confining string solutions are stored in the form of (m,y,z),
+            #where the layers m are the field, the rows y are the vertical,
+            #the columns z are the horizontal
+            #x_half_transpose has shape (m,y)
+            x_half_transpose = x_half.T
+            half_num = x_half_transpose.shape[1]
+            #a verticle slice of x should be two reversed BPS walls merged
+            #together, going from boundary to inner vacua and then negative vacua
+            #comes back back (due to the relaxation, it the discontinuity in the
+            #middle in this case is +/- x_1)
+            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+            x_slice[:,0:half_num] = x_half_transpose
+            x_slice[:,-1-half_num:-1] = -np.flip(x_half_transpose,1)
+            #first set x0 entirely equal to boundary values
+            for i in range(self.m):
+                x0[i,:,:] *= self.bound_vec[i]
+            #for the 2 columns between the two charges, set to x_slice
+            for k in range(self.grid.num_z):
+                if self.grid.left_axis <= k <= self.grid.right_axis:
+                    x0[:,:,k] = x_slice
+        elif self.N ==3 and str(self.bound) == "x1":
+            y_half,x_top_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+                          vacf_arg="x0",z0=self.grid.y0,
+                          zf=0,h=self.grid.h,
+                          folder="",tol=1e-5)
+            y_half,x_bottom_half = solve_BPS(N=self.N,vac0_arg=str(self.charge),
+                          vacf_arg=str(self.bound),z0=self.grid.y0,
+                          zf=0,h=self.grid.h,
+                          folder="",tol=1e-5)
+            x_top_half_trans = x_top_half.T
+            x_bottom_half_trans = x_bottom_half.T
+            half_num = x_top_half_trans.shape[1]
+            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+            x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
+            x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
+            #first set x0 entirely equal to boundary values
+            for i in range(self.m):
+                x0[i,:,:] *= self.bound_vec[i]
+            #for the 2 columns between the two charges, set to x_slice
+            for k in range(self.grid.num_z):
+                if self.grid.left_axis <= k <= self.grid.right_axis:
+                    x0[:,:,k] = x_slice
         return x0
     
     def _apply_bound(self,x_old):
