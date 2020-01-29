@@ -58,7 +58,7 @@ class Relaxation():
     loop (int) = number of loops actually ran;
                  if equation has not been solved yet, loop = 0
     """
-    def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose,folder=""):
+    def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
         self.grid = grid
         self.N = N
         self.m = N-1
@@ -70,7 +70,6 @@ class Relaxation():
         self.max_loop = max_loop
         self.x0 = x0
         self.diagnose = diagnose
-        self.folder = folder
         self.W = Superpotential(N)
         #default laplacian function is the full-grid EOM (equation of motion)
         #this can be altered by creating a child class
@@ -133,8 +132,7 @@ class Relaxation():
         if self.N == 2 and str(self.bound)== "x0":
             y_half,x_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                                       vacf_arg="x1",z0=self.grid.y0,
-                                      zf=0,h=self.grid.h,
-                                      folder=self.folder,tol=1e-5)
+                                      zf=0,h=self.grid.h,tol=1e-5)
             #need some numpy shape gymnastic here
             #BPS solution is stored in the form of (y,m), where the rows y
             #are the points, and the columns, m, are the fields
@@ -161,12 +159,10 @@ class Relaxation():
         elif self.N ==3 and str(self.bound) == "x1":
             y_half,x_top_half = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                           vacf_arg="x0",z0=self.grid.y0,
-                          zf=0,h=self.grid.h,
-                          folder=self.folder,tol=1e-5)
+                          zf=0,h=self.grid.h,tol=1e-5)
             y_half,x_bottom_half = solve_BPS(N=self.N,vac0_arg=str(self.charge),
                           vacf_arg=str(self.bound),z0=self.grid.y0,
-                          zf=0,h=self.grid.h,
-                          folder=self.folder,tol=1e-5)
+                          zf=0,h=self.grid.h,tol=1e-5)
             x_top_half_trans = x_top_half.T
             x_bottom_half_trans = x_bottom_half.T
             half_num = x_top_half_trans.shape[1]
