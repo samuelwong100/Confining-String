@@ -64,7 +64,7 @@ def _get_new_from_old_title(old_title,max_loop):
     index_comma = old_title.find(",",index_m) #start search at index_m
     #get the parts before and after the loop number
     first_part = old_title[0:index_equal_sign+1]
-    last_part = old_title[index_comma,len(old_title)]
+    last_part = old_title[index_comma:len(old_title)]
     #insert the new max_loop
     new_title = first_part+str(max_loop)+last_part
     return new_title
