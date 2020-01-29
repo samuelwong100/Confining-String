@@ -33,28 +33,32 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
     return sol
 
 def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
+    #note the input old_title does not contain path, just folder name
     new_title = _get_new_from_old_title(old_title,max_loop)
-    #get old title into a format used by solution viewer
-    old_title = "../Results/Solutions/" + old_title + "/"
-    old_sol = Solution_Viewer(old_title)
-    #get the parameters from the old solution
-    N = old_sol.N
-    tol = old_sol.tol
-    x0 = old_sol.x0
-    charge_arg = old_sol.charge_arg
-    bound_arg = old_sol.bound_arg
-    charge = Sigma_Critical(N,charge_arg)
-    bound = Sigma_Critical(N,bound_arg)
-    L = old_sol.L
-    w = old_sol.w
-    h = old_sol.h
-    R = old_sol.R
-    #create a continuing relaxation object, which starts with old field
-    relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
-    relax.solve()
-    store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
-                   x0,"full grid")
-    sol = Solution_Viewer(new_title)
+    if os.path.exists(new_title):
+        sol = Solution_Viewer(new_title)
+    else:
+        #get old title into a format used by solution viewer
+        old_title = "../Results/Solutions/" + old_title + "/"
+        old_sol = Solution_Viewer(old_title)
+        #get the parameters from the old solution
+        N = old_sol.N
+        tol = old_sol.tol
+        x0 = old_sol.x0
+        charge_arg = old_sol.charge_arg
+        bound_arg = old_sol.bound_arg
+        charge = Sigma_Critical(N,charge_arg)
+        bound = Sigma_Critical(N,bound_arg)
+        L = old_sol.L
+        w = old_sol.w
+        h = old_sol.h
+        R = old_sol.R
+        #create a continuing relaxation object, which starts with old field
+        relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
+        relax.solve()
+        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
+                       x0,"full grid")
+        sol = Solution_Viewer(new_title)
     sol.display_all()
     return sol
 
@@ -69,5 +73,7 @@ def _get_new_from_old_title(old_title,max_loop):
     last_part = old_title[index_comma:len(old_title)]
     #insert the new max_loop
     new_title = first_part+str(max_loop)+last_part
+    #get new title into proper format for storage
+    new_title = "../Results/Solutions/" + new_title + "/"
     return new_title
     
