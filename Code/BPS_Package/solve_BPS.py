@@ -12,7 +12,7 @@ from Relaxation_1D import Relaxation_1D
 from BPS import BPS
 from plot_BPS import plot_BPS
 
-def solve_BPS(N,vac0_arg,vacf_arg,z0,zf,h,folder,tol):
+def solve_BPS(N,vac0_arg,vacf_arg,z0,zf,h,folder,tol,save_plot=True):
     num = int((zf-z0)/h)
     #if vacua0 is one of "x_k", then the sigma critical includes 2pi already
     #if it is one of "w_k", then the sigma cirtical does not include 2pi
@@ -23,7 +23,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,z0,zf,h,folder,tol):
     R.solve(num,tol=tol,f0="special kink",diagnose=False)
     z = R.sol_z
     x = R.sol_f        
-    plot_BPS(N,z,x,B,h,folder,vac0,vacf)
+    plot_BPS(N,z,x,B,h,folder,vac0,vacf,save_plot)
     return z,x
 
 def _take_care_of_2pi(N,vac_arg):
