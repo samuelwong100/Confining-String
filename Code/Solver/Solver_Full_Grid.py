@@ -13,7 +13,7 @@ from Relaxation import Relaxation
 from Solver_Helpers import get_title, store_solution
 from Solution_Viewer import Solution_Viewer
 
-def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
+def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
                      diagnose=False):
     prefix = "../Results/Solutions/"
     title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
@@ -24,8 +24,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0=None,
         charge = Sigma_Critical(N,charge_arg)
         bound = Sigma_Critical(N,bound_arg)
         grid = Standard_Dipole_Grid(L,w,h,R)
-        relax = Relaxation(grid,N,bound.imaginary_vector,charge.real_vector,
-                           tol,max_loop,x0,diagnose)
+        relax = Relaxation(grid,N,bound,charge,tol,max_loop,x0,diagnose)
         relax.solve()
         store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
                        x0,"full grid")

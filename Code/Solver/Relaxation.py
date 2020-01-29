@@ -6,11 +6,13 @@ Author: Samuel Wong
 """
 import sys
 sys.path.append("../Tools")
+sys.path.append("../BPS_Package")
 import numpy as np
 from numpy import pi
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from Math import Superpotential
+from solve_BPS import solve_BPS
 
 class Relaxation():
     """
@@ -62,6 +64,8 @@ class Relaxation():
         self.m = N-1
         self.bound = bound
         self.charge = charge
+        self.bound_vec = bound.imaginary_vector
+        self.charge_vec = charge.real_vector
         self.tol = tol
         self.max_loop = max_loop
         self.x0 = x0
@@ -94,15 +98,94 @@ class Relaxation():
         #the default initial grid is equal to boundary everywhere
         if self.x0 is None:
             for i in range(self.m):
-                x0[i,:,:] *= self.bound[i]
+                x0[i,:,:] *= self.bound_vec[i]
         else:
             #preset the initial grid options that do not depend on bound values
             if self.x0 == "one-one":
                 x0 *= complex(1,1)
             elif self.x0 == "zero":
                 x0 *= complex(0,0)
+            elif self.x0 == 'BPS':
+                x0 = self._BPS_x0(x0)
             #enforce the boundary condition
             x0 = self._apply_bound(x0)
+            for i in range(self.m):
+                plt.figure()
+                plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x0[i,:,:]))
+                plt.colorbar()
+                plt.title("$\phi$"+str(i+1))
+                plt.show()
+
+                plt.figure()
+                plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x0[i,:,:]))
+                plt.colorbar()
+                plt.title("$\sigma$"+str(i+1))
+                plt.show()
+        return x0
+
+    def _BPS_x0(self,x0):
+        #the following BPS only works in SU(2) and boundary is 0
+        #then the inside vacua is +/- x_1 across origin. So the initial grid
+        #should be 2 BPS, one being the negative anti-kink of the other
+        #In general, this is too complicated
+        if self.N == 2 and str(self.bound)== "x0":
+            y_half,x_half,B = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+                                      vacf_arg="x1",z0=self.grid.y0,
+                                      zf=0,h=self.grid.h,folder="",
+                                      tol=1e-5,save_plot=False)
+            #need some numpy shape gymnastic here
+            #BPS solution is stored in the form of (y,m), where the rows y
+            #are the points, and the columns, m, are the fields
+            #Confining string solutions are stored in the form of (m,y,z),
+            #where the layers m are the field, the rows y are the vertical,
+            #the columns z are the horizontal
+            #x_half_transpose has shape (m,y)
+            x_half_transpose = x_half.T
+            half_num = x_half_transpose.shape[1]
+            #a verticle slice of x should be two reversed BPS walls merged
+            #together, going from boundary to inner vacua and then negative vacua
+            #comes back back (due to the relaxation, it the discontinuity in the
+            #middle in this case is +/- x_1)
+            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+            x_slice[:,0:half_num] = x_half_transpose
+            x_slice[:,-1-half_num:-1] = -np.flip(x_half_transpose,1)
+            #first set x0 entirely equal to boundary values
+            for i in range(self.m):
+                x0[i,:,:] *= self.bound_vec[i]
+            #for the 2 columns between the two charges, set to x_slice
+            for k in range(self.grid.num_z):
+                if self.grid.left_axis <= k <= self.grid.right_axis:
+                    x0[:,:,k] = x_slice
+        elif self.N ==3 and str(self.bound) == "x1":
+            y_half,x_top_half,B_top = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+                          vacf_arg="x0",z0=self.grid.y0,
+                          zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,vac0_arg=str(self.charge),
+                          vacf_arg=str(self.bound),z0=self.grid.y0,
+                          zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            x_top_half_trans = x_top_half.T
+            x_bottom_half_trans = x_bottom_half.T
+            half_num = x_top_half_trans.shape[1]
+            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+            x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
+            x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
+            #first set x0 entirely equal to boundary values
+            for i in range(self.m):
+                x0[i,:,:] *= self.bound_vec[i]
+            #for the 2 columns between the two charges, set to x_slice
+            for k in range(self.grid.num_z):
+                if self.grid.left_axis <= k <= self.grid.right_axis:
+                    x0[:,:,k] = x_slice
+        #save BPS and initial grid
+        self.B_top = B_top #store BPS object
+        self.B_bottom = B_bottom
+        self.top_BPS = x_top_half
+        self.bottom_BPS = x_bottom_half
+        self.y_half = y_half
+        self.BPS_slice = x_slice
+        self.initial_grid = x0
         return x0
     
     def _apply_bound(self,x_old):
@@ -111,7 +194,7 @@ class Relaxation():
         #take all component (first index); for each component, take all rows
         #(second index); take the first/left column (third index); set it to
         #bound
-        bound_2d = np.array([self.bound])
+        bound_2d = np.array([self.bound_vec])
         x[:,:,0] = np.repeat(bound_2d,self.grid.num_y,axis=0).T
         #repeat for bounds in other directions
         x[:,:,-1] = np.repeat(bound_2d,self.grid.num_y,axis=0).T
@@ -202,7 +285,7 @@ class Relaxation():
         #multiply everything by charge (outside relevant rows, everything is
         #zero anyway)
         for i in range(self.N-1):
-            result[i,:,:] *= self.charge[i]
+            result[i,:,:] *= self.charge_vec[i]
         #overall coefficient
         coeff = 1j*2*pi
         result = coeff*result
