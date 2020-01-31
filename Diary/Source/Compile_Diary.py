@@ -18,11 +18,14 @@ def get_date_list(end_date):
         pdfs.append(file_title)
     return pdfs
 
-merger = PdfFileMerger()
-pdfs = get_date_list("27-01-2020")
-
-for pdf in pdfs:
-    merger.append(pdf)
+def compile_diary(next_date):
+    #next_date is the day after the very last date of the journal entry
+    #in the format of "27-01-2020"
+    merger = PdfFileMerger()
+    pdfs = get_date_list(next_date)
     
-merger.write("../Diary.pdf")
-merger.close()
+    for pdf in pdfs:
+        merger.append(pdf)
+        
+    merger.write("../Diary.pdf")
+    merger.close()
