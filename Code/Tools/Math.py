@@ -422,24 +422,30 @@ class Superpotential():
         return summation/4
     
     def potential_term_on_grid_fast_optimized(self,x):
-        result = np.zeros(shape=x.shape,dtype=complex)
         #to optimize, absorb all for loop over grid into numpy vectorization
-        #fine to loop over N, since they are small
-        for b in range(self.N-1):
-            #the b-th component of the resulting vector field
-            summation = np.zeros(shape=(x.shape[0],x.shape[1]),dtype=complex)
-            x_conj = np.conjugate(x)
-            for a in range(self.N):
-                #this is the equation we get from applying the idenity of
-                #alpha_a dot alpha_b in terms of 3 delta function
-                dot_A=dot_vec_with_vec_field(self.s.alpha[a],x)
-                dot_B=dot_vec_with_vec_field(self.s.alpha[a],x_conj)
-                dot_C=dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj)
-                dot_D=dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj)
-                A = np.exp(dot_A)
-                B = np.exp(dot_B) *self.s.alpha[a][b]
-                C = np.exp(dot_C) *self.s.alpha[(a-1)%self.N][b]
-                D = np.exp(dot_D) *self.s.alpha[(a+1)%self.N][b]
-                summation += A*(2*B-C-D)
-            result[b,:,:] = summation
-        return result/4
+        #ok to loop over N, since they are small
+        x_conj = np.conjugate(x)
+        summation = np.zeros(shape=x.shape,dtype=complex)
+        #loop over a first instead of b, so that terms like exp_B only
+        #computes once
+        #the following is the equation we get from applying the idenity of
+        #alpha_a dot alpha_b in terms of 3 delta function
+        for a in range(self.N):
+            dot_A=dot_vec_with_vec_field(self.s.alpha[a],x)
+            dot_B=dot_vec_with_vec_field(self.s.alpha[a],x_conj)
+            dot_C=dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj)
+            dot_D=dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj)
+            A = np.exp(dot_A)
+            exp_B = np.exp(dot_B)
+            exp_C = np.exp(dot_C)
+            exp_D = np.exp(dot_D)
+            #the a-th term in the vector field summation
+            vec_a = np.zeros(shape=x.shape,dtype=complex)
+            for b in range(self.N-1):
+                #the b-th component of the resulting vector field
+                B = exp_B*self.s.alpha[a][b]
+                C = exp_C*self.s.alpha[(a-1)%self.N][b]
+                D = exp_D*self.s.alpha[(a+1)%self.N][b]
+                vec_a[b,:,:] += A*(2*B-C-D)
+            summation += vec_a
+        return summation/4
