@@ -80,22 +80,6 @@ def dot_vec_with_vec_field(vec,vec_field):
     #on the grid. The return is a (x,y) grid object
     return np.sum((vec*(vec_field.T)).T,axis=0)
 
-def multiply_grid_by_vector(grid,vector):
-    #grid is an array of shape (x,y)
-    #vector is an array of shape (n,)
-    #want to return a vector grid, where each layer is the grid multiply by
-    #corresponding component of the vector
-    n=vector.size
-    x,y=grid.shape
-    #repeat the grid n times in vertical axis, but just once in horizontal axis
-    #reshape it so that it is in layers corresponding to the vector
-    grid_tile = np.tile(grid,(n,1)).reshape((n,x,y))
-    vector_vertical = vector.reshape((n,1))
-    vector_tile_inter = np.tile(vector_vertical,x) #intermediate
-    vector_tile = np.repeat(vector_tile_inter,y,axis=0).reshape((n,x,y))
-    return grid_tile*vector_tile
-    
-
 """
 ================================  Classes   ===================================
 """
@@ -443,16 +427,13 @@ class Superpotential():
         for a in range(self.N):
             #this is the equation we get from applying the idenity of
             #alpha_a dot alpha_b in terms of 3 delta function
-            dot_A=dot_vec_with_vec_field(self.s.alpha[a],x)
-            dot_B=dot_vec_with_vec_field(self.s.alpha[a],x_conj)
-            dot_C=dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj)
-            dot_D=dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj)
-            A = np.exp(dot_A)
-            B = multiply_grid_by_vector(np.exp(dot_B),self.s.alpha[a])
-            C = multiply_grid_by_vector(np.exp(dot_C),
-                                        self.s.alpha[(a-1)%self.N])
-            D = multiply_grid_by_vector(np.exp(dot_D),
-                                        self.s.alpha[(a+1)%self.N])
+            A = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x))
+            B = np.exp(dot_vec_with_vec_field(self.s.alpha[a],
+                        x_conj)) *self.s.alpha[a]
+            C = np.exp(dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],
+                        x_conj)) *self.s.alpha[(a-1)%self.N]
+            D = np.exp(dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],
+                        x_conj)) *self.s.alpha[(a+1)%self.N]
             summation += A*(2*B-C-D)
-        return summation/4
+        return (summation.T)/4
         
