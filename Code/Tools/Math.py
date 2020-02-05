@@ -72,6 +72,14 @@ def derivative_sample(x,h):
     dxdz[-1] = last
     return dxdz
 
+def dot_vec_with_vec_field(vec,vec_field):
+    #assume vec is an array of shape (n,)
+    #vector field is an array of shape (n,x,y), where the field has 
+    #n components, and lives on a x-y grid.
+    #return the dot product the the vector and the field at every point
+    #on the grid. The return is a (x,y) grid object
+    return np.sum((vec*(vec_field.T)).T,axis=0)
+
 """
 ================================  Classes   ===================================
 """
@@ -412,3 +420,24 @@ class Superpotential():
             *self.s.alpha[(a+1)%self.N][b]
             summation += A*(2*B-C-D)
         return summation/4
+    
+    def potential_term_on_grid_fast_optimized(self,x):
+        result = np.zeros(shape=x.shape,dtype=complex)
+        for b in range(self.N-1):
+            #the b-th component of the resulting vector field
+            summation = np.zeros(shape=(x.shape[0],x.shape[1]),dtype=complex)
+            x_conj = np.conjugate(x)
+            for a in range(self.N):
+                #this is the equation we get from applying the idenity of
+                #alpha_a dot alpha_b in terms of 3 delta function
+                A = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x))
+                B = np.exp(dot_vec_with_vec_field(self.s.alpha[a],
+                            x_conj)) *self.s.alpha[a][b]
+                C = np.exp(dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],
+                            x_conj)) *self.s.alpha[(a-1)%self.N][b]
+                D = np.exp(dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],
+                            x_conj)) *self.s.alpha[(a+1)%self.N][b]
+                summation += A*(2*B-C-D)
+            result[b,:,:] = summation
+        return result/4
+        
