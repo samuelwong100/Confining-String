@@ -54,10 +54,6 @@ class Solution_Viewer():
             self.charge_arg = core_dict["charge_arg"]
             self.folder_title = title
             self.x0 = core_dict["x0"]
-            if "energy" in core_dict:
-                self.energy = core_dict["energy"]
-            else:
-                self.energy = None
             if self.x0 == "BPS":
                 self.top_BPS = core_dict["BPS_top"]
                 self.bottom_BPS = core_dict["BPS_bottom"]
@@ -77,6 +73,7 @@ class Solution_Viewer():
         self.plot_gradient_energy_density()
         self.plot_potential_energy_density()
         self.plot_energy_density()
+        self.store_energy()
         if self.x0 == "BPS":
             self.plot_initial_grid()
             self.plot_BPS()
@@ -246,19 +243,11 @@ class Solution_Viewer():
                + self.get_gradient_energy_density()
                
     def get_energy(self):
-        if self.energy is None:
-            energy = simps(simps(self.get_energy_density(),self.grid.z),
-                           self.grid.y)
-            self.energy = energy #store energy in local solution viewer
-            #store energy in permanent core dictionary
-            self._store_energy(energy)
-            return energy
-        else:
-            return self.energy
-            
-    def _store_energy(self, energy):
+        return simps(simps(self.get_energy_density(),self.grid.z),self.grid.y)
+    
+    def store_energy(self):
         with open(self.folder_title+"core_dict","wb") as file:
-            self.core_dict["energy"] = energy
+            self.core_dict["energy"] = self.get_energy()
             pickle.dump(self.core_dict, file)
     
     def plot_energy_density(self):
