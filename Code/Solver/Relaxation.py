@@ -127,39 +127,7 @@ class Relaxation():
         return x0
 
     def _BPS_x0(self,x0):
-        #the following BPS only works in SU(2) and boundary is 0
-        #then the inside vacua is +/- x_1 across origin. So the initial grid
-        #should be 2 BPS, one being the negative anti-kink of the other
-        #In general, this is too complicated
-        if self.N == 2 and str(self.bound)== "x0":
-            y_half,x_half,B = solve_BPS(N=self.N,vac0_arg=str(self.bound),
-                                      vacf_arg="x1",z0=self.grid.y0,
-                                      zf=0,h=self.grid.h,folder="",
-                                      tol=1e-5,save_plot=False)
-            #need some numpy shape gymnastic here
-            #BPS solution is stored in the form of (y,m), where the rows y
-            #are the points, and the columns, m, are the fields
-            #Confining string solutions are stored in the form of (m,y,z),
-            #where the layers m are the field, the rows y are the vertical,
-            #the columns z are the horizontal
-            #x_half_transpose has shape (m,y)
-            x_half_transpose = x_half.T
-            half_num = x_half_transpose.shape[1]
-            #a verticle slice of x should be two reversed BPS walls merged
-            #together, going from boundary to inner vacua and then negative vacua
-            #comes back back (due to the relaxation, it the discontinuity in the
-            #middle in this case is +/- x_1)
-            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
-            x_slice[:,0:half_num] = x_half_transpose
-            x_slice[:,-1-half_num:-1] = -np.flip(x_half_transpose,1)
-            #first set x0 entirely equal to boundary values
-            for i in range(self.m):
-                x0[i,:,:] *= self.bound_vec[i]
-            #for the 2 columns between the two charges, set to x_slice
-            for k in range(self.grid.num_z):
-                if self.grid.left_axis <= k <= self.grid.right_axis:
-                    x0[:,:,k] = x_slice
-        elif str(self.bound) == "x1":
+        if str(self.bound) == "x1":
             y_half,x_top_half,B_top = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                           vacf_arg="x0",z0=self.grid.y0,
                           zf=0,h=self.grid.h,folder="",
@@ -323,3 +291,94 @@ class Continue_Relaxation(Relaxation):
         #overide initial field function to be self.x, which was set to old
         #field already in the init
         return self.x
+    
+class Relaxation_half_grid(Relaxation):
+    def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
+        super.__init__(grid,N,bound,charge,tol,max_loop,x0,diagnose)
+        self.full_grid = grid
+        self.grid = half_grid
+
+    def _BPS_x0(self,x0):
+        if str(self.bound) == "x1":
+            y_half,x_top_half,B_top = solve_BPS(N=self.N,vac0_arg=str(self.bound),
+                          vacf_arg="x0",z0=self.grid.y0,
+                          zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,vac0_arg=str(self.charge),
+                          vacf_arg=str(self.bound),z0=self.grid.y0,
+                          zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            x_top_half_trans = x_top_half.T
+            x_bottom_half_trans = x_bottom_half.T
+            half_num = x_top_half_trans.shape[1]
+            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+            x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
+            x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
+            #first set x0 entirely equal to boundary values
+            for i in range(self.m):
+                x0[i,:,:] *= self.bound_vec[i]
+            #for the 2 columns between the two charges, set to x_slice
+            #since this is for half grid, this is same as center to right axis
+            for k in range(self.grid.num_z):
+                if 0 <= k <= self.grid.right_axis:
+                    x0[:,:,k] = x_slice
+        #save BPS and initial grid
+        self.B_top = B_top #store BPS object
+        self.B_bottom = B_bottom
+        self.top_BPS = x_top_half
+        self.bottom_BPS = x_bottom_half
+        self.y_half = y_half
+        self.BPS_slice = x_slice
+        self.initial_grid = x0
+        return x0
+
+    def _apply_bound(self,x_old):
+        x = deepcopy(x_old)
+        #set all sides to bound except for left
+        #leave left side alone and let it be whatever the initial config
+        #was used
+        bound_2d = np.array([self.bound_vec])
+        x[:,:,-1] = np.repeat(bound_2d,self.grid.num_y,axis=0).T
+        x[:,0,:] = np.repeat(bound_2d.T,self.grid.num_z,axis=1)
+        x[:,-1,:] = np.repeat(bound_2d.T,self.grid.num_z,axis=1)
+        return x
+    
+    def _define_source_term(self):
+        #modifies original by only setting right of right axis to 0
+        # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'
+        result = np.zeros(shape=(self.m,self.grid.num_y,self.grid.num_z),
+                          dtype=complex)
+        #the derivative of delta function in y gives something close to infinity
+        #for y just below 0 and somthing close to -infinity for y just above 0
+        #here, we have x(y = 0^{-}) = 1/h^2 and x(y=0^{+})= -1/h^2
+        #note that the lower row correspond to higher y
+        inf = 1/(self.grid.h**2)
+        result[:,self.grid.z_axis-1,:] = -inf
+        result[:,self.grid.z_axis,:] = inf
+        #set grid to 0 unless it is on z_axis and between -R/2 and R/2
+        result[:,:,self.grid.right_axis+1:]=0 #right_axis included in source
+        #multiply everything by charge (outside relevant rows, everything is
+        #zero anyway)
+        for i in range(self.N-1):
+            result[i,:,:] *= self.charge_vec[i]
+        #overall coefficient
+        coeff = 1j*2*pi
+        result = coeff*result
+        return result
+    
+    def _update(self,x_old):
+        # replace each element of x_old with average of 4 neighboring points,
+        # plus a source term;
+        x = deepcopy(x_old)
+        source_term = self.laplacian(x)
+        # we loop over each element in the grid, skipping over the edge.
+        # so we start loop at 1, avoiding 0. We ignore the last one by -1
+        for row in range(1,self.grid.num_y-1):
+            for col in range(1,self.grid.num_z-1):
+                x[:,row,col] = (x[:,row-1,col] + x[:,row+1,col] +
+                              x[:,row,col-1] + x[:,row,col+1]
+                              - source_term[:,row,col]*(self.grid.h)**2)/4
+        #for half grid, set the first column equal to its neighboring column
+        #to maintain a Neumann boundary condition
+        x[:,:,0] = x[:,:,1]
+        return x
