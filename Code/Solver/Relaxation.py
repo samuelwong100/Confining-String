@@ -159,7 +159,7 @@ class Relaxation():
             for k in range(self.grid.num_z):
                 if self.grid.left_axis <= k <= self.grid.right_axis:
                     x0[:,:,k] = x_slice
-        elif self.N ==3 and str(self.bound) == "x1":
+        elif str(self.bound) == "x1":
             y_half,x_top_half,B_top = solve_BPS(N=self.N,vac0_arg=str(self.bound),
                           vacf_arg="x0",z0=self.grid.y0,
                           zf=0,h=self.grid.h,folder="",
