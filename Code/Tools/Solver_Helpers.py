@@ -7,19 +7,18 @@ Author: Samuel Wong
 import os
 import pickle
 
-def get_title(prefix,N,charge,bound,L,w,h,R,tol,max_loop,x0,method):
+def get_title(prefix,N,charge,bound,L,w,h,R,tol,max_loop,x0):
     title =\
     ('{}CS(N={},charge={},bound={},L={},w={},h={},R={},tol={},'+ \
-    'max_loop={},x0={},method={})/').format(prefix,str(N),charge,
-    bound,str(L),str(w),str(h),str(R),str(tol),str(max_loop),str(x0),method)
+    'max_loop={},x0={})/').format(prefix,str(N),charge,
+    bound,str(L),str(w),str(h),str(R),str(tol),str(max_loop),str(x0))
     return title
 
-def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
-                   method):
+def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0):
     #store the core result in a dictionary
     core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
                   "w":w,"h":h,"R":R,"tol":tol,"max_loop":max_loop,"x0":x0,
-                  "method":method,"loop":relax.loop,"field":relax.x,
+                  "loop":relax.loop,"field":relax.x,
                   "error":relax.error}
     if x0 == "BPS":
         core_dict["BPS_top"] = relax.top_BPS

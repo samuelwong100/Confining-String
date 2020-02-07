@@ -13,11 +13,32 @@ from Relaxation import Relaxation, Continue_Relaxation
 from Solver_Helpers import get_title, store_solution
 from Solution_Viewer import Solution_Viewer
 
+def Solver(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
+           half_grid=True,diagnose=False):
+    prefix = "../Results/Solutions/"
+    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0)
+    if os.path.exists(title):
+        sol = Solution_Viewer(title)
+    else:
+        charge = Sigma_Critical(N,charge_arg)
+        bound = Sigma_Critical(N,bound_arg)
+        grid = Standard_Dipole_Grid(L,w,h,R)
+        if half_grid:
+            relax = Relaxation_half_grid(grid,N,bound,charge,tol,max_loop,x0,
+                                         diagnose)
+        else:
+            relax = Relaxation(grid,N,bound,charge,tol,max_loop,x0,diagnose)
+        relax.solve()
+        store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
+                       x0)
+        sol = Solution_Viewer(title)
+    #sol.display_all()
+    return sol
+
 def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
                      diagnose=False):
     prefix = "../Results/Solutions/"
-    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0,
-                      "full grid")
+    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0)
     if os.path.exists(title):
         sol = Solution_Viewer(title)
     else:
@@ -27,7 +48,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
         relax = Relaxation(grid,N,bound,charge,tol,max_loop,x0,diagnose)
         relax.solve()
         store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
-                       x0,"full grid")
+                       x0)
         sol = Solution_Viewer(title)
     #sol.display_all()
     return sol
@@ -56,8 +77,8 @@ def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
         #create a continuing relaxation object, which starts with old field
         relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
         relax.solve()
-        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
-                       x0,"full grid")
+        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,
+                       max_loop,x0)
         sol = Solution_Viewer(new_title)
     #sol.display_all()
     return sol
