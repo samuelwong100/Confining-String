@@ -60,7 +60,6 @@ class Relaxation():
     """
     def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
         self.grid = grid
-        self.inf = 1/(self.grid.h**2)
         self.N = N
         self.m = N-1
         self.bound = bound
@@ -79,6 +78,8 @@ class Relaxation():
         self.x = None
         self.error = []
         self.loop = 0
+        #create a constant source term, which is independent of field
+        self.source_term = self._define_source_term()
     
     def solve(self):
         """
@@ -267,20 +268,22 @@ class Relaxation():
                 plt.show()
 
     def _full_grid_EOM(self,x):
-        return self._source_term(x) + self._potential_term(x)
+        return self._source_term + self._potential_term(x)
     
     def _potential_term(self,x):
         return self.W.potential_term_on_grid_fast_optimized(x)
     
-    def _source_term(self,x):
+    def _define_source_term(self):
         # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'
-        result = np.zeros(shape=x.shape,dtype=complex)
+        result = np.zeros(shape=(self.m,self.grid.num_y,self.grid.num_z),
+                          dtype=complex)
         #the derivative of delta function in y gives something close to infinity
         #for y just below 0 and somthing close to -infinity for y just above 0
         #here, we have x(y = 0^{-}) = 1/h^2 and x(y=0^{+})= -1/h^2
         #note that the lower row correspond to higher y
-        result[:,self.grid.z_axis-1,:] = -self.inf
-        result[:,self.grid.z_axis,:] = self.inf
+        inf = 1/(self.grid.h**2)
+        result[:,self.grid.z_axis-1,:] = -inf
+        result[:,self.grid.z_axis,:] = inf
         #set grid to 0 unless it is on z_axis and between -R/2 and R/2
         result[:,:,0:self.grid.left_axis]=0 #left_axis included in source
         result[:,:,self.grid.right_axis+1:]=0 #right_axis included in source
