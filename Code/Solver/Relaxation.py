@@ -270,7 +270,11 @@ class Relaxation():
         return self._source_term(x) + self._potential_term(x)
     
     def _potential_term(self,x):
+<<<<<<< HEAD
         return self.W.potential_term_on_grid_fast_optimized(x)
+=======
+        return self.W.potential_term_on_grid(x)
+>>>>>>> master
     
     def _source_term(self,x):
         # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'

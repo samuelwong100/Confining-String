@@ -286,82 +286,82 @@ class Superpotential():
             summation +=  coef * exp(np.dot(self.s.alpha[a],x_row))
         return summation
     
-#    def ddW_dxb_dxa(self,x,b,a):
-#        """
-#        Mixed second partial derivative, d^2(W)/(dx^b dx^a)
-#        
-#        Input
-#        -------------------------------------------
-#        x (array) = the value of the field at m points;an array of shape
-#                    (m,N-1); where m is number of points,
-#                    N-1 is number of field components
-#        b (int) = index of field
-#        a (int) = index of field
-#    
-#        Output
-#        --------------------------------------------
-#        second_derivative (array) = an array of shape (m,)
-#        """
-#        m = x.shape[0] # number of points
-#        #initialize
-#        second_derivative = np.zeros(shape=(m,),dtype=complex)
-#        #loop over each point (ie, row in x)
-#        for (j,x_row) in enumerate(x):
-#            second_derivative[j] = self._ddW_dxb_dxa_point(x_row,a,b)
-#        return second_derivative
-#        
-#    def _ddW_dxb_dxa_point(self,x_row,a,b):
-#        summation = 0j
-#        for i in range(self.N):
-#            coeff = self.s.alpha[i][a]*self.s.alpha[i][b]
-#            summation += coeff * exp(np.dot(self.s.alpha[i],x_row))
-#        return summation
-#    
-#    def sum_over_dWdxa_ddWdxbdxa_conj(self,x,b):
-#        """        
-#        Input
-#        -------------------------------------------
-#        x (array) = the value of the field at m points;an array of shape
-#                    (m,N-1); where m is number of points,
-#                    N-1 is number of field components
-#        b (int) = index of field
-#    
-#        Output
-#        --------------------------------------------
-#        row vector of dW dotted ddW (array) = an array of shape (m,)
-#        """
-#        #each row of dw_list is gradient of a point
-#        #each column is each partial derivative component
-#        dW_list = self.dWdx(x)
-#        ddW_list = []
-#        for a in range(0,self.N-1):
-#            ddW_list.append(np.conjugate(self.ddW_dxb_dxa(x,b,a)))
-#        #each row of ddW_list is a 1D array of partial derivative,
-#        #each parital is for a different point
-#        #if we take transpose, each row becomes different partial of the same point
-#        ddW_list = np.array(ddW_list).T
-#        #multiply component wise and sum over the columns
-#        #now each row should be the answer we want for each point
-#        #but then the sum function reduces the dimension and transposes it
-#        #so now it is a row vector
-#        return np.sum(dW_list*ddW_list,axis=1)
-#    
-#    def sum_over_dWdxa_ddWdxbdxa_conj_on_grid(self,x):
-#        #this time x is a grid with N-1 layer, each representing a field
-#        layers,row_num,col_num = x.shape
-#        x_final = np.zeros(x.shape,dtype=complex)
-#        for r in range(row_num):
-#            #take a row with multiple layers
-#            for b in range(layers):
-#                #for each layer, the values of that row is based on b
-#                #need to take transpose since x has fields in layers; here
-#                #this means the points are in the same row
-#                #But in sum function, the points are assumed to be different rows
-#                x_final[b,r,:] = self.sum_over_dWdxa_ddWdxbdxa_conj(x[:,r,:].T,b)
-#        return x_final
-#            
-#    def potential_term_on_grid(self,x):
-#        return (1/4)*self.sum_over_dWdxa_ddWdxbdxa_conj_on_grid(x)
+    def ddW_dxb_dxa(self,x,b,a):
+        """
+        Mixed second partial derivative, d^2(W)/(dx^b dx^a)
+        
+        Input
+        -------------------------------------------
+        x (array) = the value of the field at m points;an array of shape
+                    (m,N-1); where m is number of points,
+                    N-1 is number of field components
+        b (int) = index of field
+        a (int) = index of field
+    
+        Output
+        --------------------------------------------
+        second_derivative (array) = an array of shape (m,)
+        """
+        m = x.shape[0] # number of points
+        #initialize
+        second_derivative = np.zeros(shape=(m,),dtype=complex)
+        #loop over each point (ie, row in x)
+        for (j,x_row) in enumerate(x):
+            second_derivative[j] = self._ddW_dxb_dxa_point(x_row,a,b)
+        return second_derivative
+        
+    def _ddW_dxb_dxa_point(self,x_row,a,b):
+        summation = 0j
+        for i in range(self.N):
+            coeff = self.s.alpha[i][a]*self.s.alpha[i][b]
+            summation += coeff * exp(np.dot(self.s.alpha[i],x_row))
+        return summation
+    
+    def sum_over_dWdxa_ddWdxbdxa_conj(self,x,b):
+        """        
+        Input
+        -------------------------------------------
+        x (array) = the value of the field at m points;an array of shape
+                    (m,N-1); where m is number of points,
+                    N-1 is number of field components
+        b (int) = index of field
+    
+        Output
+        --------------------------------------------
+        row vector of dW dotted ddW (array) = an array of shape (m,)
+        """
+        #each row of dw_list is gradient of a point
+        #each column is each partial derivative component
+        dW_list = self.dWdx(x)
+        ddW_list = []
+        for a in range(0,self.N-1):
+            ddW_list.append(np.conjugate(self.ddW_dxb_dxa(x,b,a)))
+        #each row of ddW_list is a 1D array of partial derivative,
+        #each parital is for a different point
+        #if we take transpose, each row becomes different partial of the same point
+        ddW_list = np.array(ddW_list).T
+        #multiply component wise and sum over the columns
+        #now each row should be the answer we want for each point
+        #but then the sum function reduces the dimension and transposes it
+        #so now it is a row vector
+        return np.sum(dW_list*ddW_list,axis=1)
+    
+    def sum_over_dWdxa_ddWdxbdxa_conj_on_grid(self,x):
+        #this time x is a grid with N-1 layer, each representing a field
+        layers,row_num,col_num = x.shape
+        x_final = np.zeros(x.shape,dtype=complex)
+        for r in range(row_num):
+            #take a row with multiple layers
+            for b in range(layers):
+                #for each layer, the values of that row is based on b
+                #need to take transpose since x has fields in layers; here
+                #this means the points are in the same row
+                #But in sum function, the points are assumed to be different rows
+                x_final[b,r,:] = self.sum_over_dWdxa_ddWdxbdxa_conj(x[:,r,:].T,b)
+        return x_final
+            
+    def potential_term_on_grid(self,x):
+        return (1/4)*self.sum_over_dWdxa_ddWdxbdxa_conj_on_grid(x)
     
     def _potential_term_on_grid_slow(self,x):
         layers,row_num,col_num = x.shape
@@ -389,6 +389,7 @@ class Superpotential():
                    dot_prod_2 = np.dot(self.s.alpha[l],x_vec)
                    summation += coeff*np.exp(dot_prod_1 + dot_prod_2)
         return summation/4
+<<<<<<< HEAD
 
     def potential_term_on_grid_fast(self,x):
         layers,row_num,col_num = x.shape
@@ -449,3 +450,7 @@ class Superpotential():
                 vec_a[b,:,:] += A*(2*B-C-D)
             summation += vec_a
         return summation/4
+=======
+                            
+    
+>>>>>>> master
