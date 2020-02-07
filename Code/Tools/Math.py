@@ -72,6 +72,14 @@ def derivative_sample(x,h):
     dxdz[-1] = last
     return dxdz
 
+def dot_vec_with_vec_field(vec,vec_field):
+    #assume vec is an array of shape (n,)
+    #vector field is an array of shape (n,x,y), where the field has 
+    #n components, and lives on a x-y grid.
+    #return the dot product the the vector and the field at every point
+    #on the grid. The return is a (x,y) grid object
+    return np.sum((vec*(vec_field.T)).T,axis=0)
+
 """
 ================================  Classes   ===================================
 """
@@ -381,5 +389,68 @@ class Superpotential():
                    dot_prod_2 = np.dot(self.s.alpha[l],x_vec)
                    summation += coeff*np.exp(dot_prod_1 + dot_prod_2)
         return summation/4
+<<<<<<< HEAD
+
+    def potential_term_on_grid_fast(self,x):
+        layers,row_num,col_num = x.shape
+        result = np.ones(shape=x.shape,dtype=complex)
+        for r in range(row_num):
+            for c in range(col_num):
+                x_vec= x[:,r,c]
+                result[:,r,c] = self._sum_fast(x_vec)
+        return result
+
+    def _sum_fast(self,x_vec):
+        vec = np.zeros(self.N-1,dtype=complex)
+        for b in range(self.N-1):
+            #the b-th component of the resulting vector
+            vec[b] = self._term_b_fast(x_vec,b)
+        return vec
+    
+    def _term_b_fast(self,x_vec,b):
+        summation = 0j
+        x_vec_conj = np.conjugate(x_vec)
+        for a in range(self.N):
+            #this is the equation we get from applying the idenity of
+            #alpha_a dot alpha_b in terms of 3 delta function
+            A = np.exp(np.dot(self.s.alpha[a],x_vec))
+            B = np.exp(np.dot(self.s.alpha[a],x_vec_conj))*self.s.alpha[a][b]
+            C = np.exp(np.dot(self.s.alpha[(a-1)%self.N],x_vec_conj)) \
+            *self.s.alpha[(a-1)%self.N][b]
+            D = np.exp(np.dot(self.s.alpha[(a+1)%self.N],x_vec_conj)) \
+            *self.s.alpha[(a+1)%self.N][b]
+            summation += A*(2*B-C-D)
+        return summation/4
+    
+    def potential_term_on_grid_fast_optimized(self,x):
+        #to optimize, absorb all for loop over grid into numpy vectorization
+        #ok to loop over N, since they are small
+        x_conj = np.conjugate(x)
+        summation = np.zeros(shape=x.shape,dtype=complex)
+        #loop over a first instead of b, so that terms like exp_B only
+        #computes once
+        #the following is the equation we get from applying the idenity of
+        #alpha_a dot alpha_b in terms of 3 delta function
+        for a in range(self.N):
+            dot_A=dot_vec_with_vec_field(self.s.alpha[a],x)
+            dot_B=dot_vec_with_vec_field(self.s.alpha[a],x_conj)
+            dot_C=dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj)
+            dot_D=dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj)
+            A = np.exp(dot_A)
+            exp_B = np.exp(dot_B)
+            exp_C = np.exp(dot_C)
+            exp_D = np.exp(dot_D)
+            #the a-th term in the vector field summation
+            vec_a = np.zeros(shape=x.shape,dtype=complex)
+            for b in range(self.N-1):
+                #the b-th component of the resulting vector field
+                B = exp_B*self.s.alpha[a][b]
+                C = exp_C*self.s.alpha[(a-1)%self.N][b]
+                D = exp_D*self.s.alpha[(a+1)%self.N][b]
+                vec_a[b,:,:] += A*(2*B-C-D)
+            summation += vec_a
+        return summation/4
+=======
                             
     
+>>>>>>> master

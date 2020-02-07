@@ -60,6 +60,7 @@ class Relaxation():
     """
     def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
         self.grid = grid
+        self.inf = 1/(self.grid.h**2)
         self.N = N
         self.m = N-1
         self.bound = bound
@@ -269,7 +270,11 @@ class Relaxation():
         return self._source_term(x) + self._potential_term(x)
     
     def _potential_term(self,x):
+<<<<<<< HEAD
+        return self.W.potential_term_on_grid_fast_optimized(x)
+=======
         return self.W.potential_term_on_grid(x)
+>>>>>>> master
     
     def _source_term(self,x):
         # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'
@@ -278,8 +283,8 @@ class Relaxation():
         #for y just below 0 and somthing close to -infinity for y just above 0
         #here, we have x(y = 0^{-}) = 1/h^2 and x(y=0^{+})= -1/h^2
         #note that the lower row correspond to higher y
-        result[:,self.grid.z_axis-1,:] = -1/(self.grid.h**2)
-        result[:,self.grid.z_axis,:] = 1/(self.grid.h**2)
+        result[:,self.grid.z_axis-1,:] = -self.inf
+        result[:,self.grid.z_axis,:] = self.inf
         #set grid to 0 unless it is on z_axis and between -R/2 and R/2
         result[:,:,0:self.grid.left_axis]=0 #left_axis included in source
         result[:,:,self.grid.right_axis+1:]=0 #right_axis included in source
