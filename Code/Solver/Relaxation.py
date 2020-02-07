@@ -268,7 +268,7 @@ class Relaxation():
                 plt.show()
 
     def _full_grid_EOM(self,x):
-        return self._source_term + self._potential_term(x)
+        return self.source_term + self._potential_term(x)
     
     def _potential_term(self,x):
         return self.W.potential_term_on_grid_fast_optimized(x)
