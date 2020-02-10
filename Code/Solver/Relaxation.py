@@ -295,9 +295,10 @@ class Continue_Relaxation(Relaxation):
     
 class Relaxation_half_grid(Relaxation):
     def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
-        super().__init__(grid,N,bound,charge,tol,max_loop,x0,diagnose)
         self.full_grid = grid
         self.grid = Half_Grid(grid)
+        #need to explicitly use the half grid in superclass construction
+        super().__init__(self.grid,N,bound,charge,tol,max_loop,x0,diagnose)
 
     def _BPS_x0(self,x0):
         if str(self.bound) == "x1":
