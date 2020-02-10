@@ -18,7 +18,7 @@ def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0):
     #store the core result in a dictionary
     core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
                   "w":w,"h":h,"R":R,"tol":tol,"max_loop":max_loop,"x0":x0,
-                  "loop":relax.loop,"field":relax.x, "grid":relax.grid,
+                  "loop":relax.loop,"field":relax.x,
                   "error":relax.error}
     if x0 == "BPS":
         core_dict["BPS_top"] = relax.top_BPS
