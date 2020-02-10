@@ -294,9 +294,8 @@ class Continue_Relaxation(Relaxation):
         return self.x
     
 class Relaxation_half_grid(Relaxation):
-    def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
-        self.full_grid = grid
-        self.grid = Half_Grid(grid)
+    def __init__(self,full_grid,N,bound,charge,tol,max_loop,x0,diagnose):
+        self.grid = Half_Grid(full_grid)
         #need to explicitly use the half grid in superclass construction
         super().__init__(self.grid,N,bound,charge,tol,max_loop,x0,diagnose)
 
