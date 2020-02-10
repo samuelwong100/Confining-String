@@ -13,6 +13,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from Math import Superpotential
 from solve_BPS import solve_BPS
+from Grid import Half_Grid
 
 class Relaxation():
     """
@@ -294,9 +295,9 @@ class Continue_Relaxation(Relaxation):
     
 class Relaxation_half_grid(Relaxation):
     def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
-        super.__init__(grid,N,bound,charge,tol,max_loop,x0,diagnose)
+        super().__init__(grid,N,bound,charge,tol,max_loop,x0,diagnose)
         self.full_grid = grid
-        self.grid = half_grid
+        self.grid = Half_Grid(grid)
 
     def _BPS_x0(self,x0):
         if str(self.bound) == "x1":
@@ -382,3 +383,19 @@ class Relaxation_half_grid(Relaxation):
         #to maintain a Neumann boundary condition
         x[:,:,0] = x[:,:,1]
         return x
+    
+    def solve(self):
+        x = self._set_x0() #initialize the vector grid
+        x = self._relaxation(x) #solve using relaxation method
+        #convert the half grid result back to full grid
+        self.x = self._half_to_full_grid(x)
+        
+    def _half_to_full_grid(self,x):
+        #currently, x contains the central column plus everthing to the right
+        #slice out everything to the right of central
+        x_right = x[:,:,1:]
+        #flip horionztally
+        x_left = np.flip(x_right,axis=2)
+        #join left with the original (including center column)
+        return np.concatenate((x_left,x),axis=2)
+        
