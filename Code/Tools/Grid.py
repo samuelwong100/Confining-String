@@ -196,6 +196,9 @@ class Half_Grid(Grid):
         #axis number of right charge
         self.right_axis = int(self.R_fraction*self.num_z)
         
+    def generate_full_grid(self):
+        return Modified_Dipole_Grid(self)
+        
     def plot_empty_grid(self):
         """
         Plot an empty grid to show what the grid looks like.
@@ -223,4 +226,37 @@ class Half_Grid(Grid):
                   extent=[self.z0, self.zf,self.y0, self.yf],
                   zorder=0)
         fig.suptitle("Empty Grid",fontsize=20)
+        
+class Modified_Dipole_Grid(Grid_Dipole):
+    def __init__(self,hg):
+        #hg is the original half grid
+        #all major parameters are the same except for z0
+        self.L = hg.L
+        self.w = hg.w
+        self.R = hg.R
+        self.h = hg.h
+        self.z0 = -self.L/2
+        self.zf = self.L/2
+        self.y0 = -self.w/2
+        self.yf = self.w/2
+        #the vertical y list doesn't change
+        self.y = hg.y
+        #multiply z by -1, exclude the first element, which is 0, flip
+        z_left = np.flip((-1*hg.z)[1:])
+        self.z = np.concatenate((z_left,hg.z))
+        #To find the left and right axis, we use the fact that 
+        #hg.num_z-1 is the last index of the half grid, and by a reflection
+        #symmetry, it is also the z-index of the origin in the new grid
+        self.middle_z = hg.num_z-1
+        #the new left and right axis are equidistance to the new middle z 
+        #with a distance equal to the half grid right axis distance
+        self.left_axis = self.middle_z - hg.right_axis
+        self.right_axis = self.middle_z + hg.right_axis
+        #for a visual description proof of the above calculation, see image
+        #in Feb 23 diary entry
+        self.num_y = hg.num_y
+        self.num_z = self.z.size
+        self.zv, self.yv = np.meshgrid(self.z, self.y)
+        self.y_axis = self.middle_z
+        self.z_axis = hg.z_axis
         
