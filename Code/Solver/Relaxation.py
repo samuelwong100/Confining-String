@@ -111,19 +111,19 @@ class Relaxation():
                 x0 = self._BPS_x0(x0)
             #enforce the boundary condition
             x0 = self._apply_bound(x0)
-            print("Plot initial grid")
-            for i in range(self.m):
-                plt.figure()
-                plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x0[i,:,:]))
-                plt.colorbar()
-                plt.title("$\phi$"+str(i+1))
-                plt.show()
-
-                plt.figure()
-                plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x0[i,:,:]))
-                plt.colorbar()
-                plt.title("$\sigma$"+str(i+1))
-                plt.show()
+#            print("Plot initial grid")
+#            for i in range(self.m):
+#                plt.figure()
+#                plt.pcolormesh(self.grid.zv,self.grid.yv,np.real(x0[i,:,:]))
+#                plt.colorbar()
+#                plt.title("$\phi$"+str(i+1))
+#                plt.show()
+#
+#                plt.figure()
+#                plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x0[i,:,:]))
+#                plt.colorbar()
+#                plt.title("$\sigma$"+str(i+1))
+#                plt.show()
         return x0
 
     def _BPS_x0(self,x0):
@@ -179,7 +179,7 @@ class Relaxation():
             self.error.append(self._get_error(x_new,x)) # get new error
             x = x_new #set x to the new grid
             self.loop += 1
-            self._diagnostic_plot(x)
+            #self._diagnostic_plot(x)
         self.error = np.array(self.error) #change error into an array
         return x
     
