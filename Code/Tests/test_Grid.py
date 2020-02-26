@@ -6,7 +6,7 @@ Author: Samuel Wong
 """
 import sys
 sys.path.append("../Tools")
-from Grid import Grid, Grid_Dipole, Standard_Dipole_Grid
+from Grid import Grid, Grid_Dipole, Standard_Dipole_Grid, Half_Grid
 
 def test_Grid():
     #should see red lines on axis
@@ -30,6 +30,13 @@ def test_Standard_Dipole_Grid_charge_location():
     G = Standard_Dipole_Grid(10,10,0.1,2)
     print("right = ", G.right_charge) #should be 1
     print("left = ", G.left_charge) #should be -1
+    
+def test_Half_Grid():
+    sdg = Standard_Dipole_Grid(L=30,w=30,h=0.5,R=10)
+    sdg.plot_empty_grid()
+    half = Half_Grid(sdg)
+    half.plot_empty_grid()
 
 #test_Standard_Dipole_Grid() #pass
 #test_Standard_Dipole_Grid_charge_location() #pass
+#test_Half_Grid() #pass

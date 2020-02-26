@@ -178,3 +178,85 @@ class Standard_Dipole_Grid(Grid_Dipole):
         self.R = R
         Grid_Dipole.__init__(self,-L/2,L/2,-w/2,w/2,h,R/L)
         
+class Half_Grid(Grid):
+    def __init__(self,sdg):
+        #sdg is a Standard Dipole Grid
+        self.L = sdg.L
+        self.w = sdg.w
+        self.R = sdg.R
+        self.R_fraction = sdg.R_fraction
+        #call the parent class, which is a general grid, with y-width unchanged
+        #but the z-length reduced to half, starting at zero
+        super().__init__(z0=0, zf=self.L/2, y0=-self.w/2, yf=self.w/2,
+                      h=sdg.h)
+        #Note: for the following 2 lines, no longer need to divide by 2
+        #since the half grid is already reflected in the zf and num_z values
+        #being half of original
+        self.right_charge = self.R_fraction*self.zf
+        #axis number of right charge
+        self.right_axis = int(self.R_fraction*self.num_z)
+        
+    def generate_full_grid(self):
+        return Modified_Dipole_Grid(self)
+        
+    def plot_empty_grid(self):
+        """
+        Plot an empty grid to show what the grid looks like.
+        """
+        #plot an empty grid
+        f = np.ones(shape=(self.num_y,self.num_z))*np.nan
+        # make a figure + axes
+        fig, ax = plt.subplots(1, 1,figsize = (10,10))
+        # make color map
+        cmap = matplotlib.colors.ListedColormap(['r', 'g', 'b'])
+        # set the 'bad' values (nan) to be white and transparent
+        cmap.set_bad(color='w', alpha=0)
+        # draw the grid
+        for z in self.z:
+            ax.axvline(z, lw=2, color='grey', zorder=5)
+        for y in self.y:
+            ax.axhline(y, lw=2, color='grey', zorder=5)
+        if self.y_axis is not None:
+            ax.axvline(self.z[self.y_axis],color='r',lw=2,zorder=5)
+        if self.z_axis is not None:
+            ax.axhline(self.y[self.z_axis],color='r',lw=2,zorder=5)
+        ax.axvline(self.z[self.right_axis],color='r',lw=2,zorder=5)
+        # draw the boxes
+        ax.imshow(f, interpolation='none', cmap=cmap, 
+                  extent=[self.z0, self.zf,self.y0, self.yf],
+                  zorder=0)
+        fig.suptitle("Empty Grid",fontsize=20)
+        
+class Modified_Dipole_Grid(Grid_Dipole):
+    def __init__(self,hg):
+        #hg is the original half grid
+        #all major parameters are the same except for z0
+        self.L = hg.L
+        self.w = hg.w
+        self.R = hg.R
+        self.h = hg.h
+        self.z0 = -self.L/2
+        self.zf = self.L/2
+        self.y0 = -self.w/2
+        self.yf = self.w/2
+        #the vertical y list doesn't change
+        self.y = hg.y
+        #multiply z by -1, exclude the first element, which is 0, flip
+        z_left = np.flip((-1*hg.z)[1:])
+        self.z = np.concatenate((z_left,hg.z))
+        #To find the left and right axis, we use the fact that 
+        #hg.num_z-1 is the last index of the half grid, and by a reflection
+        #symmetry, it is also the z-index of the origin in the new grid
+        self.middle_z = hg.num_z-1
+        #the new left and right axis are equidistance to the new middle z 
+        #with a distance equal to the half grid right axis distance
+        self.left_axis = self.middle_z - hg.right_axis
+        self.right_axis = self.middle_z + hg.right_axis
+        #for a visual description proof of the above calculation, see image
+        #in Feb 23 diary entry
+        self.num_y = hg.num_y
+        self.num_z = self.z.size
+        self.zv, self.yv = np.meshgrid(self.z, self.y)
+        self.y_axis = self.middle_z
+        self.z_axis = hg.z_axis
+        
