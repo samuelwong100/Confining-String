@@ -59,7 +59,7 @@ class Relaxation():
     loop (int) = number of loops actually ran;
                  if equation has not been solved yet, loop = 0
     """
-    def __init__(self,grid,N,bound,charge,tol,max_loop,x0,diagnose):
+    def __init__(self,grid,N,bound,charge,max_loop,x0,diagnose):
         self.grid = grid
         self.N = N
         self.m = N-1
@@ -67,7 +67,6 @@ class Relaxation():
         self.charge = charge
         self.bound_vec = bound.imaginary_vector
         self.charge_vec = charge.real_vector
-        self.tol = tol
         self.max_loop = max_loop
         self.x0 = x0
         self.diagnose = diagnose
@@ -175,7 +174,7 @@ class Relaxation():
         return x
     
     def _relaxation(self,x):
-        while self._continue_loop():
+        while self.loop < self.max_loop:
             x_new = self._update(x) # update a new grid for x
             self.error.append(self._get_error(x_new,x)) # get new error
             x = x_new #set x to the new grid
@@ -183,20 +182,6 @@ class Relaxation():
             self._diagnostic_plot(x)
         self.error = np.array(self.error) #change error into an array
         return x
-    
-    def _continue_loop(self):
-        #return whether to continue the relaxation loop
-        contin = True
-        if self.error == []:
-            #continue if no trials had occured yet
-            contin = True
-        elif self.error[-1] < self.tol:
-            #discontinue if the latest error is already less than tolerance
-            contin = False
-        elif self.loop > self.max_loop:
-            #discontinue if maximum loop is reached
-            contin = False
-        return contin
     
     def _update(self,x_old):
         # replace each element of x_old with average of 4 neighboring points,
@@ -294,11 +279,11 @@ class Continue_Relaxation(Relaxation):
         return self.x
     
 class Relaxation_half_grid(Relaxation):
-    def __init__(self,full_grid,N,bound,charge,tol,max_loop,x0,diagnose):
+    def __init__(self,full_grid,N,bound,charge,max_loop,x0,diagnose):
         self.full_grid = full_grid
         self.grid = Half_Grid(full_grid)
         #need to explicitly use the half grid in superclass construction
-        super().__init__(self.grid,N,bound,charge,tol,max_loop,x0,diagnose)
+        super().__init__(self.grid,N,bound,charge,max_loop,x0,diagnose)
 
     def _BPS_x0(self,x0):
         if str(self.bound) == "x1":
