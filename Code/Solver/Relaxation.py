@@ -390,6 +390,8 @@ class Relaxation_half_grid(Relaxation):
         x = self._relaxation(x) #solve using relaxation method
         #convert the half grid result back to full grid
         self.x = self._half_to_full_grid(x)
+        #update the final grid to the modified full grid to save
+        self.grid = self.grid.generate_full_grid()
         
     def _half_to_full_grid(self,x):
         #currently, x contains the central column plus everthing to the right

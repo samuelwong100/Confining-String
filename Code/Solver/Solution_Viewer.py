@@ -49,7 +49,7 @@ class Solution_Viewer():
             self.w = core_dict["w"]
             self.h = core_dict["h"]
             self.R = core_dict["R"]
-            self.grid = Standard_Dipole_Grid(self.L,self.w,self.h,self.R)
+            self.grid = core_dict["grid"]
             self.bound_arg = core_dict["bound_arg"]
             self.charge_arg = core_dict["charge_arg"]
             self.folder_title = title

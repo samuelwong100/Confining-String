@@ -19,7 +19,7 @@ def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0):
     core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
                   "w":w,"h":h,"R":R,"tol":tol,"max_loop":max_loop,"x0":x0,
                   "loop":relax.loop,"field":relax.x,
-                  "error":relax.error}
+                  "error":relax.error,"grid":relax.grid}
     if x0 == "BPS":
         core_dict["BPS_top"] = relax.top_BPS
         core_dict["BPS_bottom"] = relax.bottom_BPS
