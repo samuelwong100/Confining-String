@@ -331,7 +331,9 @@ class Relaxation_half_grid(Relaxation):
         self.bottom_BPS = x_bottom_half
         self.y_half = y_half
         self.BPS_slice = x_slice
-        self.initial_grid = x0
+        #save the full grid version of x0 into initial grid for solution
+        #viewer, but continue to use the half x0
+        self.initial_grid = self._half_to_full_grid(x0)
         return x0
 
     def _apply_bound(self,x_old):
