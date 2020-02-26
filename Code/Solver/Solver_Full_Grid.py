@@ -13,10 +13,10 @@ from Relaxation import Relaxation, Continue_Relaxation, Relaxation_half_grid
 from Solver_Helpers import get_title, store_solution
 from Solution_Viewer import Solution_Viewer
 
-def Solver(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
+def Solver(N,charge_arg,bound_arg,L,w,h,R,max_loop,x0="BPS",
            half_grid=True,diagnose=False):
     prefix = "../Results/Solutions/"
-    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0)
+    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0)
     if os.path.exists(title):
         sol = Solution_Viewer(title)
     else:
@@ -24,12 +24,12 @@ def Solver(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
         bound = Sigma_Critical(N,bound_arg)
         grid = Standard_Dipole_Grid(L,w,h,R)
         if half_grid:
-            relax = Relaxation_half_grid(grid,N,bound,charge,tol,max_loop,x0,
+            relax = Relaxation_half_grid(grid,N,bound,charge,max_loop,x0,
                                          diagnose)
         else:
-            relax = Relaxation(grid,N,bound,charge,tol,max_loop,x0,diagnose)
+            relax = Relaxation(grid,N,bound,charge,max_loop,x0,diagnose)
         relax.solve()
-        store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
+        store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,
                        x0)
         sol = Solution_Viewer(title)
     #sol.display_all()

@@ -43,7 +43,6 @@ class Solution_Viewer():
             self.m = self.x.shape[0]
             self.error = core_dict["error"]
             self.loop = core_dict["loop"]
-            self.tol = core_dict["tol"]
             self.max_loop = core_dict["max_loop"]
             self.L = core_dict["L"]    
             self.w = core_dict["w"]
@@ -86,7 +85,6 @@ class Solution_Viewer():
         print("charge_arg = " + self.charge_arg)
         print("bound_arg = " + self.bound_arg)
         print("max loop = " + str(self.max_loop))
-        print("tolerance = "+str(self.tol))
         print("L = " + str(self.grid.L))
         print("w = " + str(self.grid.w))
         print("h = " + str(self.grid.h))
@@ -344,7 +342,7 @@ class Solution_Viewer():
         #return theoretical laplacian
         charge = Sigma_Critical(self.N,self.charge_arg)
         bound = Sigma_Critical(self.N,self.bound_arg)
-        relax = Relaxation(self.grid,self.N,bound,charge,self.tol,
+        relax = Relaxation(self.grid,self.N,bound,charge,
                            self.max_loop,x0=None,diagnose=False)
         return relax._full_grid_EOM(self.x)
     

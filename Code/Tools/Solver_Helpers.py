@@ -7,17 +7,17 @@ Author: Samuel Wong
 import os
 import pickle
 
-def get_title(prefix,N,charge,bound,L,w,h,R,tol,max_loop,x0):
+def get_title(prefix,N,charge,bound,L,w,h,R,max_loop,x0):
     title =\
-    ('{}CS(N={},charge={},bound={},L={},w={},h={},R={},tol={},'+ \
+    ('{}CS(N={},charge={},bound={},L={},w={},h={},R={},'+ \
     'max_loop={},x0={})/').format(prefix,str(N),charge,
-    bound,str(L),str(w),str(h),str(R),str(tol),str(max_loop),str(x0))
+    bound,str(L),str(w),str(h),str(R),str(max_loop),str(x0))
     return title
 
-def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0):
+def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0):
     #store the core result in a dictionary
     core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
-                  "w":w,"h":h,"R":R,"tol":tol,"max_loop":max_loop,"x0":x0,
+                  "w":w,"h":h,"R":R,"max_loop":max_loop,"x0":x0,
                   "loop":relax.loop,"field":relax.x,
                   "error":relax.error,"grid":relax.grid}
     if x0 == "BPS":
