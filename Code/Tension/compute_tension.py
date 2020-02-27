@@ -68,36 +68,7 @@ def compute_tension(N,p):
 if __name__ == "__main__":
     import time    
     start = time.time()
-    compute_tension(N=4,p=1)
+    compute_tension(N=7,p=1)
     end = time.time()
     print(end - start)
-    
-    start = time.time()
-    compute_tension(N=4,p=2)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=5,p=1)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=5,p=2)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=6,p=1)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=6,p=2)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=6,p=3)
-    end = time.time()
-    print(end - start)
+
