@@ -12,15 +12,16 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 #a dictionary that given N, gives the optimal L,w,h,max_loop
-N_Lwhm_dict = {2:[10,10,0.1,400],
-               3:[10,10,0.1,400],
-               4:[10,10,0.1,400]}
+N_Lwhm_dict = {2:[30,30,0.1,400],
+               3:[30,30,0.1,400],
+               4:[30,30,0.1,400],
+               5:[30,30,0.1,400],}
 
 def compute_energy(N,charge_arg,L,w,h,max_loop):
     #initialze lists
     R_list = []
     energy_list = []
-    for R in range(1,L):
+    for R in range(5,L,5):
         sol = Solver(N=N,charge_arg=charge_arg,bound_arg="x1",
                      L=L,w=w,h=h,R=R,max_loop=max_loop,
                      x0="BPS",half_grid=True)
@@ -65,6 +66,6 @@ def compute_tension(N,p):
 if __name__ == "__main__":
     import time
     start = time.time()
-    compute_tension(N=4,p=3)
+    compute_tension(N=2,p=1)
     end = time.time()
     print(end - start)
