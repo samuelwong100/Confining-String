@@ -13,7 +13,8 @@ from scipy.optimize import curve_fit
 
 #a dictionary that given N, gives the optimal L,w,h,max_loop
 N_Lwhm_dict = {2:[10,10,0.1,400],
-               3:[10,10,0.1,400]}
+               3:[10,10,0.1,400],
+               4:[10,10,0.1,400]}
 
 def compute_energy(N,charge_arg,L,w,h,max_loop):
     #initialze lists
