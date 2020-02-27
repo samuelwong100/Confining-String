@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-
 import sys
-sys.path.append("../Tensions")
-from Tensions import compute_tension
+sys.path.append("../Tension")
+from compute_tension import compute_tension
 import time
 
 start = time.time()
