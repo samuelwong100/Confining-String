@@ -4,8 +4,8 @@ sys.path.append("../Tension")
 from compute_tension import compute_tension
 import time
 
-print('hi this is N7p2')
+print('hi this is N3p2')
 start = time.time()
-compute_tension(N=7,p=2)
+compute_tension(N=3,p=2)
 end = time.time()
 print(end - start)
