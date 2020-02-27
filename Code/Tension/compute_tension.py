@@ -70,23 +70,3 @@ if __name__ == "__main__":
     compute_tension(N=3,p=1)
     end = time.time()
     print(end - start)
-    
-    start = time.time()
-    compute_tension(N=4,p=1)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=4,p=2)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=5,p=1)
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    compute_tension(N=5,p=2)
-    end = time.time()
-    print(end - start)
