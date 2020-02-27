@@ -62,5 +62,9 @@ def compute_tension(N,p):
         text_file.write("{} {} {} {}\n".format(str(N),str(p),str(m),str(dm)))
     return m, dm
     
-    
-
+if __name__ == "__main__":
+    import time
+    start = time.time()
+    compute_tension(N=4,p=3)
+    end = time.time()
+    print(end - start)
