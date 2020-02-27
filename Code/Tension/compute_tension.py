@@ -15,7 +15,8 @@ from scipy.optimize import curve_fit
 N_Lwhm_dict = {2:[30,30,0.1,400],
                3:[30,30,0.1,400],
                4:[30,30,0.1,400],
-               5:[30,30,0.1,400],}
+               5:[30,30,0.1,400],
+               6:[30,30,0.1,400],}
 
 def compute_energy(N,charge_arg,L,w,h,max_loop):
     #initialze lists
@@ -66,6 +67,26 @@ def compute_tension(N,p):
 if __name__ == "__main__":
     import time
     start = time.time()
-    compute_tension(N=2,p=1)
+    compute_tension(N=3,p=1)
+    end = time.time()
+    print(end - start)
+    
+    start = time.time()
+    compute_tension(N=4,p=1)
+    end = time.time()
+    print(end - start)
+    
+    start = time.time()
+    compute_tension(N=4,p=2)
+    end = time.time()
+    print(end - start)
+    
+    start = time.time()
+    compute_tension(N=5,p=1)
+    end = time.time()
+    print(end - start)
+    
+    start = time.time()
+    compute_tension(N=5,p=2)
     end = time.time()
     print(end - start)
