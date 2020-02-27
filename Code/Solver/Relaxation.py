@@ -128,13 +128,15 @@ class Relaxation():
 
     def _BPS_x0(self,x0):
         if str(self.bound) == "x1":
-            y_half,x_top_half,B_top = solve_BPS(N=self.N,vac0_arg=str(self.bound),
-                          vacf_arg="x0",z0=self.grid.y0,
-                          zf=0,h=self.grid.h,folder="",
+            y_half,x_top_half,B_top = solve_BPS(N=self.N,
+                          vac0_arg=str(self.bound),
+                          vacf_arg="x0",
+                          z0=self.grid.y0,zf=0,h=self.grid.h,folder="",
                           tol=1e-5,save_plot=False)
-            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,vac0_arg=str(self.charge),
-                          vacf_arg=str(self.bound),z0=self.grid.y0,
-                          zf=0,h=self.grid.h,folder="",
+            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,
+                          vac0_arg=str(self.charge),
+                          vacf_arg=str(self.bound),
+                          z0=self.grid.y0,zf=0,h=self.grid.h,folder="",
                           tol=1e-5,save_plot=False)
             x_top_half_trans = x_top_half.T
             x_bottom_half_trans = x_bottom_half.T
