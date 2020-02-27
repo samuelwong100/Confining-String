@@ -80,6 +80,7 @@ class Relaxation():
         self.loop = 0
         #create a constant source term, which is independent of field
         self.source_term = self._define_source_term()
+        self.h_squared = self.grid.h**2 #for speedup of relaxation
     
     def solve(self):
         """
@@ -196,7 +197,7 @@ class Relaxation():
             for col in range(1,self.grid.num_z-1):
                 x[:,row,col] = (x[:,row-1,col] + x[:,row+1,col] +
                               x[:,row,col-1] + x[:,row,col+1]
-                              - source_term[:,row,col]*(self.grid.h)**2)/4
+                              - source_term[:,row,col]*self.h_squared)/4
         # since we skipped over the edge, the Dirichlet boundary is automatically
         #enforced.
         return x
@@ -368,7 +369,7 @@ class Relaxation_half_grid(Relaxation):
             for col in range(1,self.grid.num_z-1):
                 x[:,row,col] = (x[:,row-1,col] + x[:,row+1,col] +
                               x[:,row,col-1] + x[:,row,col+1]
-                              - source_term[:,row,col]*(self.grid.h)**2)/4
+                              - source_term[:,row,col]*self.h_squared)/4
         #for half grid, set the first column equal to its neighboring column
         #to maintain a Neumann boundary condition
         x[:,:,0] = x[:,:,1]
