@@ -17,7 +17,7 @@ N_Lwhm_dict = {2:[30,30,0.1,400],
                4:[30,30,0.1,400],
                5:[30,30,0.1,400],
                6:[30,30,0.1,400],
-               7:[30,30,0.1,400],}
+               7:[30,30,0.1,400]}
 
 def compute_energy(N,charge_arg,L,w,h,max_loop):
     #initialze lists
@@ -65,10 +65,10 @@ def compute_tension(N,p):
         text_file.write("{} {} {} {}\n".format(str(N),str(p),str(m),str(dm)))
     return m, dm
     
-if __name__ == "__main__":
-    import time    
-    start = time.time()
-    compute_tension(N=7,p=1)
-    end = time.time()
-    print(end - start)
+#if __name__ == "__main__":
+#    import time    
+#    start = time.time()
+#    compute_tension(N=7,p=1)
+#    end = time.time()
+#    print(end - start)
 
