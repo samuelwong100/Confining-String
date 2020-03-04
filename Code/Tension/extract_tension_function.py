@@ -63,17 +63,17 @@ def f(N,p):
 def df(N,p):
     return df_dict[(N,p)]
 
-N1_list = np.array([2,3,4,5,6])
-T1_list = np.array([T(2,1),T(3,1),T(4,1),T(5,1),T(6,1)])
-dT1_list = np.array([dT(2,1),dT(3,1),dT(4,1),dT(5,1),dT(6,1)])
+N1_list = np.array([2,3,4,5,6,7])
+T1_list = np.array([T(2,1),T(3,1),T(4,1),T(5,1),T(6,1),T(7,1)])
+dT1_list = np.array([dT(2,1),dT(3,1),dT(4,1),dT(5,1),dT(6,1),dT(7,1)])
 
-N2_list = np.array([4,5,6])
-T2_list = np.array([T(4,2),T(5,2),T(6,2)])
-dT2_list = np.array([dT(4,2),dT(5,2),dT(6,2)])
+N2_list = np.array([4,5,6,7])
+T2_list = np.array([T(4,2),T(5,2),T(6,2),T(7,2)])
+dT2_list = np.array([dT(4,2),dT(5,2),dT(6,2),dT(7,2)])
 
-N3_list = np.array([6])
-T3_list = np.array([T(6,3)])
-dT3_list = np.array([dT(6,3)])
+N3_list = np.array([6,7])
+T3_list = np.array([T(6,3),T(7,3)])
+dT3_list = np.array([dT(6,3),dT(7,3)])
 
 plt.figure()
 plt.errorbar(x=N1_list,y=T1_list,yerr=dT1_list,fmt='o',ls='-',label='p=1')
@@ -83,16 +83,16 @@ plt.xlabel('N')
 plt.ylabel('Tension')
 plt.title('Tension vs N')
 plt.legend()
-plt.savefig('Tension vs N.png')
+plt.savefig('../Results/Tensions/Tension vs N.png')
 plt.show()
 
-N2_list = np.array([4,5,6])
-f2_list = np.array([f(4,2),f(5,2),f(6,2)])
-df2_list = np.array([df(4,2),df(5,2),df(6,2)])
+N2_list = np.array([4,5,6,7])
+f2_list = np.array([f(4,2),f(5,2),f(6,2),f(7,2)])
+df2_list = np.array([df(4,2),df(5,2),df(6,2),df(7,2)])
 
-N3_list = np.array([6])
-f3_list = np.array([f(6,3)])
-df3_list = np.array([df(6,3)])
+N3_list = np.array([6,7])
+f3_list = np.array([f(6,3),f(7,3)])
+df3_list = np.array([df(6,3),df(7,3)])
 
 plt.figure()
 plt.errorbar(x=N2_list,y=f2_list,yerr=df2_list,fmt='o',ls='-',label='p=2')
@@ -101,7 +101,7 @@ plt.xlabel('N')
 plt.ylabel('f')
 plt.title('f(N,p)')
 plt.legend()
-plt.savefig('f(N,p).png')
+plt.savefig('../Results/Tensions/f(N,p).png')
 plt.show()
 
 #
