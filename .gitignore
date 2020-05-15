@@ -5,3 +5,7 @@ Code/Solver/Solver_Full_Grid.ipynb
 Diary/
 Diary/Diary.pdf
 Reference Papers/
+Code/Results/Solutions/CS(N=2,charge=w1,bound=x1,L=300,w=50,h=0.1,R=290,max_loop=400,x0=BPS)/core_dict
+Code/Results/Solutions/CS(N=2,charge=w1,bound=x1,L=1000,w=30,h=0.1,R=980,max_loop=400,x0=BPS)/core_dict
+Code/Results/Solutions/CS(N=2,charge=w1,bound=x1,L=1500,w=30,h=0.1,R=1450,max_loop=400,x0=BPS)/core_dict
+Code/Results/Solutions/CS(N=2,charge=w1,bound=x1,L=600,w=40,h=0.1,R=590,max_loop=400,x0=BPS)/core_dict
