@@ -9,8 +9,8 @@ sys.path.append("../Tools")
 import os
 from Grid import Standard_Dipole_Grid
 from Sigma_Critical import Sigma_Critical
-from Relaxation import Relaxation, Continue_Relaxation, Relaxation_half_grid,
-                       Continue_Relaxation_Half_Grid
+from Relaxation import Relaxation, Continue_Relaxation, Relaxation_half_grid,\
+Continue_Relaxation_Half_Grid
 from Solver_Helpers import get_title, store_solution
 from Solution_Viewer import Solution_Viewer
 
