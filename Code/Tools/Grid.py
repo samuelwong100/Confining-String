@@ -234,7 +234,9 @@ class Modified_Dipole_Grid(Grid_Dipole):
         self.L = hg.L
         self.w = hg.w
         self.R = hg.R
-        self.R_fraction = self.R/self.L
+        self.R_fraction = hg.R_fraction
+        print(self.R_fraction)
+        print(hg.R_fraction)
         self.h = hg.h
         self.z0 = -self.L/2
         self.zf = self.L/2

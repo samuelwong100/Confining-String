@@ -401,7 +401,7 @@ class Continue_Relaxation_Half_Grid(Relaxation_half_grid):
         self.loop = old_sol.loop
         self.error = list(old_sol.error) #change error from array back to list
         #initialize solution to old field
-        self.x = old_sol.x_half_grid
+        self.x = old_sol.relax.x_half_grid
         #store BPS related object if original field solution started with BPS
         if self.x0 == 'BPS':
             self.B_top = old_sol.B_top
