@@ -182,7 +182,7 @@ class Relaxation():
             self.error.append(self._get_error(x_new,x)) # get new error
             x = x_new #set x to the new grid
             self.loop += 1
-            #self._diagnostic_plot(x)
+            self._diagnostic_plot(x)
         self.error = np.array(self.error) #change error into an array
         return x
     
@@ -209,7 +209,7 @@ class Relaxation():
         return np.sum(np.abs(x_new - x))/normalization
 
     def _diagnostic_plot(self,x):
-        if self.diagnose and self.loop % 50 == 0:
+        if self.diagnose and self.loop % 100 == 0:
             print("loop =",self.loop,"error =",self.error[-1])
             for i in range(self.m):
                 plt.figure()

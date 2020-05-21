@@ -32,7 +32,7 @@ def Solver(N,charge_arg,bound_arg,L,w,h,R,max_loop,x0="BPS",
         store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,
                        x0)
         sol = Solution_Viewer(title)
-    #sol.display_all()
+    sol.display_all()
     return sol
 
 def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
@@ -50,7 +50,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
         store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,
                        x0)
         sol = Solution_Viewer(title)
-    #sol.display_all()
+    sol.display_all()
     return sol
 
 def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
@@ -80,7 +80,7 @@ def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
         store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,
                        max_loop,x0)
         sol = Solution_Viewer(new_title)
-    #sol.display_all()
+    sol.display_all()
     return sol
 
 def _get_new_from_old_title(old_title,max_loop):
