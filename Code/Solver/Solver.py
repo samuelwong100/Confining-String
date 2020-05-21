@@ -64,7 +64,6 @@ def Continue_Solver(old_title,max_loop,half_grid=True,diagnose=True):
         old_sol = Solution_Viewer(old_title)
         #get the parameters from the old solution
         N = old_sol.N
-        tol = old_sol.tol
         x0 = old_sol.x0
         charge_arg = old_sol.charge_arg
         bound_arg = old_sol.bound_arg
@@ -81,7 +80,7 @@ def Continue_Solver(old_title,max_loop,half_grid=True,diagnose=True):
         else:
             relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
         relax.solve()
-        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,
+        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,
                        max_loop,x0)
         sol = Solution_Viewer(new_title)
     sol.display_all()
