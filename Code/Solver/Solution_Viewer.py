@@ -53,6 +53,7 @@ class Solution_Viewer():
             self.charge_arg = core_dict["charge_arg"]
             self.folder_title = title
             self.x0 = core_dict["x0"]
+            self.relax = core_dict["relax"]
             if self.x0 == "BPS":
                 self.top_BPS = core_dict["BPS_top"]
                 self.bottom_BPS = core_dict["BPS_bottom"]

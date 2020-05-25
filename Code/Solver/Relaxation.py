@@ -378,6 +378,7 @@ class Relaxation_half_grid(Relaxation):
     def solve(self):
         x = self._set_x0() #initialize the vector grid
         x = self._relaxation(x) #solve using relaxation method
+        self.x_half_grid = x #save the final result in half grid form
         #convert the half grid result back to full grid
         self.x = self._half_to_full_grid(x)
         #update the final grid to the modified full grid to save
@@ -392,3 +393,30 @@ class Relaxation_half_grid(Relaxation):
         #join left with the original (including center column)
         return np.concatenate((x_left,x),axis=2)
         
+class Continue_Relaxation_Half_Grid(Relaxation_half_grid):
+    def __init__(self,old_sol,new_max_loop,charge,bound,diagnose):
+        super().__init__(old_sol.grid, old_sol.N, bound,charge,new_max_loop,
+             old_sol.x0, diagnose)
+        #the loop and error do not start at 0 and empty list!
+        self.loop = old_sol.loop
+        self.error = list(old_sol.error) #change error from array back to list
+        #initialize solution to old field
+        self.x = old_sol.relax.x_half_grid
+        #store BPS related object if original field solution started with BPS
+        if self.x0 == 'BPS':
+            self.B_top = old_sol.B_top
+            self.B_bottom = old_sol.B_bottom
+            self.top_BPS = old_sol.top_BPS
+            self.bottom_BPS = old_sol.bottom_BPS
+            self.y_half = old_sol.y_half
+            self.BPS_slice = old_sol.BPS_slice
+            #the initial grid here denotes the initial grid of the old soluiton
+            #of course, the continue relaxation initial grid is the final 
+            #grid of the old solution, but that is store is self.x
+            #Here, it is as if we started with some BPS and just ran longer
+            self.initial_grid = old_sol.initial_grid
+        
+    def _set_x0(self):
+        #overide initial field function to be self.x, which was set to old
+        #field already in the init
+        return self.x

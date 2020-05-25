@@ -9,7 +9,8 @@ sys.path.append("../Tools")
 import os
 from Grid import Standard_Dipole_Grid
 from Sigma_Critical import Sigma_Critical
-from Relaxation import Relaxation, Continue_Relaxation, Relaxation_half_grid
+from Relaxation import Relaxation, Continue_Relaxation, Relaxation_half_grid,\
+Continue_Relaxation_Half_Grid
 from Solver_Helpers import get_title, store_solution
 from Solution_Viewer import Solution_Viewer
 
@@ -53,7 +54,7 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
     sol.display_all()
     return sol
 
-def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
+def Continue_Solver(old_title,max_loop,half_grid=True,diagnose=True):
     #note the input old_title does not contain path, just folder name
     new_title = _get_new_from_old_title(old_title,max_loop)
     if os.path.exists(new_title):
@@ -64,7 +65,6 @@ def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
         old_sol = Solution_Viewer(old_title)
         #get the parameters from the old solution
         N = old_sol.N
-        tol = old_sol.tol
         x0 = old_sol.x0
         charge_arg = old_sol.charge_arg
         bound_arg = old_sol.bound_arg
@@ -75,9 +75,13 @@ def Continue_Solver_Full_Grid(old_title,max_loop,diagnose=True):
         h = old_sol.h
         R = old_sol.R
         #create a continuing relaxation object, which starts with old field
-        relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
+        if half_grid:
+            relax = Continue_Relaxation_Half_Grid(old_sol,max_loop,charge,
+                                                  bound,diagnose)
+        else:
+            relax = Continue_Relaxation(old_sol,max_loop,charge,bound,diagnose)
         relax.solve()
-        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,tol,
+        store_solution(relax,new_title,N,charge_arg,bound_arg,L,w,h,R,
                        max_loop,x0)
         sol = Solution_Viewer(new_title)
     sol.display_all()
