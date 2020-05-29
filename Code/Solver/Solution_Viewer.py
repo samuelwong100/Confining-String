@@ -34,6 +34,7 @@ class Solution_Viewer():
     """
     def __init__(self,title):
         # check for the existence of the file path
+        title = "../Results/Solutions/" + title + "/"
         if os.path.exists(title+"core_dict"):
             pickle_in = open(title+"core_dict","rb")
             core_dict = pickle.load(pickle_in)
@@ -161,7 +162,7 @@ class Solution_Viewer():
         Plot the error.
         """
         plt.figure()
-        plt.plot(np.arange(0,self.loop,1),np.log(self.error))
+        plt.plot(np.arange(0,self.loop,1),np.log10(self.error))
         plt.ylabel("log(error)")
         plt.title("Error")
         plt.savefig(self.folder_title+"Error.png")
