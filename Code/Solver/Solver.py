@@ -38,9 +38,9 @@ def Solver(N,charge_arg,bound_arg,L,w,h,R,max_loop,x0="BPS",
 
 def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
                      diagnose=False):
-    prefix = "../Results/Solutions/"
-    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0)
-    if os.path.exists(title):
+    title = get_title(N,charge_arg,bound_arg,L,w,h,R,max_loop,x0)
+    path = "../Results/Solutions/"+title+"/"
+    if os.path.exists(path):
         sol = Solution_Viewer(title)
     else:
         charge = Sigma_Critical(N,charge_arg)
