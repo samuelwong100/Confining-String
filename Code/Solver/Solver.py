@@ -16,9 +16,9 @@ from Solution_Viewer import Solution_Viewer
 
 def Solver(N,charge_arg,bound_arg,L,w,h,R,max_loop,x0="BPS",
            half_grid=True,diagnose=False):
-    prefix = "../Results/Solutions/"
-    title = get_title(prefix,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0)
-    if os.path.exists(title):
+    title = get_title(N,charge_arg,bound_arg,L,w,h,R,max_loop,x0)
+    path = "../Results/Solutions/"+title+"/"
+    if os.path.exists(path):
         sol = Solution_Viewer(title)
     else:
         charge = Sigma_Critical(N,charge_arg)
@@ -57,11 +57,11 @@ def Solver_Full_Grid(N,charge_arg,bound_arg,L,w,h,R,tol,max_loop,x0="BPS",
 def Continue_Solver(old_title,max_loop,half_grid=True,diagnose=True):
     #note the input old_title does not contain path, just folder name
     new_title = _get_new_from_old_title(old_title,max_loop)
-    if os.path.exists(new_title):
+    if os.path.exists("../Results/Solutions/"+new_title+"/"):
         sol = Solution_Viewer(new_title)
     else:
         #get old title into a format used by solution viewer
-        old_title = "../Results/Solutions/" + old_title + "/"
+        old_title = old_title
         old_sol = Solution_Viewer(old_title)
         #get the parameters from the old solution
         N = old_sol.N
@@ -98,7 +98,5 @@ def _get_new_from_old_title(old_title,max_loop):
     last_part = old_title[index_comma:len(old_title)]
     #insert the new max_loop
     new_title = first_part+str(max_loop)+last_part
-    #get new title into proper format for storage
-    new_title = "../Results/Solutions/" + new_title + "/"
     return new_title
     
