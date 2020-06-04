@@ -62,7 +62,7 @@ class Relaxation_1D():
                 loop = loop + 1
         return f
     
-    def _set_f0(self,f0,num):
+    def _set_f0(self,f0,num,R,top):
         # define a initial f if none was given
         if f0 is None:
             f0 = np.ones(shape=(num,self.m),dtype=complex)*complex(1,1)
@@ -71,6 +71,22 @@ class Relaxation_1D():
             half = num // 2
             f0[0:half,:] = self.bound0 + 0.1
             f0[half:-1,:] = self.boundf + 0.1
+        elif f0 == "kink with predicted width":
+            f0 = np.ones(shape=(num,self.m),dtype=complex)
+            #predict the width to be d/2 = y(R/2) = ln(R/2+1)-R/(R+2)
+            height = np.log(R/2+1)-R/(R+2) #equivalent to d/2
+            print("height = ",height)
+            ratio = height/np.abs(self.zf - self.z0)
+            print("zf = ",self.zf)
+            print("z0 = ",self.z0)
+            print("zf-z0 =", self.zf - self.z0)
+            print("ratio = ",ratio)
+            if top:
+                kink_pixel_number = int((1-ratio)*num)
+            else:
+                kink_pixel_number = int(ratio*num)
+            f0[0:kink_pixel_number,:] = self.bound0
+            f0[kink_pixel_number:-1,:] = self.boundf
         elif f0 == "special kink without +0.1":
             f0 = np.ones(shape=(num,self.m),dtype=complex)
             half = num // 2
@@ -80,7 +96,7 @@ class Relaxation_1D():
         f0[-1]= self.boundf
         return f0
         
-    def solve(self,num,tol=1e-5,f0=None,diagnose=True):
+    def solve(self,R,top,num,tol=1e-5,f0=None,diagnose=True):
         """
         num = number of points in grid
         tol = tolerance of error
@@ -89,7 +105,7 @@ class Relaxation_1D():
         #define variables
         h = (self.zf - self.z0)/num # pixel
         z = np.linspace(self.z0,self.zf,num) # grid for z
-        f0 = self._set_f0(f0,num)
+        f0 = self._set_f0(f0,num,R,top)
         
         # solve
         f = self._relaxation(num,tol,f0,h,z,diagnose)
