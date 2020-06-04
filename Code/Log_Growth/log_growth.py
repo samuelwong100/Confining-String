@@ -12,6 +12,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Solution_Viewer import Solution_Viewer
 
+def find_string_separation(sol):
+    pe = sol.get_potential_energy_density()
+    center = sol.grid.y_axis
+    pe_top = pe[0:sol.grid.z_axis,center]
+    pe_bottom = pe[sol.grid.z_axis:,center]
+    top_arg = np.argmax(pe_top)
+    bottom_arg = np.argmax(pe_bottom) + pe_top.size
+    d = sol.grid.y[bottom_arg]-sol.grid.y[top_arg]
+    return d
+    
+
 sol_list = []
 d_list = []
 R_list = []
@@ -25,15 +36,7 @@ for title in str_list:
     sol = Solution_Viewer(title)
     sol.plot_potential_energy_density()
     sol_list.append(sol)
-    pe = sol.get_potential_energy_density()
-    center = sol.grid.y_axis
-    pe_top = pe[0:sol.grid.z_axis,center]
-    pe_bottom = pe[sol.grid.z_axis:,center]
-    top_arg = np.argmax(pe_top)
-    bottom_arg = np.argmax(pe_bottom) + pe_top.size
-    d = sol.grid.y[bottom_arg]-sol.grid.y[top_arg]
-    print(sol.grid.y[bottom_arg])
-    print(sol.grid.y[top_arg])
+    d = find_string_separation(sol)
     R_list.append(sol.R)
     d_list.append(d)
 R = np.array(R_list)
