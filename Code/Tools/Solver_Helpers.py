@@ -7,14 +7,15 @@ Author: Samuel Wong
 import os
 import pickle
 
-def get_title(prefix,N,charge,bound,L,w,h,R,max_loop,x0):
+def get_title(N,charge,bound,L,w,h,R,max_loop,x0):
     title =\
-    ('{}CS(N={},charge={},bound={},L={},w={},h={},R={},'+ \
-    'max_loop={},x0={})/').format(prefix,str(N),charge,
+    ('CS(N={},charge={},bound={},L={},w={},h={},R={},'+ \
+    'max_loop={},x0={})').format(str(N),charge,
     bound,str(L),str(w),str(h),str(R),str(max_loop),str(x0))
     return title
 
 def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0):
+    path = "../Results/Solutions/"+title+"/"
     #store the core result in a dictionary
     core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
                   "w":w,"h":h,"R":R,"max_loop":max_loop,"x0":x0,
@@ -29,8 +30,8 @@ def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0):
         core_dict["B_top"] = relax.B_top #store BPS objects
         core_dict["B_bottom"] = relax.B_bottom
     #create directory for new folder if it doesn't exist
-    if not os.path.exists(title):
-        os.makedirs(title)
+    if not os.path.exists(path):
+        os.makedirs(path)
     #dump dictionary into pickle
-    with open(title+"core_dict","wb") as file:
+    with open(path+"core_dict","wb") as file:
         pickle.dump(core_dict, file)
