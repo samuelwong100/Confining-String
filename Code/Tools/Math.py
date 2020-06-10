@@ -25,7 +25,6 @@ one rho ever.
 import numpy as np
 from numpy import sqrt, pi, exp
 from copy import deepcopy
-import matplotlib.pyplot as plt
 
 """
 ==================================Functions====================================
