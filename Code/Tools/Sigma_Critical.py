@@ -31,7 +31,7 @@ class Sigma_Critical():
     arg (str) = a string that describes a linear combo of fundamental weights
                 and/or x_min vectors;
                 Must be in the form of:
-               "wi +/- xj +/- wk ..."
+               "wi +/-xj +/-wk ..."
                where the first letter of each term is either 'w' or 'x',
                followed by a integer (i,j,k), and it is either "+" or "-" for 
                each sign.
@@ -69,10 +69,10 @@ class Sigma_Critical():
                     summation += sign*np.imag(self.W.x_min[k,:])
                 else:
                     raise Exception("Unacceptable sigma crticial points \
-                                    specification.")
+                                    specification due to non x or w character")
             else:
                 raise Exception("Unacceptable sigma crticial points \
-                                    specification.")
+                                    specification due to term too long.")
         return summation
         
     def _get_term_sign(self,term):
