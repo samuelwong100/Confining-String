@@ -12,7 +12,7 @@ from copy import deepcopy
 ===============================================================================
                                     Math
 ===============================================================================
-    Conventions
+Conventions
                         
 1. The general complex field, x, is stored as a (m x n) array. Each of the m
 rows is a new point. So if x is only storing the field at one point, then its
@@ -208,6 +208,6 @@ class Superpotential():
                 B = exp_B*self.s.alpha[a][b]
                 C = exp_C*self.s.alpha[(a-1)%self.N][b]
                 D = exp_D*self.s.alpha[(a+1)%self.N][b]
-                vec_a[b,:,:] += A*(2*B-C-D)
-            summation += vec_a
+                vec_a[b,:,:] += 2*B-C-D
+            summation += A*vec_a
         return summation/4
