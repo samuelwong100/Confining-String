@@ -13,7 +13,7 @@ class Sigma_Critical():
     Full name: Sigma Space Crictical Points
     A class that handles the vector and string name of general ciritical points
     of superpotential. This includes the charge of quarks in the form of linear
-    comdinations of fundamental weights and field vaccua, which can be sum of 
+    combinations of fundamental weights and field vaccua, which can be sum of 
     x_min vector with fundamental weights.
     
     Warning: There is a problem of convention. Technically, the sigma space is
