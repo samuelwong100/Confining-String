@@ -154,6 +154,32 @@ class Relaxation():
             for k in range(self.grid.num_z):
                 if self.grid.left_axis <= k <= self.grid.right_axis:
                     x0[:,:,k] = x_slice
+        elif str(self.bound) == "x2" and str(self.charge) == "w1 -w2 +w3" and self.N==4:
+            y_half,x_top_half,B_top = solve_BPS(N=self.N,separation_R=self.grid.R,
+                                                top=True,
+                          vac0_arg=str(self.bound),
+                          vacf_arg="w2",
+                          z0=self.grid.y0,zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,separation_R=self.grid.R,
+                                                      top=False,
+                          vac0_arg="w1+w3",
+                          vacf_arg=str(self.bound),
+                          z0=self.grid.y0,zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            x_top_half_trans = x_top_half.T
+            x_bottom_half_trans = x_bottom_half.T
+            half_num = x_top_half_trans.shape[1]
+            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+            x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
+            x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
+            #first set x0 entirely equal to boundary values
+            for i in range(self.m):
+                x0[i,:,:] *= self.bound_vec[i]
+            #for the 2 columns between the two charges, set to x_slice
+            for k in range(self.grid.num_z):
+                if self.grid.left_axis <= k <= self.grid.right_axis:
+                    x0[:,:,k] = x_slice
         #save BPS and initial grid
         self.B_top = B_top #store BPS object
         self.B_bottom = B_bottom
@@ -304,20 +330,33 @@ class Relaxation_half_grid(Relaxation):
                           vacf_arg=str(self.bound),z0=self.grid.y0,
                           zf=0,h=self.grid.h,folder="",
                           tol=1e-5,save_plot=False)
-            x_top_half_trans = x_top_half.T
-            x_bottom_half_trans = x_bottom_half.T
-            half_num = x_top_half_trans.shape[1]
-            x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
-            x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
-            x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
-            #first set x0 entirely equal to boundary values
-            for i in range(self.m):
-                x0[i,:,:] *= self.bound_vec[i]
-            #for the 2 columns between the two charges, set to x_slice
-            #since this is for half grid, this is same as center to right axis
-            for k in range(self.grid.num_z):
-                if 0 <= k <= self.grid.right_axis:
-                    x0[:,:,k] = x_slice
+        elif str(self.bound) == "x2" and str(self.charge) == "w1 -w2 +w3" and self.N==4:
+            y_half,x_top_half,B_top = solve_BPS(N=self.N,separation_R=self.grid.R,
+                                                top=True,
+                          vac0_arg=str(self.bound),
+                          vacf_arg="w2",
+                          z0=self.grid.y0,zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+            y_half,x_bottom_half,B_bottom = solve_BPS(N=self.N,separation_R=self.grid.R,
+                                                      top=False,
+                          vac0_arg="w1 +w3",
+                          vacf_arg=str(self.bound),
+                          z0=self.grid.y0,zf=0,h=self.grid.h,folder="",
+                          tol=1e-5,save_plot=False)
+        x_top_half_trans = x_top_half.T
+        x_bottom_half_trans = x_bottom_half.T
+        half_num = x_top_half_trans.shape[1]
+        x_slice = np.zeros(shape=(self.m,self.grid.num_y),dtype=complex)
+        x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
+        x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
+        #first set x0 entirely equal to boundary values
+        for i in range(self.m):
+            x0[i,:,:] *= self.bound_vec[i]
+        #for the 2 columns between the two charges, set to x_slice
+        #since this is for half grid, this is same as center to right axis
+        for k in range(self.grid.num_z):
+            if 0 <= k <= self.grid.right_axis:
+                x0[:,:,k] = x_slice
         #save BPS and initial grid
         self.B_top = B_top #store BPS object
         self.B_bottom = B_bottom
