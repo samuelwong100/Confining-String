@@ -193,14 +193,10 @@ class Superpotential():
         #the following is the equation we get from applying the idenity of
         #alpha_a dot alpha_b in terms of 3 delta function
         for a in range(self.N):
-            dot_A=dot_vec_with_vec_field(self.s.alpha[a],x)
-            dot_B=dot_vec_with_vec_field(self.s.alpha[a],x_conj)
-            dot_C=dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj)
-            dot_D=dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj)
-            A = np.exp(dot_A)
-            exp_B = np.exp(dot_B)
-            exp_C = np.exp(dot_C)
-            exp_D = np.exp(dot_D)
+            A = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x))
+            exp_B = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x_conj))
+            exp_C = np.exp(dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj))
+            exp_D = np.exp(dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj))
             #the a-th term in the vector field summation
             vec_a = np.zeros(shape=x.shape,dtype=complex)
             for b in range(self.N-1):
