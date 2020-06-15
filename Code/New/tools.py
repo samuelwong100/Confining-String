@@ -26,6 +26,8 @@ For example, SU.rho = array([rho_1, rho_2, ...., rho_n]), since there is only
 one rho ever.
 ===============================================================================
 """
+
+""" ============== subsection: SU(N) ======================================="""
 def delta(i,j):
     #kronecker delta
     if i==j:
@@ -111,6 +113,7 @@ class SU():
             summation += self.w[A,:]
         return summation
 
+""" ============== subsection: Superpotential ============================="""
 def dot_vec_with_vec_field(vec,vec_field):
     #assume vec is an array of shape (n,)
     #vector field is an array of shape (n,x,y), where the field has 
@@ -118,41 +121,6 @@ def dot_vec_with_vec_field(vec,vec_field):
     #return the dot product the the vector and the field at every point
     #on the grid. The return is a (x,y) grid object
     return np.sum((vec*(vec_field.T)).T,axis=0)
-
-def grad(f, points, dx = 1e-5):
-    """
-    NAME:
-        grad
-    PURPOSE:
-        Calculate the numerical value of gradient for an array of points, using
-        a function that is able to take an array of points
-    INPUT:
-        f = a differentiable function that takes an array of m points, each
-        with n dimensions, and returns an (m,1) array
-        points = (m,n) array, representing m points, each with n dimensions
-    OUTPUT:
-        (m,n) array, each row being a gradient
-    """
-    n = np.shape(points)[1]
-    increment = dx*np.identity(n)
-    df = []
-    for row in increment:
-        df.append((f(points + row) - f(points-row))/(2*dx))
-    return np.array(df).T[0]    
-
-def derivative_sample(x,h):
-    """
-    return the derivative of a sample of a function, x, which can have multiple
-    components (column), and the points are stored as rows.
-    """
-    #get the derivaitve and fix the boundary issues
-    first = (x[1] - x[0])/h
-    last = (x[-1] - x[-2])/h
-    dxdz = (np.roll(x,-1,axis=0) - np.roll(x,1,axis=0))/(2*h)
-    dxdz[0] = first
-    dxdz[-1] = last
-    return dxdz
-
 
 class Superpotential():
     """
@@ -207,3 +175,39 @@ class Superpotential():
                 vec_a[b,:,:] += 2*B-C-D
             summation += A*vec_a
         return summation/4
+
+""" ============== subsection: Miscellaneous Math Functions =============="""
+
+def grad(f, points, dx = 1e-5):
+    """
+    NAME:
+        grad
+    PURPOSE:
+        Calculate the numerical value of gradient for an array of points, using
+        a function that is able to take an array of points
+    INPUT:
+        f = a differentiable function that takes an array of m points, each
+        with n dimensions, and returns an (m,1) array
+        points = (m,n) array, representing m points, each with n dimensions
+    OUTPUT:
+        (m,n) array, each row being a gradient
+    """
+    n = np.shape(points)[1]
+    increment = dx*np.identity(n)
+    df = []
+    for row in increment:
+        df.append((f(points + row) - f(points-row))/(2*dx))
+    return np.array(df).T[0]    
+
+def derivative_sample(x,h):
+    """
+    return the derivative of a sample of a function, x, which can have multiple
+    components (column), and the points are stored as rows.
+    """
+    #get the derivaitve and fix the boundary issues
+    first = (x[1] - x[0])/h
+    last = (x[-1] - x[-2])/h
+    dxdz = (np.roll(x,-1,axis=0) - np.roll(x,1,axis=0))/(2*h)
+    dxdz[0] = first
+    dxdz[-1] = last
+    return dxdz
