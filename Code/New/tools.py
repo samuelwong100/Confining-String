@@ -31,7 +31,6 @@ Subsections:
 SU(N)
 Superpotential
 Sigma Space Critical Points
-Miscellaneous Math Functions
 ===============================================================================
 """
 
@@ -264,42 +263,6 @@ class Sigma_Critical():
             term = term.replace("-","")
         return sign, term
 
-""" ============== subsection: Miscellaneous Math Functions =============="""
-
-def grad(f, points, dx = 1e-5):
-    """
-    NAME:
-        grad
-    PURPOSE:
-        Calculate the numerical value of gradient for an array of points, using
-        a function that is able to take an array of points
-    INPUT:
-        f = a differentiable function that takes an array of m points, each
-        with n dimensions, and returns an (m,1) array
-        points = (m,n) array, representing m points, each with n dimensions
-    OUTPUT:
-        (m,n) array, each row being a gradient
-    """
-    n = np.shape(points)[1]
-    increment = dx*np.identity(n)
-    df = []
-    for row in increment:
-        df.append((f(points + row) - f(points-row))/(2*dx))
-    return np.array(df).T[0]    
-
-def derivative_sample(x,h):
-    """
-    return the derivative of a sample of a function, x, which can have multiple
-    components (column), and the points are stored as rows.
-    """
-    #get the derivaitve and fix the boundary issues
-    first = (x[1] - x[0])/h
-    last = (x[-1] - x[-2])/h
-    dxdz = (np.roll(x,-1,axis=0) - np.roll(x,1,axis=0))/(2*h)
-    dxdz[0] = first
-    dxdz[-1] = last
-    return dxdz
-
 """
 ===============================================================================
                                     Field
@@ -367,45 +330,42 @@ class Grid():
     def zy_number_to_position(self,nz,ny):
         return (self.z_number_to_position(nz), self.y_number_to_position(ny))
     
-    def z_position_to_z_number(self,z):
-        #return the nearest z_number given a z_position; round down if necessary
-        if z < self.z0 or z > self.zf:
-            raise Exception("z-position out of bound.")
-        elif z == self.z0:
+    def _position_to_number(self,x,direction):
+        #x can be either z or y
+        #return the nearest x_number given a x_position; round down if necessary
+        if direction == "z":
+            linspace = self.z_linspace
+            num = self.num_z
+            x0 = self.z0
+            xf = self.zf
+        elif direction == "y":
+            linspace = self.y_linspace
+            num = self.num_y
+            x0 = self.y0
+            xf = self.yf    
+        if x < x0 or x > xf:
+            raise Exception("{}-position out of bound.".format(direction))
+        elif x == x0:
             return 0
-        elif z == self.zf:
-            return self.num_z - 1
+        elif x == xf:
+            return num - 1
         else:
-            #get the next index where z is between next index and previous index
-            next_index = np.searchsorted(self.z_linspace,z)
-            mid_value = (self.z_linspace[next_index] + self.z_linspace[next_index-1])/2
-            if z == mid_value:
-                z_number = next_index - 1 #need to round down to get axis right
-            elif z < mid_value:
-                z_number = next_index - 1
+            #get the next index where x is between next index and previous index
+            next_index = np.searchsorted(linspace,x)
+            mid_value = (linspace[next_index] + linspace[next_index-1])/2
+            if x == mid_value:
+                x_number = next_index - 1 #need to round down to get axis right
+            elif x < mid_value:
+                x_number = next_index - 1
             else:
-                z_number = next_index
-            return z_number
+                x_number = next_index
+            return x_number
+    
+    def z_position_to_z_number(self,z):
+        return self._position_to_number(z,"z")
         
     def y_position_to_y_number(self,y):
-        #return the nearest y_number given a y_position; round down if necessary
-        if y < self.y0 or y > self.yf:
-            raise Exception("y-position out of bound.")
-        elif y == self.y0:
-            return 0
-        elif y == self.yf:
-            return self.num_y - 1
-        else:
-            #get the next index where z is between next index and previous index
-            next_index = np.searchsorted(self.y_linspace,y)
-            mid_value = (self.y_linspace[next_index] + self.y_linspace[next_index-1])/2
-            if y == mid_value:
-                y_number = next_index - 1
-            elif y < mid_value:
-                y_number = next_index - 1
-            else:
-                y_number = next_index
-            return y_number
+        return self._position_to_number(y,"y")
         
     def zy_position_to_zy_number(self,z,y):
         nz = self.z_position_to_z_number(z)
