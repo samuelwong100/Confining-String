@@ -383,6 +383,10 @@ class Grid():
     def get_nearest_position_on_grid(self,z,y):
         return self.zy_number_to_position(*self.zy_position_to_zy_number(z,y))
     
+    def create_vector_field(self,m,dtype=complex):
+        #m is number of component of vector field
+        return np.zeros(shape=(m,self.num_y,self.num_z),dtype=dtype)
+    
     def plot_empty_grid(self):
         """
         Plot an empty grid to show what the grid looks like.
@@ -467,6 +471,15 @@ class Dipole_Half_Grid(Grid):
     def _verify_num_R_half(self,num_R_half):
         if num_R_half >= self.num_z:
             raise Exception("num_R_half must be smaller than num_z.")
+            
+    def reflect_vector_field(self,x):
+        #currently, x contains the central column plus everthing to the left
+        #slice out everything to the left of central column
+        x_left = x[:,:,:-1]
+        #flip horionztally
+        x_right = np.flip(x_left,axis=2)
+        #join right with the original (including center column)
+        return np.concatenate((x,x_right),axis=2)
 
 
 if __name__ == "__main__":

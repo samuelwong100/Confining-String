@@ -4,12 +4,15 @@ File Name: tests.py
 Purpose: 
 Author: Samuel Wong
 """
+import numpy as np
 from source import Dipole_Full_Grid
 from source import within_epsilon
 
 def test_dipole_full_grid():
-    DFG = Dipole_Full_Grid(11,7,3,h=0.1)
+    DFG = Dipole_Full_Grid(11,7,3)
     hg = DFG.half_grid
+    DFG2 = Dipole_Full_Grid(101,301,1)
+    hg2 = DFG2.half_grid
     
     assert DFG.num_z == 11
     assert DFG.num_z_half == 5
@@ -44,5 +47,12 @@ def test_dipole_full_grid():
     assert hg.left_charge_axis_number == 4
     assert within_epsilon(hg.left_charge_z_position,-0.1)
     
+    x=DFG2.create_vector_field(10)
+    x[:,:,0] = 1
+    x[:,:,-1] = 1
+    y=hg2.create_vector_field(10)
+    y[:,:,0] = 1
+    x_new = hg2.reflect_vector_field(y)
+    assert within_epsilon(np.max(x-x_new),0)
     
 test_dipole_full_grid()
