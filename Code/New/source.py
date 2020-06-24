@@ -31,6 +31,7 @@ Subsections:
 SU(N)
 Superpotential
 Sigma Space Critical Points
+Miscellaneous Math
 ===============================================================================
 """
 
@@ -262,15 +263,21 @@ class Sigma_Critical():
             sign = -1
             term = term.replace("-","")
         return sign, term
+    
+""" ============== subsection: Miscellaneous Math Functions ================"""
+def within_epsilon(x,target):
+    epsilon = 1e-5
+    if isinstance(target,tuple):
+        result = True
+        for i in range(len(target)):
+            result = result and target[i] - epsilon < x[i] < target[i] + epsilon
+        return result
+    else:
+        return target - epsilon < x < target + epsilon
 
 """
 ===============================================================================
-                                    Field
-===============================================================================
-
-Subsections:
-Grid
-Vector Field
+                                    Grid
 ===============================================================================
 """
 class Grid():
@@ -430,7 +437,7 @@ class Dipole_Full_Grid(Grid):
                 self.left_charge_axis_number)
         self.right_charge_z_position = self.z_number_to_position(
                 self.right_charge_axis_number)
-        self.half_grid = Dipole_Half_Grid(
+        self.half_grid = Dipole_Half_Grid(self,
                 num_z=self.num_z_half+1,
                 num_y=self.num_y,
                 num_R_half=int(self.num_R_interval/2)+1,
@@ -445,7 +452,7 @@ class Dipole_Full_Grid(Grid):
             
         
 class Dipole_Half_Grid(Grid):
-    def __init__(self,num_z,num_y,num_R_half,h=0.1):
+    def __init__(self,parent,num_z,num_y,num_R_half,h=0.1):
         Grid.__init__(self,num_z,num_y,h=0.1,origin="left")
         self._verify_num_R_half(num_R_half)
         self.num_R_half = num_R_half
@@ -455,6 +462,7 @@ class Dipole_Half_Grid(Grid):
                         self.y_axis_number - self.num_R_half_interval
         self.left_charge_z_position = self.z_number_to_position(
                 self.left_charge_axis_number)
+        self.parent_grid = parent
         
     def _verify_num_R_half(self,num_R_half):
         if num_R_half >= self.num_z:
@@ -462,7 +470,7 @@ class Dipole_Half_Grid(Grid):
 
 
 if __name__ == "__main__":
-    DFG = Dipole_Full_Grid(11,11,3)
+    DFG = Dipole_Full_Grid(13,13,5)
     DFG.plot_empty_grid()
     hg = DFG.half_grid
     hg.plot_empty_grid()
