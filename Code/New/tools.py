@@ -295,8 +295,9 @@ class Grid():
             raise Exception("num_z must be integer.")
         if type(num_y) is not int:
             raise Exception("num_y must be integer.")
-        if num_z % 2 == 0:
-            raise Exception("num_z must be odd.")
+        if not isinstance(self,Dipole_Half_Grid): #half grid can have even numz
+            if num_z % 2 == 0:
+                raise Exception("num_z must be odd.")
         if num_y % 2 == 0:
             raise Exception("num_y must be odd.")
     
@@ -405,7 +406,10 @@ class Grid():
         ax.imshow(f, interpolation='none', cmap=cmap, 
                   extent=[self.z0, self.zf,self.y0, self.yf],
                   zorder=0)
-        fig.suptitle("Empty Grid",fontsize=20)
+        if isinstance(self,Dipole_Half_Grid):
+            fig.suptitle("Empty Half Grid",fontsize=20)
+        else:
+            fig.suptitle("Empty Grid",fontsize=20)
         
 
 class Dipole_Full_Grid(Grid):
@@ -458,7 +462,7 @@ class Dipole_Half_Grid(Grid):
 
 
 if __name__ == "__main__":
-    DFG = Dipole_Full_Grid(101,101,51)
+    DFG = Dipole_Full_Grid(11,11,3)
     DFG.plot_empty_grid()
     hg = DFG.half_grid
     hg.plot_empty_grid()
