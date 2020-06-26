@@ -4,6 +4,11 @@ File Name: .py
 Purpose: 
 Author: Samuel Wong
 """
+import os
+import pickle
+import sys
+sys.path.append("../BPS_Package")
+from solve_BPS import solve_BPS
 import numpy as np
 from numpy import sqrt, pi, exp
 import matplotlib.pyplot as plt
@@ -183,6 +188,45 @@ class Superpotential():
                 vec_a[b,:,:] += 2*B-C-D
             summation += A*vec_a
         return summation/4
+    
+    def create_laplacian_function(self,DFG,charge_vec,use_half_grid):
+        if use_half_grid:
+            source_term = self._define_half_grid_source_term(DFG,charge_vec)
+        else:
+            source_term = self._define_full_grid_source_term(DFG,charge_vec)
+            
+        def laplacian_function(x):
+            return source_term + self.potential_term_on_grid_fast_optimized(x)
+        
+        return laplacian_function
+    
+    def _define_full_grid_source_term(self,DFG,charge_vec):
+        """ assumes charge vec contains 2pi factor, and is real """
+        # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'
+        result = DFG.create_zeros_vector_field(self.N-1)
+        #the derivative of delta function in y gives something close to infinity
+        #for y just below 0 and somthing close to -infinity for y just above 0
+        #here, we have x(y = 0^{-}) = 1/h^2 and x(y=0^{+})= -1/h^2
+        #note that the lower row correspond to higher y
+        inf = 1/(DFG.h_squared)
+        result[:,DFG.z_axis_number-1,:] = -inf
+        result[:,DFG.z_axis_number,:] = inf
+        #set grid to 0 unless it is on z_axis and between -R/2 and R/2
+        result[:,:,0:DFG.left_charge_axis_number]=0 #left_axis included in source
+        result[:,:,DFG.right_charge_axis_number+1:]=0 #right_axis included in source
+        #multiply everything by charge (outside relevant rows, everything is
+        #zero anyway)
+        for i in range(self.N-1):
+            result[i,:,:] *= charge_vec[i]
+        result = 1j*result # overall coefficient
+        return result
+    
+    def _define_half_grid_source_term(self,DFG,charge_vec):
+        full_grid_source_term = self._define_full_grid_source_term(DFG,charge_vec)
+        half_grid = self.DFG.half_grid
+        half_grid_source_term = half_grid.full_vector_field_to_half(
+                full_grid_source_term)
+        return half_grid_source_term
 
 """ ============== subsection: Sigma_Critical ============================="""
 
@@ -272,6 +316,15 @@ def within_epsilon(x,target):
         for i in range(len(target)):
             result = result and target[i] - epsilon < x[i] < target[i] + epsilon
         return result
+    elif isinstance(target,np.ndarray):
+        result = True
+        size= x.size
+        x_compressed = x.reshape((size,))
+        target_compressed = target.reshape((size,))
+        for i in range(size):
+            result = result and (target_compressed[i] - epsilon < 
+                                 x_compressed[i] < target_compressed[i] + epsilon)
+        return result
     else:
         return target - epsilon < x < target + epsilon
 
@@ -286,6 +339,7 @@ class Grid():
         self.num_z = num_z
         self.num_y = num_y
         self.h = h
+        self.h_squared = self.h**2
         #number of points in each half of grid
         self.num_z_half = int((self.num_z-1)/2)
         self.num_y_half = int((self.num_y-1)/2)
@@ -383,9 +437,19 @@ class Grid():
     def get_nearest_position_on_grid(self,z,y):
         return self.zy_number_to_position(*self.zy_position_to_zy_number(z,y))
     
-    def create_vector_field(self,m,dtype=complex):
+    def create_zeros_vector_field(self,m,dtype=complex):
         #m is number of component of vector field
         return np.zeros(shape=(m,self.num_y,self.num_z),dtype=dtype)
+    
+    def create_ones_vector_field(self,m,dtype=complex):
+        #m is number of component of vector field
+        return np.ones(shape=(m,self.num_y,self.num_z),dtype=dtype)
+    
+    def create_constant_vector_field(self,vec):
+        x = self.create_ones_vector_field(vec.size)
+        for i in range(x.shape[0]):
+            x[i,:,:] *= vec[i]
+        return x
     
     def plot_empty_grid(self):
         """
@@ -480,13 +544,224 @@ class Dipole_Half_Grid(Grid):
         x_right = np.flip(x_left,axis=2)
         #join right with the original (including center column)
         return np.concatenate((x,x_right),axis=2)
+    
+    def full_vector_field_to_half(self,x):
+        #slize out a vector field on full grid to just left half and central
+        #column
+        return x[:,:,:self.y_axis_number+1]
 
+"""
+===============================================================================
+                                    Relaxation
+===============================================================================
+"""    
+def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
+                         use_half_grid):
+    """
+    Without regard to whether we use half grid method, create an initial
+    vector field on full grid, pass in along with the full grid and laplacian
+    function. This relaxation algorithm converts the initial full field
+    to half field, run it on half grid method if desired, and return the
+    the full grid result.
+    Note: x_initial needs to have correct boundary condition
+    """
+    if use_half_grid:
+        half_grid = full_grid.half_grid
+        x_initial_half = half_grid.full_vector_field_to_half(x_initial)
+        x_half, error, loop = _relaxation_while_loop(x_initial_half,
+                                                    laplacian_function,
+                                                    half_grid,tol,
+                                                    _relaxation_update_half_grid)
+        x_full = half_grid.reflect_vector_field(x_half)
+        return x_full, error, loop
+    else:
+        return _relaxation_while_loop(x_initial,laplacian_function,full_grid,tol,
+                                   _relaxation_update_full_grid)
+
+def _relaxation_while_loop(x,laplacian_function,grid,tol,update_function):
+    error = [tol+1] #initialize a "fake" error so that while loop can run
+    loop = 0
+    while error[-1]>tol:
+        x_new = update_function(x,laplacian_function,grid)
+        error.append(_get_error(x_new,x))
+        x = x_new
+        loop += 1
+        _diagnostic_plot(loop,error,grid,x)
+    del error[0] #delete the first, fake error
+    error = np.array(error) #change error into an array
+    return x, error, loop
+
+def _relaxation_update_full_grid(x_old,laplacian_function,grid):
+    # replace each element of x_old with average of 4 neighboring points,
+    # minus laplacian
+    x = deepcopy(x_old) #keep the old field to compare for error later
+    laplacian = laplacian_function(x)
+    # we loop over each element in the field grid, skipping over the edge.
+    # so we start loop at 1, avoiding 0. We ignore the last one by -1
+    for row in range(1,grid.num_y-1):
+        for col in range(1,grid.num_z-1):
+            x[:,row,col] = (x[:,row-1,col] + x[:,row+1,col] +
+                          x[:,row,col-1] + x[:,row,col+1]
+                          - laplacian[:,row,col]*grid.h_squared)/4
+    # since we skipped over the edge, the Dirichlet boundary is automatically
+    #enforced. (ie full grid method)
+    return x
+
+def _relaxation_update_half_grid(x_old,laplacian_function,grid):
+    x=_relaxation_update_full_grid(x_old,laplacian_function,grid)
+    #set the last column equal to its neighboring column to maintain a
+    #Neumann boundary condition. Note that the half grid has y axis on 
+    #the right, ie this is a left half grid.
+    x[:,:,-1] = x[:,:,-2]
+    return x
+
+def _get_error(x_new,x):
+    return np.max(np.abs(x_new-x))/np.max(np.abs(x_new))
+
+def _diagnostic_plot(loop,error,grid,x):
+    if loop % 100 == 0:
+        print("loop =",loop,"error =",error[-1])
+        for i in range(x.shape[0]):
+            plt.figure()
+            plt.pcolormesh(grid.zv,grid.yv,np.real(x[i,:,:]))
+            plt.colorbar()
+            plt.title("$\phi$"+str(i+1))
+            plt.show()
+
+#            plt.figure()
+#            plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
+#            plt.colorbar()
+#            plt.title("$\sigma$"+str(i+1))
+#            plt.show()
+
+"""
+===============================================================================
+                          Confining String Solver
+===============================================================================
+"""
+def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw="BPS",
+           use_half_grid=True,diagnose=False):
+    title = get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid)
+    path = get_path(title)
+    num_z,num_y,num_R = canonical_length_num_conversion(L,w,R,h)
+    DFG = Dipole_Full_Grid(num_z,num_y,num_R,h)
+    charge = Sigma_Critical(N,charge_arg)
+    bound = Sigma_Critical(N,bound_arg)
+    W = Superpotential(N)
+    laplacian_function = W.create_laplacian_function(DFG,charge.real_vector,
+                                                     use_half_grid)
+    x_initial = initialize_field(N,DFG,charge,bound,initial_kw)
+    x, error, loop = relaxation_algorithm(x_initial,laplacian_function,
+                                          DFG,tol,use_half_grid)
+
+def get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid):
+    title =\
+    ('CS(N={},charge={},bound={},L={},w={},h={},R={},'+ \
+    'tol={},initial_kw={},use_half_grid={})').format(str(N),charge,
+    bound,str(L),str(w),str(h),str(R),str(tol),initial_kw,str(use_half_grid))
+    return title
+
+def get_path(title):
+    path = "../Results/Solutions/"+title+"/"
+    return path
+
+def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0):
+    path = "../Results/Solutions/"+title+"/"
+    #store the core result in a dictionary
+    core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
+                  "w":w,"h":h,"R":R,"max_loop":max_loop,"x0":x0,
+                  "loop":relax.loop,"field":relax.x,
+                  "error":relax.error,"grid":relax.grid,"relax":relax}
+    if x0 == "BPS":
+        core_dict["BPS_top"] = relax.top_BPS
+        core_dict["BPS_bottom"] = relax.bottom_BPS
+        core_dict["BPS_y"] = relax.y_half
+        core_dict["BPS_slice"] = relax.BPS_slice
+        core_dict["initial_grid"] = relax.initial_grid
+        core_dict["B_top"] = relax.B_top #store BPS objects
+        core_dict["B_bottom"] = relax.B_bottom
+    #create directory for new folder if it doesn't exist
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+"core_dict","wb") as file:
+        pickle.dump(core_dict, file)
+    
+def canonical_length_num_conversion(L,w,R,h):
+    if isinstance(L,int) and isinstance(w,int) and isinstance(R,int) and h==0.1:
+        num_z = int(L/h)+1 #this is guranteed to be odd if L is integer
+        num_y = int(w/h)+1
+        num_R = int(R/h)+1
+    return num_z,num_y,num_R
+
+def initialize_field(N,DFG,charge,bound,initial_kw):
+    if initial_kw == "constant":
+        x0 = DFG.create_constant_vector_field(bound.imaginary_vector)
+    elif initial_kw == "zero":
+        x0 = DFG.create_zeros_vector_field(N-1)
+    elif initial_kw == "BPS":
+        x0 = _BPS_initial_field(N,DFG,charge,bound)
+    x0 = enforce_boundary(x0,DFG,bound.imaginary_vector)
+    return x0
+
+def enforce_boundary(x_old,grid,bound_vec):
+    x = deepcopy(x_old)
+    #set all the left sides to bound
+    #take all component (first index); for each component, take all rows
+    #(second index); take the first/left column (third index); set it to
+    #bound
+    bound_2d = np.array([bound_vec])
+    x[:,:,0] = np.repeat(bound_2d,grid.num_y,axis=0).T
+    #repeat for bounds in other directions
+    x[:,:,-1] = np.repeat(bound_2d,grid.num_y,axis=0).T
+    x[:,0,:] = np.repeat(bound_2d.T,grid.num_z,axis=1)
+    x[:,-1,:] = np.repeat(bound_2d.T,grid.num_z,axis=1)
+    return x
+    
+def _BPS_initial_field(N,DFG,charge,bound):
+    if str(bound) == "x1":
+        y_half,x_top_half,B_top, x_bottom_half,B_bottom = \
+        _get_BPS_from_ordered_vacua(str(bound),"x0",str(charge),
+                                    vacf_arg=str(bound))
+    elif str(bound) == "x2" and str(charge) == "w1 -w2 +w3" and self.N==4:
+        y_half,x_top_half,B_top, x_bottom_half,B_bottom = \
+        _get_BPS_from_ordered_vacua(str(bound),"w2","w1+w3",str(bound))
+
+    x_top_half_trans = x_top_half.T
+    x_bottom_half_trans = x_bottom_half.T
+    half_num = x_top_half_trans.shape[1]
+    x_slice = np.zeros(shape=(N-1,DFG.num_y),dtype=complex)
+    x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
+    x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
+    #first set x0 entirely equal to boundary values
+    for i in range(N-1):
+        x0[i,:,:] *= bound.imaginary_vector[i]
+    #for the 2 columns between the two charges, set to x_slice
+    for k in range(DFG.num_z):
+        if DFG.left_charge_axis_number <= k <= DFG.right_charge_axis_number:
+            x0[:,:,k] = x_slice
+
+    #save BPS and initial grid
+    self.B_top = B_top #store BPS object
+    self.B_bottom = B_bottom
+    self.top_BPS = x_top_half
+    self.bottom_BPS = x_bottom_half
+    self.y_half = y_half
+    self.BPS_slice = x_slice
+    self.initial_grid = x0
+    return x0
+
+def _get_BPS_from_ordered_vacua(v1,v2,v3,v4):
+    y_half,x_top_half,B_top = _call_BPS(
+            top=True,vac0_arg=v1,vacf_arg=v2,N,DFG)
+    y_half,x_bottom_half,B_bottom = _call_BPS(
+            top=False,vac0_arg=v3,vacf_arg=v4,N,DFG)
+    return y_half, x_top_half, B_top, x_bottom_half, B_bottom
+
+def _call_BPS(top,vac0_arg,vacf_arg,N,DFG):
+    return solve_BPS(N=N, separation_R=DFG.R, top=top, vac0_arg=vac0_arg,
+                    vacf_arg=vacf_arg, z0=DFG.y0, zf=0, h=DFG.h, folder="",
+                    tol=1e-5, save_plot=False)
 
 if __name__ == "__main__":
-    DFG = Dipole_Full_Grid(13,13,5)
-    DFG.plot_empty_grid()
-    hg = DFG.half_grid
-    hg.plot_empty_grid()
-    
-
+    pass
     
