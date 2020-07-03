@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-File Name: .py
+File Name: source.py
 Purpose: 
 Author: Samuel Wong
 """
 import os
-import pickle
 import sys
-sys.path.append("../BPS_Package")
+sys.path.append("BPS_Package")
 from solve_BPS import solve_BPS
+from plot_BPS import plot_BPS as external_plot_BPS
+import pickle
 import numpy as np
 from numpy import sqrt, pi, exp
 import matplotlib.pyplot as plt
 import matplotlib
 from copy import deepcopy
+from scipy.integrate import simps
 
 """
 ===============================================================================
@@ -628,11 +630,11 @@ def _diagnostic_plot(loop,error,grid,x):
             plt.title("$\phi$"+str(i+1))
             plt.show()
 
-#            plt.figure()
-#            plt.pcolormesh(self.grid.zv,self.grid.yv,np.imag(x[i,:,:]))
-#            plt.colorbar()
-#            plt.title("$\sigma$"+str(i+1))
-#            plt.show()
+            plt.figure()
+            plt.pcolormesh(grid.zv,grid.yv,np.imag(x[i,:,:]))
+            plt.colorbar()
+            plt.title("$\sigma$"+str(i+1))
+            plt.show()
 
 """
 ===============================================================================
@@ -641,18 +643,26 @@ def _diagnostic_plot(loop,error,grid,x):
 """
 def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw="BPS",
            use_half_grid=True,diagnose=False):
-    title = get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid)
+    title = get_title(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,use_half_grid)
     path = get_path(title)
-    num_z,num_y,num_R = canonical_length_num_conversion(L,w,R,h)
-    DFG = Dipole_Full_Grid(num_z,num_y,num_R,h)
-    charge = Sigma_Critical(N,charge_arg)
-    bound = Sigma_Critical(N,bound_arg)
-    W = Superpotential(N)
-    laplacian_function = W.create_laplacian_function(DFG,charge.real_vector,
-                                                     use_half_grid)
-    x_initial = initialize_field(N,DFG,charge,bound,initial_kw)
-    x, error, loop = relaxation_algorithm(x_initial,laplacian_function,
-                                          DFG,tol,use_half_grid)
+    if os.path.exists(path):
+        sol = Solution_Viewer(title)
+    else:
+        num_z,num_y,num_R = canonical_length_num_conversion(L,w,R,h)
+        DFG = Dipole_Full_Grid(num_z,num_y,num_R,h)
+        charge = Sigma_Critical(N,charge_arg)
+        bound = Sigma_Critical(N,bound_arg)
+        W = Superpotential(N)
+        laplacian_function = W.create_laplacian_function(DFG,charge.real_vector,
+                                                         use_half_grid)
+        x_initial, BPS_dic = initialize_field(N,DFG,charge,bound,initial_kw)
+        x, error, loop = relaxation_algorithm(x_initial,laplacian_function,
+                                              DFG,tol,use_half_grid)
+        store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
+           use_half_grid,loop,error,DFG,BPS_dic)
+        sol = Solution_Viewer(title)
+    sol.display_all()
+    return sol
 
 def get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid):
     title =\
@@ -662,29 +672,8 @@ def get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid):
     return title
 
 def get_path(title):
-    path = "../Results/Solutions/"+title+"/"
+    path = "Results/Solutions/"+title+"/"
     return path
-
-def store_solution(relax,title,N,charge_arg,bound_arg,L,w,h,R,max_loop,x0):
-    path = "../Results/Solutions/"+title+"/"
-    #store the core result in a dictionary
-    core_dict = {"N":N,"charge_arg":charge_arg,"bound_arg":bound_arg,"L":L,
-                  "w":w,"h":h,"R":R,"max_loop":max_loop,"x0":x0,
-                  "loop":relax.loop,"field":relax.x,
-                  "error":relax.error,"grid":relax.grid,"relax":relax}
-    if x0 == "BPS":
-        core_dict["BPS_top"] = relax.top_BPS
-        core_dict["BPS_bottom"] = relax.bottom_BPS
-        core_dict["BPS_y"] = relax.y_half
-        core_dict["BPS_slice"] = relax.BPS_slice
-        core_dict["initial_grid"] = relax.initial_grid
-        core_dict["B_top"] = relax.B_top #store BPS objects
-        core_dict["B_bottom"] = relax.B_bottom
-    #create directory for new folder if it doesn't exist
-    if not os.path.exists(path):
-        os.makedirs(path)
-    with open(path+"core_dict","wb") as file:
-        pickle.dump(core_dict, file)
     
 def canonical_length_num_conversion(L,w,R,h):
     if isinstance(L,int) and isinstance(w,int) and isinstance(R,int) and h==0.1:
@@ -693,15 +682,35 @@ def canonical_length_num_conversion(L,w,R,h):
         num_R = int(R/h)+1
     return num_z,num_y,num_R
 
+def store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
+           use_half_grid,loop,error,DFG,BPS_dic):
+    #store the core result in a dictionary
+    core_dict = {"N":N,
+                 "field":x,
+                 "charge_arg":charge_arg, "bound_arg":bound_arg,
+                 "L":L,"w":w,"h":h,"R":R,
+                 "tol":tol,
+                 "initial_kw":initial_kw,
+                  "loop":loop,"error":error,
+                  "grid":DFG}
+    if initial_kw == "BPS":
+        core_dict.update(BPS_dic) #combine two dictionaries
+    #create directory for new folder if it doesn't exist
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+"core_dict","wb") as file:
+        pickle.dump(core_dict, file)
+
 def initialize_field(N,DFG,charge,bound,initial_kw):
+    BPS_dic = None #initialize
     if initial_kw == "constant":
         x0 = DFG.create_constant_vector_field(bound.imaginary_vector)
     elif initial_kw == "zero":
         x0 = DFG.create_zeros_vector_field(N-1)
     elif initial_kw == "BPS":
-        x0 = _BPS_initial_field(N,DFG,charge,bound)
+        x0, BPS_dic = _BPS_initial_field(N,DFG,charge,bound)
     x0 = enforce_boundary(x0,DFG,bound.imaginary_vector)
-    return x0
+    return x0, BPS_dic
 
 def enforce_boundary(x_old,grid,bound_vec):
     x = deepcopy(x_old)
@@ -718,49 +727,450 @@ def enforce_boundary(x_old,grid,bound_vec):
     return x
     
 def _BPS_initial_field(N,DFG,charge,bound):
+    #solve for the two BPS equations
     if str(bound) == "x1":
         y_half,x_top_half,B_top, x_bottom_half,B_bottom = \
         _get_BPS_from_ordered_vacua(str(bound),"x0",str(charge),
-                                    vacf_arg=str(bound))
-    elif str(bound) == "x2" and str(charge) == "w1 -w2 +w3" and self.N==4:
+                                    str(bound),N,DFG)
+    elif str(bound) == "x2" and str(charge) == "w1 -w2 +w3" and N==4:
         y_half,x_top_half,B_top, x_bottom_half,B_bottom = \
-        _get_BPS_from_ordered_vacua(str(bound),"w2","w1+w3",str(bound))
+        _get_BPS_from_ordered_vacua(str(bound),"w2","w1+w3",str(bound),N,DFG)
+    #combine the two BPS equations into a single vertical slice
+    x_slice = _get_double_BPS_slice(x_top_half,x_bottom_half,N,DFG)
+    #initialize result
+    x0 = DFG.create_constant_vector_field(bound.imaginary_vector)
+    #for the 2 columns between the two charges, set to x_slice
+    for k in range(DFG.num_z):
+        if DFG.left_charge_axis_number <= k <= DFG.right_charge_axis_number:
+            x0[:,:,k] = x_slice
+    #create a dictionary to store BPS objects
+    BPS_dic = {}
+    #save BPS and initial grid
+    BPS_dic["B_top"] = B_top #store BPS object
+    BPS_dic["B_bottom"]  = B_bottom
+    BPS_dic["top_BPS"]  = x_top_half
+    BPS_dic["bottom_BPS"]  = x_bottom_half
+    BPS_dic["y_half"]  = y_half
+    BPS_dic["BPS_slice"]  = x_slice
+    BPS_dic["initial_grid"]  = x0
+    return x0, BPS_dic
 
+def _get_double_BPS_slice(x_top_half,x_bottom_half,N,DFG):
     x_top_half_trans = x_top_half.T
     x_bottom_half_trans = x_bottom_half.T
     half_num = x_top_half_trans.shape[1]
     x_slice = np.zeros(shape=(N-1,DFG.num_y),dtype=complex)
     x_slice[:,-1-half_num:-1] = np.flip(x_top_half_trans,1)
     x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
-    #first set x0 entirely equal to boundary values
-    for i in range(N-1):
-        x0[i,:,:] *= bound.imaginary_vector[i]
-    #for the 2 columns between the two charges, set to x_slice
-    for k in range(DFG.num_z):
-        if DFG.left_charge_axis_number <= k <= DFG.right_charge_axis_number:
-            x0[:,:,k] = x_slice
+    return x_slice
 
-    #save BPS and initial grid
-    self.B_top = B_top #store BPS object
-    self.B_bottom = B_bottom
-    self.top_BPS = x_top_half
-    self.bottom_BPS = x_bottom_half
-    self.y_half = y_half
-    self.BPS_slice = x_slice
-    self.initial_grid = x0
-    return x0
-
-def _get_BPS_from_ordered_vacua(v1,v2,v3,v4):
+def _get_BPS_from_ordered_vacua(v1,v2,v3,v4,N,DFG):
     y_half,x_top_half,B_top = _call_BPS(
-            top=True,vac0_arg=v1,vacf_arg=v2,N,DFG)
+            top=True,vac0_arg=v1,vacf_arg=v2,N=N,DFG=DFG)
     y_half,x_bottom_half,B_bottom = _call_BPS(
-            top=False,vac0_arg=v3,vacf_arg=v4,N,DFG)
+            top=False,vac0_arg=v3,vacf_arg=v4,N=N,DFG=DFG)
     return y_half, x_top_half, B_top, x_bottom_half, B_bottom
 
 def _call_BPS(top,vac0_arg,vacf_arg,N,DFG):
     return solve_BPS(N=N, separation_R=DFG.R, top=top, vac0_arg=vac0_arg,
                     vacf_arg=vacf_arg, z0=DFG.y0, zf=0, h=DFG.h, folder="",
                     tol=1e-5, save_plot=False)
+
+"""
+===============================================================================
+                                Solution Viewer
+===============================================================================
+"""    
+
+
+class Solution_Viewer():
+    """
+    Analyzing and displaying the field solution.
+    
+    Variables
+    ----------------------------------------
+    grid (Standard_Dipole_Grid)
+    x (array) = the solution array with complex data type and with shape
+                (m,grid.num_y,grid.num_z)
+    m (int) = the number of dimensions of the solution field
+    error (array) = the list of error
+    loop (int) = number of loops actually ran
+    title (str) = title of file path
+    """
+    def __init__(self,title):
+        # check for the existence of the file path
+        title = "../Results/Solutions/" + title + "/"
+        if os.path.exists(title+"core_dict"):
+            pickle_in = open(title+"core_dict","rb")
+            core_dict = pickle.load(pickle_in)
+            self.core_dict = core_dict
+            self.N = core_dict["N"]
+            self.x = core_dict["field"]
+            self.m = self.x.shape[0]
+            self.error = core_dict["error"]
+            self.loop = core_dict["loop"]
+            self.max_loop = core_dict["max_loop"]
+            self.L = core_dict["L"]    
+            self.w = core_dict["w"]
+            self.h = core_dict["h"]
+            self.R = core_dict["R"]
+            self.grid = core_dict["grid"]
+            self.bound_arg = core_dict["bound_arg"]
+            self.charge_arg = core_dict["charge_arg"]
+            self.folder_title = title
+            self.x0 = core_dict["x0"]
+            self.relax = core_dict["relax"]
+            if self.x0 == "BPS":
+                self.top_BPS = core_dict["BPS_top"]
+                self.bottom_BPS = core_dict["BPS_bottom"]
+                self.y_half = core_dict["BPS_y"]
+                self.BPS_slice = core_dict["BPS_slice"]
+                self.initial_grid = core_dict["initial_grid"]
+                self.B_top = core_dict["B_top"]
+                self.B_bottom = core_dict["B_bottom"]
+        else:
+            raise Exception("Solution file does not exist.")
+            
+    def display_all(self):
+        self.print_attributes()
+        self.plot_error()
+        self.plot_x_all()
+        self.plot_laplacian_all()
+        self.plot_gradient_energy_density()
+        self.plot_potential_energy_density()
+        self.plot_energy_density()
+        self.store_energy()
+        if self.x0 == "BPS":
+            self.plot_initial_grid()
+            self.plot_BPS()
+            self.compare_slice_with_BPS()
+            
+    def print_attributes(self):
+        print()
+        print("Attributes:")
+        print("N = " + str(self.N))
+        print("charge_arg = " + self.charge_arg)
+        print("bound_arg = " + self.bound_arg)
+        print("max loop = " + str(self.max_loop))
+        print("L = " + str(self.grid.L))
+        print("w = " + str(self.grid.w))
+        print("h = " + str(self.grid.h))
+        print("R = " + str(self.grid.R))
+        print("loop = " + str(self.loop))
+        print("error = " + str(self.error[-1]))
+        print("energy = " + str(self.get_energy()))
+        print()
+            
+    def get_phi_n(self,n):
+        """
+        Return the real part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+    
+        Output
+        --------------------------------------------
+        result (array) = an array of shape (grid.num_y,grid.num_z);
+                  the real part of the nth layer of the vector field.
+        """
+        if n >= self.m:
+            raise Exception("n must be less than or equal to m-1.")
+        return np.real(self.x)[n,:,:]
+    
+    def get_sigma_n(self,n):
+        """
+        Return the imaginary part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+    
+        Output
+        --------------------------------------------
+        result (array) = an array of shape (grid.num_y,grid.num_z);
+                  the imaginary part of the nth layer of the vector field.
+        """
+        if n >= self.m:
+            raise Exception("n must be less than or equal to m-1.")
+        return np.imag(self.x)[n,:,:]
+    
+    def plot_phi_n(self,n):
+        """
+        Plot the real part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+        """
+        self._quick_plot(self.get_phi_n(n),
+                         "$\phi_{}$".format(str(n+1)), "phi_"+str(n+1))
+        
+    def plot_sigma_n(self,n):
+        """
+        Plot the imaginary part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+        """
+        self._quick_plot(self.get_sigma_n(n),
+                         "$\sigma_{}$".format(str(n+1)), "sigma_"+str(n+1))
+        
+    def plot_x_all(self):
+        for n in range(self.m):
+            self.plot_phi_n(n)
+            self.plot_sigma_n(n)
+
+    def plot_error(self):
+        """
+        Plot the error.
+        """
+        plt.figure()
+        plt.plot(np.arange(0,self.loop,1),np.log10(self.error))
+        plt.ylabel("log(error)")
+        plt.title("Error")
+        plt.savefig(self.folder_title+"Error.png")
+        plt.show()
+        
+    def get_laplacian(self):
+        #initialize second derivative in each direction
+        d2xdz = np.zeros(shape=self.x.shape,dtype=complex)
+        d2xdy = np.zeros(shape=self.x.shape,dtype=complex)
+        for i in range(self.m): #loop over each layer
+            for j in range(self.grid.num_y): #loop over each row
+                for k in range(self.grid.num_z): #loop over each column
+                    d2xdz[i][j][k] = self._get_d2xdz_ijk(i,j,k)
+                    d2xdy[i][j][k] = self._get_d2xdy_ijk(i,j,k)
+        return d2xdz + d2xdy
+
+    def plot_laplacian_all(self):
+        """
+        Plot and compare the numerical and theoretical Laplacian to verify
+        that the solution actually solves the PDE
+        """
+        lap_num = self.get_laplacian()
+        lap_theo = self._get_lap_theo()
+        for n in range(self.m):
+            self._plot_laplacian_n(n,lap_num,lap_theo)
+    
+    def get_gradient_energy_density(self):
+        """
+        Return the energy density from gradient of the field
+        
+        Output
+        --------------------------------------------
+        energy_density (array) = the energy density from gradient of the field;
+                                 an array of shape (grid.num_y,grid.num_z).
+        """
+        dxdz,dxdy = self._get_derivative() #derivative in each direction
+        dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
+        gradient_energy_density = dx_squared.sum(axis=0) #sum over components
+        return gradient_energy_density
+
+    def get_gradient_energy(self):
+        """
+        Return the value of the gradient energy
+        
+        Output
+        --------------------------------------------
+        gradient_energy (float) = the total gradient energy
+        """
+        #integrate to get energy
+        gradient_energy = simps(simps(self.get_gradient_energy_density(), 
+                             self.grid.z),self.grid.y)
+        return gradient_energy
+    
+    def plot_gradient_energy_density(self):
+        self._quick_plot(self.get_gradient_energy_density(),
+                         "Gradient Energy Density",
+                         "Gradient_Energy_Density",
+                         cmap='jet')
+
+    def get_potential_energy_density(self):
+        W = Superpotential(self.N)
+        ped = (1/4)*W.dWdx_absolute_square_on_grid(self.x)
+        ped = np.real(ped) #it is real anyway
+        return ped
+               
+    def get_potential_energy(self):
+        return simps(simps(self.get_potential_energy_density(),self.grid.z),
+                     self.grid.y)
+    
+    def plot_potential_energy_density(self):
+        self._quick_plot(self.get_potential_energy_density(),
+                         "Potential Energy Density",
+                         "Potential_Energy_Density",
+                         cmap='jet')
+        
+    def get_energy_density(self):
+        return self.get_potential_energy_density() \
+               + self.get_gradient_energy_density()
+               
+    def get_energy(self):
+        return simps(simps(self.get_energy_density(),self.grid.z),self.grid.y)
+    
+    def store_energy(self):
+        with open(self.folder_title+"core_dict","wb") as file:
+            self.core_dict["energy"] = self.get_energy()
+            pickle.dump(self.core_dict, file)
+    
+    def plot_energy_density(self):
+        self._quick_plot(self.get_energy_density(),
+                         "Energy Density",
+                         "Energy_Density",
+                         cmap='jet')
+
+    def plot_BPS(self):
+        #the following only works if the boundary is x1
+        external_plot_BPS(N=self.N,z=self.y_half,f=self.top_BPS,B=self.B_top,
+                          h=self.h,folder=self.folder_title,
+                          vac0=self.bound_arg,vacf="x0",save_plot=True)
+        external_plot_BPS(N=self.N,z=self.y_half,f=self.bottom_BPS,
+                          B=self.B_bottom,h=self.h,folder=self.folder_title,
+                          vac0=self.charge_arg,vacf=self.bound_arg,
+                          save_plot=True)
+        
+    def plot_initial_grid(self):
+        for n in range(self.m):
+            phi_n = np.real(self.initial_grid[n,:,:])
+            sigma_n = np.imag(self.initial_grid[n,:,:])
+            self._quick_plot(phi_n,"initial phi_{}".format(str(n+1)),
+                             "initial_phi_{}".format(str(n+1)))
+            self._quick_plot(sigma_n,"initial sigma_{}".format(str(n+1)),
+                             "initial_sigma_{}".format(str(n+1)))
+            
+    def compare_slice_with_BPS(self):
+        for n in range(self.m):
+            plt.figure()
+            #take a vertical slice through middle
+            middle_col = int(self.grid.num_z/2)
+            plt.plot(self.grid.y, self.get_phi_n(n)[:,middle_col],
+                     label="final $\phi_{}$".format(str(n+1)))
+            plt.plot(self.grid.y, np.real(self.BPS_slice[n,:]),
+                     label="BPS $\phi_{}$".format(str(n+1)))
+            plt.legend()
+            plt.title("compare slice with BPS phi_{}".format(str(n+1)))
+            plt.savefig(self.folder_title +
+                        "compare_slice_with_BPS_phi_{}.png".format(str(n+1)))
+            plt.show()
+            
+            plt.figure()
+            plt.plot(self.grid.y, self.get_sigma_n(n)[:,middle_col],
+                     label="final $\sigma_{}$".format(str(n+1)))
+            plt.plot(self.grid.y, np.imag(self.BPS_slice[n,:]),
+                     label="BPS $\sigma_{}$".format(str(n+1)))
+            plt.legend()
+            plt.title("compare slice with BPS sigma_{}".format(str(n+1)))
+            plt.savefig(self.folder_title +
+                    "compare_slice_with_BPS_sigma_{}.png".format(str(n+1)))
+            plt.show()
+            
+
+    def _quick_plot(self,field,title,file_title,cmap=None):
+        plt.figure()
+        plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
+        plt.colorbar()
+        plt.title(title)
+        plt.savefig(self.folder_title+file_title+".png")
+        plt.show()
+        
+    def _quick_plot_laplacian(self,field,ax,title,fig):
+        im = ax.pcolormesh(self.grid.zv,self.grid.yv,field)
+        ax.set_title(title)
+        fig.colorbar(im,ax=ax)
+        
+    def _plot_laplacian_n(self,n,lap_num,lap_theo):
+        #row= real & imag of fields; col= numeric vs theoretic
+        fig, axs = plt.subplots(2, 2) 
+        fig.subplots_adjust(hspace=0.7)
+        fig.subplots_adjust(wspace=0.7)
+        self._quick_plot_laplacian(np.real(lap_num[n,:,:]),axs[0, 0],
+                        "$\\nabla^2 \phi_{}$ numeric".format(str(n+1)),
+                                   fig)
+        self._quick_plot_laplacian(np.real(lap_theo[n,:,:]),axs[0,1],
+                        "$\\nabla^2 \phi_{}$ theoretic".format(str(n+1)),
+                                   fig)
+        self._quick_plot_laplacian(np.imag(lap_num[n,:,:]),axs[1, 0],
+                        "$\\nabla^2 \sigma_{}$ numeric".format(str(n+1)),
+                                   fig)
+        self._quick_plot_laplacian(np.imag(lap_theo[n,:,:]),axs[1,1],
+                        "$\\nabla^2 \sigma_{}$ theoretic".format(str(n+1)),
+                            fig)
+        #add axis label such that repeated are avoided
+        #for ax in axs.flat:
+            #ax.set(xlabel='z', ylabel='y')
+        # Hide x labels and tick labels for top plots and y ticks for right plots.
+        #for ax in axs.flat:
+            #ax.label_outer()
+        fig.savefig(self.folder_title+"Laplacian_{}.png".format(str(n+1)))
+            
+    def _get_lap_theo(self):
+        #return theoretical laplacian
+        charge = Sigma_Critical(self.N,self.charge_arg)
+        bound = Sigma_Critical(self.N,self.bound_arg)
+        relax = Relaxation(self.grid,self.N,bound,charge,
+                           self.max_loop,x0=None,diagnose=False)
+        return relax._full_grid_EOM(self.x)
+    
+    def _get_derivative(self):
+        #initialize derivative in each direction
+        dxdz = np.zeros(shape=self.x.shape,dtype=complex)
+        dxdy = np.zeros(shape=self.x.shape,dtype=complex)
+        for i in range(self.m): #loop over each layer
+            for j in range(self.grid.num_y): #loop over each row
+                for k in range(self.grid.num_z): #loop over each column
+                    dxdz[i][j][k] = self._get_dxdz_ijk(i,j,k)
+                    dxdy[i][j][k] = self._get_dxdy_ijk(i,j,k)
+        return dxdz, dxdy
+
+    def _get_dxdz_ijk(self,i,j,k):
+        if k == 0: #one sided derivative on the edge
+            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
+        elif k==self.grid.num_z-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j][k+1] - self.x[i][j][k-1])/(2*self.grid.h)
+        return result
+    
+    def _get_dxdy_ijk(self,i,j,k):
+        if j == 0: #one sided derivative on the edge
+            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
+        elif j==self.grid.num_y-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
+        #monodromy
+        elif j==self.grid.z_axis-1 and self.grid.left_axis<= k <=self.grid.right_axis:
+            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
+        elif j==self.grid.z_axis and self.grid.left_axis<= k <=self.grid.right_axis:
+            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j+1][k] - self.x[i][j-1][k])/(2*self.grid.h)
+        return result
+    
+    def _get_d2xdz_ijk(self,i,j,k):
+        if k == 0: #one sided second derivative on the edge (forward difference)
+            result = (self.x[i][j][k+2] - 2*self.x[i][j][k+1] +
+                      self.x[i][j][k])/(self.grid.h**2)
+        elif k==self.grid.num_z-1: #one sided second derivative on the edge
+            result = (self.x[i][j][k] - 2*self.x[i][j][k-1] +
+                      self.x[i][j][k-2])/(self.grid.h**2)
+        else: #two sided second derivative elsewhere
+            result = (self.x[i][j][k+1] - 2*self.x[i][j][k] +
+                      self.x[i][j][k-1])/(self.grid.h**2)
+        return result
+    
+    def _get_d2xdy_ijk(self,i,j,k):
+        if j == 0: #one sided derivative on the edge
+            result = (self.x[i][j+2][k] - 2*self.x[i][j+1][k] +
+                      self.x[i][j][k])/(self.grid.h**2)
+        elif j==self.grid.num_y-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - 2*self.x[i][j-1][k] +
+                      self.x[i][j-2][k])/(self.grid.h**2)
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j+1][k] - 2*self.x[i][j][k] +
+                      self.x[i][j-1][k])/(self.grid.h**2)
+        return result
+    
 
 if __name__ == "__main__":
     pass
