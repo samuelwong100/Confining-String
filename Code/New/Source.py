@@ -1237,22 +1237,35 @@ class Solution_Viewer():
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
               save_plot=True,save_result=True,folder="",
               separation_R=0,top=True):
-    #if folder is unspecified, save it in designated BPS solitons folder
-    if folder == "":
-        folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={}/".format(
-                str(N),vac0_arg,vacf_arg,str(num),str(h),str(tol))
+    #create sigma cirtical point objects for iniitial and final bondary
     vac0 = Sigma_Critical(N,vac0_arg)
     vacf = Sigma_Critical(N,vacf_arg)
+    #create linspace for physical space, z
     z0,zf,z_linspace = get_z_linspace(num,h)
+    #initialize field using speical kink
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
                  separation_R,top,kw="special kink")
+    #generate second derivative function for relaxation
     BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
-    x, z_linspace = relaxation_1D_algorithm(g=BPS_second_derivative_function,
-                                            num=num,f0=x0,h=h,tol=tol)
+    #generate continue condition that checks energy as well as error for
+    #whether to continue relaxation loop
+    BPS_energy_continue_condition = generate_BPS_energy_continue_condition(
+            N,num,vac0,vacf,z_linspace,h)
+    #call everything in relaxation algorithm
+    x, z_linspace, error = relaxation_1D_algorithm(
+            g=BPS_second_derivative_function,num=num,f0=x0,h=h,tol=tol,
+            continue_condition=BPS_energy_continue_condition)
+    #if folder is unspecified, save it in designated BPS solitons folder
+    if folder == "":
+        folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={},final_error={}/".format(
+                str(N),vac0_arg,vacf_arg,str(num),str(h),str(tol),
+                '{:0.1e}'.format(error[-1]))
     if plot:
         plot_BPS(N,z_linspace,x,num,h,vac0,vacf,save_plot,folder)
+        plot_error(error,folder)
     if save_result:
-        BPS_dict={"x":x,"z":z_linspace,"vac0":vac0,"vacf":vacf}
+        BPS_dict={"x":x,"z":z_linspace,"vac0":str(vac0),"vacf":str(vacf),
+                  "error":error}
         create_path(folder)
         with open(folder+"BPS_dict","wb") as file:
             pickle.dump(BPS_dict, file)
@@ -1357,9 +1370,31 @@ def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,R=0,top=True,
     x0[0]= vac0_vec
     x0[-1]= vacf_vec
     return x0
-    
+
+def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
+    def BPS_energy_continue_condition(error,tol,x):
+        greater_than_tol = default_continue_condition(error,tol)
+        loop = len(error)
+        if loop > 10000 and loop % 1000 ==0:
+            print("loop=",loop,"error=",error[-1])
+            #after 10,000 loops, check energy condition once every 1000 loops
+            #this ensures we don't stop prematurely and don't waste time
+            #computing energy too foten
+            theoretic_energy, numeric_energy = BPS_Energy(N,num,vac0,vacf,x,z,h)
+            energy_too_far = (np.abs(theoretic_energy - numeric_energy) > 0.005)
+            #only continue loop if error is too large and energy too far from
+            #theoretical energy
+            return greater_than_tol and energy_too_far
+        else:
+            return greater_than_tol
+    return BPS_energy_continue_condition
+        
 """ ============== subsection: relaxation 1D ==============================="""
-def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9):
+def default_continue_condition(error,tol,*args):
+    return error[-1]>tol
+
+def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,
+                            continue_condition = default_continue_condition):
     """
     Solve the boundary value problem of a set of coupled, second order,
     ordinary differential equation with m components using relaxation method.
@@ -1372,17 +1407,20 @@ def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9):
     """
     h_squared = h**2 #precalculate to save time
     z0,zf,z_linspace = get_z_linspace(num,h)
-    f = relaxation_1D_while_loop(g,f0,num,h_squared,tol) #run relaxation
-    return f, z_linspace
+    f, error = relaxation_1D_while_loop(g,f0,num,h_squared,tol,
+                                        continue_condition) #run relaxation
+    return f, z_linspace, error
 
-def relaxation_1D_while_loop(g,f,num,h_squared,tol):
-    error = tol+1 # initialize error to be larger than tolerance
-    while error>tol:
+def relaxation_1D_while_loop(g,f,num,h_squared,tol,
+                             continue_condition = default_continue_condition):
+    error = [tol+1] #initialize a "fake" error so that while loop can run
+    while continue_condition(error,tol,f):
         f_new = _realxation_1D_update(g,f,num,h_squared)
-        error = np.max(np.abs(f_new - f))/np.max(np.abs(f_new))
+        error.append(np.max(np.abs(f_new - f))/np.max(np.abs(f_new)))
         f = f_new
-        print(error)
-    return f
+    del error[0] #delete the first, fake error
+    error = np.array(error) #change error into an array
+    return f, error
 
 @jit(nopython=False)
 def _realxation_1D_update(g,f_old,num,h_squared):
@@ -1423,33 +1461,41 @@ def plot_BPS(N,z,f,num,h,vac0,vacf,save_plot,folder):
     fig = plt.figure(figsize=(14,10))
     ax1 = fig.add_subplot(221)
     for i in range(N-1):
-        ax1.plot(z,phi[i],label="$\phi_"+str(i+1)+"$")
+        ax1.plot(z,phi[i],label="$\phi_{}$".format(str(i+1)))
     ax1.legend()
+    ax1.legend(loc=(1.05, 0))
     
     ax2 = fig.add_subplot(222)
     for i in range(N-1):
-        ax2.plot(z,sigma[i],label="$\sigma_"+str(i+1)+"$")
+        ax2.plot(z,sigma[i],label="$\sigma_{}$".format(str(i+1)))
     ax2.legend()
+    ax2.legend(loc=(1.05, 0))
     
     ax3 = fig.add_subplot(223)
     for i in range(N-1):
-        ax3.plot(z, dphi_theoretic[i], '--',label="$d\phi_"+str(i+1)+"theoretic$")
-        ax3.plot(z, dphi_numeric[i],label="$d\phi_"+str(i+1)+"numeric$")
+        color=next(ax3._get_lines.prop_cycler)['color']
+        ax3.plot(z, dphi_theoretic[i], '--',
+                 label="$d\phi_{} theoretic$".format(str(i+1)),color=color)
+        ax3.plot(z, dphi_numeric[i],
+                 label="$d\phi_{} numeric$".format(str(i+1)),color=color)
     ax3.legend()
-    ax3.legend(bbox_to_anchor=(1, 1))
+    ax3.legend(loc=(1.05, 0))
     
     ax4 = fig.add_subplot(224)
     for i in range(N-1):
-        ax4.plot(z, dsigma_theoretic[i], '--',label="$d\sigma_"+str(i+1)+"theoretic$")
-        ax4.plot(z, dsigma_numeric[i],label="$d\sigma_"+str(i+1)+"numeric$")
+        color=next(ax4._get_lines.prop_cycler)['color']
+        ax4.plot(z, dsigma_theoretic[i], '--',
+                 label="$d\sigma_{} theoretic$".format(str(i+1)),color=color)
+        ax4.plot(z, dsigma_numeric[i],
+                 label="$d\sigma_{} numeric$".format(str(i+1)),color=color)
     ax4.legend()
-    ax4.legend(bbox_to_anchor=(1, 1))
+    ax4.legend(loc=(1.05,0))
     
     fig.subplots_adjust(wspace=0.7)
     
     #get and print energy
     theoretic_energy,numeric_energy = BPS_Energy(N,num,vac0,vacf,f,z,h)
-    fig.text(x=0,y=0,s= r"$E_{theoretic}$= "+str(round(theoretic_energy,4))+
+    fig.text(x=0,y=0.05,s= r"$E_{theoretic}$= "+str(round(theoretic_energy,4))+
              "; $E_{numeric}$= "+str(round(numeric_energy,4)),size=16)
     
     title="BPS (N={}, {} to {})".format(str(N),str(vac0),(vacf))
@@ -1490,6 +1536,18 @@ def BPS_Energy(N,num,vac0,vacf,x,z,h):
         sum2 += trapz(np.abs(dWdx[:,i])**2,z)
     numeric_energy = sum1 + sum2/4
     return (theoretic_energy,numeric_energy)
+
+def plot_error(error,folder):
+    """
+    Plot the error.
+    """
+    plt.figure()
+    loops = np.arange(0,error.size,1)
+    plt.plot(loops,np.log10(error))
+    plt.ylabel("log(error)")
+    plt.title("Error")
+    plt.savefig(folder+"Error.png")
+    plt.show()
 
 if __name__ == "__main__":
     pass
