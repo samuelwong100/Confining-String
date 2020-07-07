@@ -127,7 +127,7 @@ def test_relaxation_algorithm():
     return x, error,loop
     
     
-test_dipole_full_grid()
-test_relaxation_update()
-test_half_grid_reflect()
+#test_dipole_full_grid()
+#test_relaxation_update()
+#test_half_grid_reflect()
 #x, error,loop = test_relaxation_algorithm()

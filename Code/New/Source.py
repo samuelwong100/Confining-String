@@ -5,10 +5,6 @@ Purpose:
 Author: Samuel Wong
 """
 import os
-import sys
-sys.path.append("BPS_Package")
-from solve_BPS import solve_BPS
-from plot_BPS import plot_BPS as external_plot_BPS
 import pickle
 import numpy as np
 from numpy import sqrt, pi, exp
@@ -16,6 +12,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 from copy import deepcopy
 from scipy.integrate import simps
+import numba
+from numba import jit
+from numba import jitclass          # import the decorator
+from numba import int32, float32    # import the types
 
 """
 ===============================================================================
@@ -311,6 +311,40 @@ class Sigma_Critical():
         return sign, term
     
 """ ============== subsection: Miscellaneous Math Functions ================"""
+def grad(f, points, dx = 1e-5):
+    """
+    NAME:
+        grad
+    PURPOSE:
+        Calculate the numerical value of gradient for an array of points, using
+        a function that is able to take an array of points
+    INPUT:
+        f = a differentiable function that takes an array of m points, each
+        with n dimensions, and returns an (m,1) array
+        points = (m,n) array, representing m points, each with n dimensions
+    OUTPUT:
+        (m,n) array, each row being a gradient
+    """
+    n = np.shape(points)[1]
+    increment = dx*np.identity(n)
+    df = []
+    for row in increment:
+        df.append((f(points + row) - f(points-row))/(2*dx))
+    return np.array(df).T[0]
+
+def derivative_sample(x,h):
+    """
+    return the derivative of a sample of a function, x, which can have multiple
+    components (column), and the points are stored as rows.
+    """
+    #get the derivaitve and fix the boundary issues
+    first = (x[1] - x[0])/h
+    last = (x[-1] - x[-2])/h
+    dxdz = (np.roll(x,-1,axis=0) - np.roll(x,1,axis=0))/(2*h)
+    dxdz[0] = first
+    dxdz[-1] = last
+    return dxdz
+
 def within_epsilon(x,target):
     epsilon = 1e-5
     if isinstance(target,tuple):
@@ -729,11 +763,11 @@ def enforce_boundary(x_old,grid,bound_vec):
 def _BPS_initial_field(N,DFG,charge,bound):
     #solve for the two BPS equations
     if str(bound) == "x1":
-        y_half,x_top_half,B_top, x_bottom_half,B_bottom = \
+        y_half, x_top_half, B_top, x_bottom_half, B_bottom = \
         _get_BPS_from_ordered_vacua(str(bound),"x0",str(charge),
                                     str(bound),N,DFG)
     elif str(bound) == "x2" and str(charge) == "w1 -w2 +w3" and N==4:
-        y_half,x_top_half,B_top, x_bottom_half,B_bottom = \
+        y_half, x_top_half, B_top, x_bottom_half, B_bottom = \
         _get_BPS_from_ordered_vacua(str(bound),"w2","w1+w3",str(bound),N,DFG)
     #combine the two BPS equations into a single vertical slice
     x_slice = _get_double_BPS_slice(x_top_half,x_bottom_half,N,DFG)
@@ -772,8 +806,10 @@ def _get_BPS_from_ordered_vacua(v1,v2,v3,v4,N,DFG):
     return y_half, x_top_half, B_top, x_bottom_half, B_bottom
 
 def _call_BPS(top,vac0_arg,vacf_arg,N,DFG):
-    return solve_BPS(N=N, separation_R=DFG.R, top=top, vac0_arg=vac0_arg,
-                    vacf_arg=vacf_arg, z0=DFG.y0, zf=0, h=DFG.h, folder="",
+    vac0_vec = Sigma_Critical(N,vac0_arg).imaginary_vector
+    vacf_vec = Sigma_Critical(N,vacf_arg).imaginary_vector
+    return solve_BPS(N=N, separation_R=DFG.R, top=top, vac0_vec=vac0_vec,
+                    vacf_vec=vacf_vec, z0=DFG.y0, zf=0, h=DFG.h, folder="",
                     tol=1e-5, save_plot=False)
 
 """
@@ -781,8 +817,6 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG):
                                 Solution Viewer
 ===============================================================================
 """    
-
-
 class Solution_Viewer():
     """
     Analyzing and displaying the field solution.
@@ -1171,6 +1205,259 @@ class Solution_Viewer():
                       self.x[i][j-1][k])/(self.grid.h**2)
         return result
     
+"""
+===============================================================================
+                                    BPS
+===============================================================================
+"""
+""" ============== subsection: solve BPS ==================================="""
+def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
+              save_plot=True,folder=None,separation_R=0,top=True):
+    vac0 = Sigma_Critical(N,vac0_arg)
+    vacf = Sigma_Critical(N,vacf_arg)
+    z0,zf,z_linspace = get_z_linspace(num,h)
+    x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
+                 separation_R,top,kw="special kink")
+    BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
+    x, z_linspace = relaxation_1D_algorithm(g=BPS_second_derivative_function,
+                                            num=num,f0=x0,h=h,tol=tol)
+    if plot:
+        plot_BPS(N,z_linspace,x,h,vac0,vacf,save_plot,folder)
+    return x, z_linspace
+
+def get_z_linspace(num,h):
+    if num % 2 == 0:
+        raise Exception("num must be odd.")
+    #create z_linspace for future plotting
+    zf = (num-1)*h/2
+    z0 = -zf
+    z_linspace = np.linspace(start=z0,stop=zf,num=num)
+    return z0,zf,z_linspace
+
+def generate_BPS_second_derivative_function(N):
+    S = SU(N)
+    def BPS_second_derivative_function(x):
+        #returns the second derivative function:
+        #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
+        # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
+        exp_alpha_x = np.exp(dot_field_with_all_alpha(S.alpha,x))
+        exp_alpha_x_conj = np.exp(dot_field_with_all_alpha(S.alpha,np.conj(x)))
+        summation = 0
+        for a in range(0,N):
+            a_term = list_of_costants_times_vector(
+                    exp_alpha_x_conj[:,a], S.alpha[a])
+            a_minus_1_term = list_of_costants_times_vector(
+                    exp_alpha_x_conj[:,(a-1) % N],S.alpha[(a-1) % N])
+            a_plus_1_term = list_of_costants_times_vector(
+                    exp_alpha_x_conj[:,(a+1) % N],S.alpha[(a+1) % N])
+            summation += list_of_costants_times_vector(exp_alpha_x[:,a],
+                                (2*a_term - a_minus_1_term - a_plus_1_term))
+        return summation/4
+    return BPS_second_derivative_function
+
+def dot_field_with_all_alpha(alpha,x):
+    #take a vector field of shape (num,N-1), dot it with each of alpha[a],
+    #where a goes from 1 to N
+    #return result of shape (num,N), each row is a point, each column is a 
+    #result with corresponding alpha
+    return np.dot(alpha, x.T).T
+
+def list_of_costants_times_vector(constants_ls,vector):
+    #constants_ls is of shape (size,)
+    #vector is of shape(n,)
+    size=constants_ls.size
+    return constants_ls.reshape(size,1)*vector
+
+def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,R=0,top=True,
+            kw=None):
+    #m is number of fields, m = N-1
+    if kw is None:
+        x0 = np.ones(shape=(num,m),dtype=complex)
+    elif kw == "special kink":
+        x0 = np.ones(shape=(num,m),dtype=complex)
+        half = num // 2
+        x0[0:half,:] = vac0_vec
+        x0[half:-1,:] = vacf_vec
+    elif kw == "kink with predicted width":
+        x0 = np.ones(shape=(num,m),dtype=complex)
+        #predict the width to be d/2 = y(R/2) = ln(R/2+1)-R/(R+2)
+        height = np.log(R/2+1)-R/(R+2) #equivalent to d/2
+        ratio = height/np.abs(zf - z0)
+        if top:
+            kink_pixel_number = int((1-ratio)*num)
+        else:
+            kink_pixel_number = int(ratio*num)
+        x0[0:kink_pixel_number,:] = vac0_vec
+        x0[kink_pixel_number:-1,:] = vacf_vec
+    #enforce boundary
+    x0[0]= vac0_vec
+    x0[-1]= vacf_vec
+    return x0
+    
+""" ============== subsection: relaxation 1D ==============================="""
+def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9):
+    """
+    Solve the boundary value problem of a set of coupled, second order,
+    ordinary differential equation with m components using relaxation method.
+    
+    The ODE has to be of the form
+    d^2(f(z))/dz^2 = g(f(z))
+    where f can be a vector.
+    
+    f0 is the initial field, which is assumed to have right boundary.
+    """
+    h_squared = h**2 #precalculate to save time
+    z0,zf,z_linspace = get_z_linspace(num,h)
+    f = relaxation_1D_while_loop(g,f0,num,h_squared,tol) #run relaxation
+    return f, z_linspace
+
+def relaxation_1D_while_loop(g,f,num,h_squared,tol):
+    error = tol+1 # initialize error to be larger than tolerance
+    while error>tol:
+        f_new = _realxation_1D_update(g,f,num,h_squared)
+        error = np.max(np.abs(f_new - f))/np.max(np.abs(f_new))
+        f = f_new
+        print(error)
+    return f
+
+def _realxation_1D_update(g,f_old,num,h_squared):
+    # replace each element of f_old with sum of left and right neighbors,
+    # plus a second derivative term
+    f_new = deepcopy(f_old)
+    second_derivative = g(f_new)
+    for k in range(1,num-1): #skip boundaries
+        #note f is of shape (num,m), where num is number of points,
+        #m is number of components
+        f_new[k] = (f_new[k-1] + f_new[k+1] - second_derivative[k]*h_squared)/2
+    return f_new
+
+""" ============== subsection: plot BPS ===================================="""
+def plot_BPS(N,z,f,h,vac0,vacf,save_plot=True,folder="BPS Solitons"):
+    phi = []
+    sigma = []
+    for i in range(N-1):
+        phi.append(np.real(f[:,i]))
+        sigma.append(np.imag(f[:,i]))
+    
+    #get the theoretical derivative for comparison
+    dx_theoretic = BPS_dx(N,f,vac0,vacf)
+    dphi_theoretic = []
+    dsigma_theoretic = []
+    for i in range(N-1):
+        dphi_theoretic.append(np.real(dx_theoretic[:,i]))
+        dsigma_theoretic.append(np.imag(dx_theoretic[:,i]))
+        
+    #get numerical derivative
+    dx_numeric = derivative_sample(f,h)
+    dphi_numeric = []
+    dsigma_numeric = []
+    for i in range(N-1):
+        dphi_numeric.append(np.real(dx_numeric[:,i]))
+        dsigma_numeric.append(np.imag(dx_numeric[:,i]))
+    
+    fig = plt.figure(figsize=(14,10))
+    ax1 = fig.add_subplot(221)
+    for i in range(N-1):
+        ax1.plot(z,phi[i],label="$\phi_"+str(i+1)+"$")
+    ax1.legend()
+    
+    ax2 = fig.add_subplot(222)
+    for i in range(N-1):
+        ax2.plot(z,sigma[i],label="$\sigma_"+str(i+1)+"$")
+    ax2.legend()
+    
+    ax3 = fig.add_subplot(223)
+    for i in range(N-1):
+        ax3.plot(z, dphi_theoretic[i], '--',label="$d\phi_"+str(i+1)+"theoretic$")
+        ax3.plot(z, dphi_numeric[i],label="$d\phi_"+str(i+1)+"numeric$")
+    ax3.legend()
+    ax3.legend(bbox_to_anchor=(1, 1))
+    
+    ax4 = fig.add_subplot(224)
+    for i in range(N-1):
+        ax4.plot(z, dsigma_theoretic[i], '--',label="$d\sigma_"+str(i+1)+"theoretic$")
+        ax4.plot(z, dsigma_numeric[i],label="$d\sigma_"+str(i+1)+"numeric$")
+    ax4.legend()
+    ax4.legend(bbox_to_anchor=(1, 1))
+    
+    fig.subplots_adjust(wspace=0.7)
+    
+    title="BPS (N={}, {} to {})".format(str(N),str(vac0),(vacf))
+    fig.suptitle(title)
+    if save_plot:
+        fig.savefig(folder+title+".png", dpi=300)
+
+def BPS_dx(N,x,vac0,vacf):
+    """
+    BPS equations
+    """
+    W = Superpotential(N)
+    x_ = np.conj(x)
+    dWdx_ = grad(W,x_)
+    numerator = W(np.array([vacf.imaginary_vector])) - \
+                W(np.array([vac0.imaginary_vector]))
+    denominator = np.absolute(numerator)
+    alpha = numerator/denominator
+    return (alpha/2)*dWdx_
+        
+#class BPS():
+#    """
+#    A class representing the BPS equation in SU(N).
+#    """
+#    def __init__(self,N,xmin0,xminf): 
+#        self.s = SU(N)
+#        self.W = Superpotential(N)
+#        self.N = N
+#        self.xmin0 = np.array([xmin0])
+#        self.xminf = np.array([xminf])
+#        numerator = self.W(self.xminf) - self.W(self.xmin0)
+#        denominator = np.absolute(numerator)
+#        self.alpha = numerator/denominator
+#
+#    def dx(self,x):
+#        """
+#        BPS equations
+#        """
+#        x_ = np.conj(x)
+#        dWdx_ = grad(self.W,x_)
+#        return (self.alpha/2)*dWdx_
+#
+#    def _Hessian(self,x):
+#        """
+#        Hessian Matrix for W*
+#        """
+#        m = x.shape[0] # there are m points
+#        # for each point, there is a Hessian matrix
+#        # so we will return a (length m) list of Hessian
+#        ls = []
+#        for row in range(m):
+#            ls.append(self._define_Hessian(x[row]))
+#        return ls
+#
+#    def _define_Hessian(self,x):
+#        # x is now a row array
+#        #initialize Hessian
+#        H = np.zeros(shape=(self.N-1,self.N-1),dtype=complex)
+#        for i in range(self.N-1):
+#            for j in range(self.N-1):
+#                summation = 0j
+#                for a in range(self.N):
+#                    summation += self.s.alpha[a][i] * self.s.alpha[a][j] * \
+#                    np.exp(np.dot(self.s.alpha[a],np.conj(x)))
+#                H[i][j] = summation
+#        return H
+#
+#    def ddx(self,x):
+#        """
+#        Second order BPS equations
+#        """
+#        dWdx = grad(self.W,x)
+#        m = x.shape[0]
+#        result = np.zeros(shape=(m,self.N-1),dtype=complex)
+#        H_ls = self._Hessian(x)
+#        for (row,H) in enumerate(H_ls):
+#            result[row] = np.matmul(H,dWdx[row])/4
+#        return result
 
 if __name__ == "__main__":
     pass
