@@ -11,11 +11,31 @@ from numpy import sqrt, pi, exp
 import matplotlib.pyplot as plt
 import matplotlib
 from copy import deepcopy
-from scipy.integrate import simps
+from scipy.integrate import simps, trapz
 import numba
 from numba import jit
 from numba import jitclass          # import the decorator
 from numba import int32, float32    # import the types
+import time
+
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        if 'log_time' in kw:
+            name = kw.get('log_name', method.__name__.upper())
+            kw['log_time'][name] = int((te - ts) * 1000)
+        else:
+            print('%r  %2.2f ms' % \
+                  (method.__name__, (te - ts) * 1000))
+        return result
+    return timed
+
+def create_path(path):
+    #create directory for new folder if it doesn't exist
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 """
 ===============================================================================
@@ -175,18 +195,21 @@ class Superpotential():
         #computes once
         #the following is the equation we get from applying the idenity of
         #alpha_a dot alpha_b in terms of 3 delta function
+        #TODO: try to reduce loop over a into a numpy slice
         for a in range(self.N):
+            a_minus_1 = (a-1) % self.N
+            a_plus_1 = (a+1) % self.N
             A = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x))
             exp_B = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x_conj))
-            exp_C = np.exp(dot_vec_with_vec_field(self.s.alpha[(a-1)%self.N],x_conj))
-            exp_D = np.exp(dot_vec_with_vec_field(self.s.alpha[(a+1)%self.N],x_conj))
+            exp_C = np.exp(dot_vec_with_vec_field(self.s.alpha[a_minus_1],x_conj))
+            exp_D = np.exp(dot_vec_with_vec_field(self.s.alpha[a_plus_1],x_conj))
             #the a-th term in the vector field summation
             vec_a = np.zeros(shape=x.shape,dtype=complex)
             for b in range(self.N-1):
                 #the b-th component of the resulting vector field
                 B = exp_B*self.s.alpha[a][b]
-                C = exp_C*self.s.alpha[(a-1)%self.N][b]
-                D = exp_D*self.s.alpha[(a+1)%self.N][b]
+                C = exp_C*self.s.alpha[a_minus_1][b]
+                D = exp_D*self.s.alpha[a_plus_1][b]
                 vec_a[b,:,:] += 2*B-C-D
             summation += A*vec_a
         return summation/4
@@ -311,7 +334,7 @@ class Sigma_Critical():
         return sign, term
     
 """ ============== subsection: Miscellaneous Math Functions ================"""
-def grad(f, points, dx = 1e-5):
+def grad(f, points, dx = 1e-6):
     """
     NAME:
         grad
@@ -730,8 +753,7 @@ def store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
     if initial_kw == "BPS":
         core_dict.update(BPS_dic) #combine two dictionaries
     #create directory for new folder if it doesn't exist
-    if not os.path.exists(path):
-        os.makedirs(path)
+    create_path(path)
     with open(path+"core_dict","wb") as file:
         pickle.dump(core_dict, file)
 
@@ -1211,8 +1233,14 @@ class Solution_Viewer():
 ===============================================================================
 """
 """ ============== subsection: solve BPS ==================================="""
+@timeit
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
-              save_plot=True,folder=None,separation_R=0,top=True):
+              save_plot=True,save_result=True,folder="",
+              separation_R=0,top=True):
+    #if folder is unspecified, save it in designated BPS solitons folder
+    if folder == "":
+        folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={}/".format(
+                str(N),vac0_arg,vacf_arg,str(num),str(h),str(tol))
     vac0 = Sigma_Critical(N,vac0_arg)
     vacf = Sigma_Critical(N,vacf_arg)
     z0,zf,z_linspace = get_z_linspace(num,h)
@@ -1222,7 +1250,12 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
     x, z_linspace = relaxation_1D_algorithm(g=BPS_second_derivative_function,
                                             num=num,f0=x0,h=h,tol=tol)
     if plot:
-        plot_BPS(N,z_linspace,x,h,vac0,vacf,save_plot,folder)
+        plot_BPS(N,z_linspace,x,num,h,vac0,vacf,save_plot,folder)
+    if save_result:
+        BPS_dict={"x":x,"z":z_linspace,"vac0":vac0,"vacf":vacf}
+        create_path(folder)
+        with open(folder+"BPS_dict","wb") as file:
+            pickle.dump(BPS_dict, file)
     return x, z_linspace
 
 def get_z_linspace(num,h):
@@ -1244,12 +1277,14 @@ def generate_BPS_second_derivative_function(N):
         exp_alpha_x_conj = np.exp(dot_field_with_all_alpha(S.alpha,np.conj(x)))
         summation = 0
         for a in range(0,N):
+            a_minus_1 = (a-1) % N
+            a_plus_1 = (a+1) % N
             a_term = list_of_costants_times_vector(
                     exp_alpha_x_conj[:,a], S.alpha[a])
             a_minus_1_term = list_of_costants_times_vector(
-                    exp_alpha_x_conj[:,(a-1) % N],S.alpha[(a-1) % N])
+                    exp_alpha_x_conj[:,a_minus_1],S.alpha[a_minus_1])
             a_plus_1_term = list_of_costants_times_vector(
-                    exp_alpha_x_conj[:,(a+1) % N],S.alpha[(a+1) % N])
+                    exp_alpha_x_conj[:,a_plus_1],S.alpha[a_plus_1])
             summation += list_of_costants_times_vector(exp_alpha_x[:,a],
                                 (2*a_term - a_minus_1_term - a_plus_1_term))
         return summation/4
@@ -1267,6 +1302,35 @@ def list_of_costants_times_vector(constants_ls,vector):
     #vector is of shape(n,)
     size=constants_ls.size
     return constants_ls.reshape(size,1)*vector
+
+def numba_generate_BPS_second_derivative_function(N):
+    S = SU(N)
+    @jit(nopython=False)
+    def BPS_second_derivative_function(x):
+        #returns the second derivative function:
+        #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
+        # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
+        summation = np.zeros(shape=x.shape,dtype=complex)
+        x_conj = np.conj(x)
+        for a in range(0,N): #loop over alpha componenets
+            a_minus_1 = (a-1) % N
+            a_plus_1 = (a+1) % N
+            for i in range(x.shape[0]): #loop over points
+                exp_alpha_x = exp_alpha_dot_x(a,i,S,x)
+                exp_alpha_x_conj = exp_alpha_dot_x(a,i,S,x_conj)
+                exp_alpha_x_conj_a_minus_1 = exp_alpha_dot_x(a_minus_1,i,S,x_conj)
+                exp_alpha_x_conj_a_plus_1 = exp_alpha_dot_x(a_plus_1,i,S,x_conj)
+                for j in range(x.shape[1]): #loop over field components
+                    a_term = exp_alpha_x_conj*S.alpha[a][j]
+                    a_minus_1_term = exp_alpha_x_conj_a_minus_1*S.alpha[a_minus_1][j]
+                    a_plus_1_term = exp_alpha_x_conj_a_plus_1*S.alpha[a_plus_1][j]
+                    summation[i][j] += exp_alpha_x * (
+                            2*a_term - a_minus_1_term - a_plus_1_term)
+        return summation/4
+    return BPS_second_derivative_function
+
+def exp_alpha_dot_x(a,i,S,x):
+    return np.exp(np.dot(S.alpha[a],x[i]))
 
 def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,R=0,top=True,
             kw=None):
@@ -1320,6 +1384,7 @@ def relaxation_1D_while_loop(g,f,num,h_squared,tol):
         print(error)
     return f
 
+@jit(nopython=False)
 def _realxation_1D_update(g,f_old,num,h_squared):
     # replace each element of f_old with sum of left and right neighbors,
     # plus a second derivative term
@@ -1332,7 +1397,7 @@ def _realxation_1D_update(g,f_old,num,h_squared):
     return f_new
 
 """ ============== subsection: plot BPS ===================================="""
-def plot_BPS(N,z,f,h,vac0,vacf,save_plot=True,folder="BPS Solitons"):
+def plot_BPS(N,z,f,num,h,vac0,vacf,save_plot,folder):
     phi = []
     sigma = []
     for i in range(N-1):
@@ -1382,9 +1447,15 @@ def plot_BPS(N,z,f,h,vac0,vacf,save_plot=True,folder="BPS Solitons"):
     
     fig.subplots_adjust(wspace=0.7)
     
+    #get and print energy
+    theoretic_energy,numeric_energy = BPS_Energy(N,num,vac0,vacf,f,z,h)
+    fig.text(x=0,y=0,s= r"$E_{theoretic}$= "+str(round(theoretic_energy,4))+
+             "; $E_{numeric}$= "+str(round(numeric_energy,4)),size=16)
+    
     title="BPS (N={}, {} to {})".format(str(N),str(vac0),(vacf))
-    fig.suptitle(title)
+    fig.suptitle(title,size=30)
     if save_plot:
+        create_path(folder)
         fig.savefig(folder+title+".png", dpi=300)
 
 def BPS_dx(N,x,vac0,vacf):
@@ -1399,65 +1470,26 @@ def BPS_dx(N,x,vac0,vacf):
     denominator = np.absolute(numerator)
     alpha = numerator/denominator
     return (alpha/2)*dWdx_
-        
-#class BPS():
-#    """
-#    A class representing the BPS equation in SU(N).
-#    """
-#    def __init__(self,N,xmin0,xminf): 
-#        self.s = SU(N)
-#        self.W = Superpotential(N)
-#        self.N = N
-#        self.xmin0 = np.array([xmin0])
-#        self.xminf = np.array([xminf])
-#        numerator = self.W(self.xminf) - self.W(self.xmin0)
-#        denominator = np.absolute(numerator)
-#        self.alpha = numerator/denominator
-#
-#    def dx(self,x):
-#        """
-#        BPS equations
-#        """
-#        x_ = np.conj(x)
-#        dWdx_ = grad(self.W,x_)
-#        return (self.alpha/2)*dWdx_
-#
-#    def _Hessian(self,x):
-#        """
-#        Hessian Matrix for W*
-#        """
-#        m = x.shape[0] # there are m points
-#        # for each point, there is a Hessian matrix
-#        # so we will return a (length m) list of Hessian
-#        ls = []
-#        for row in range(m):
-#            ls.append(self._define_Hessian(x[row]))
-#        return ls
-#
-#    def _define_Hessian(self,x):
-#        # x is now a row array
-#        #initialize Hessian
-#        H = np.zeros(shape=(self.N-1,self.N-1),dtype=complex)
-#        for i in range(self.N-1):
-#            for j in range(self.N-1):
-#                summation = 0j
-#                for a in range(self.N):
-#                    summation += self.s.alpha[a][i] * self.s.alpha[a][j] * \
-#                    np.exp(np.dot(self.s.alpha[a],np.conj(x)))
-#                H[i][j] = summation
-#        return H
-#
-#    def ddx(self,x):
-#        """
-#        Second order BPS equations
-#        """
-#        dWdx = grad(self.W,x)
-#        m = x.shape[0]
-#        result = np.zeros(shape=(m,self.N-1),dtype=complex)
-#        H_ls = self._Hessian(x)
-#        for (row,H) in enumerate(H_ls):
-#            result[row] = np.matmul(H,dWdx[row])/4
-#        return result
+
+def BPS_Energy(N,num,vac0,vacf,x,z,h):
+    W=Superpotential(N)    
+    theoretic_energy = np.abs(W(np.array([vacf.imaginary_vector])) -\
+                              W(np.array([vac0.imaginary_vector])))[0][0]
+    #get the derivaitve of field
+    dxdz = derivative_sample(x,h)
+    # initialize first term
+    sum1 = 0
+    for i in range(N-1):
+        # integrate the absolute square of each complex field and sum them up
+        sum1 += trapz(np.abs(dxdz[:,i])**2,z)
+    # get the gradient of superpotential
+    dWdx = grad(W,x)
+    # initialize second term
+    sum2 = 0
+    for i in range(N-1):
+        sum2 += trapz(np.abs(dWdx[:,i])**2,z)
+    numeric_energy = sum1 + sum2/4
+    return (theoretic_energy,numeric_energy)
 
 if __name__ == "__main__":
     pass
