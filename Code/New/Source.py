@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-File Name: source.py
+File Name: Source.py
 Purpose: 
 Author: Samuel Wong
 """
@@ -1233,9 +1233,11 @@ class Solution_Viewer():
 """
 """ ============== subsection: solve BPS ==================================="""
 @timeit
-def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=0,plot=True,
+def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
               save_plot=True,save_result=True,folder="",
               separation_R=0,top=True):
+    #sor = successive overrelaxation parameter. For h=0.1 in 2D, the ideal
+    #value is given by approximately 1.5. For 1D, it's different; just a guess.
     #create sigma cirtical point objects for iniitial and final bondary
     vac0 = Sigma_Critical(N,vac0_arg)
     vacf = Sigma_Critical(N,vacf_arg)
@@ -1400,7 +1402,7 @@ def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
 def default_continue_condition(error,tol,*args):
     return error[-1]>tol
 
-def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,sor=0,
+def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,sor=1.5,
                             continue_condition = default_continue_condition):
     """
     Solve the boundary value problem of a set of coupled, second order,
