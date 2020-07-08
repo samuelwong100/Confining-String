@@ -6,10 +6,15 @@ Author: Samuel Wong
 """
 from Source import solve_BPS
 
-for N in range(3,5):
-    x,z = solve_BPS(N,"x0","x1",401,tol=1e-9)
-    for i in range(1,N):
-        x,z = solve_BPS(N,"w"+str(i),"x1",401,tol=1e-9)
-        
-if N = 10, num=601
+def get_ideal_num(N):
+    if N<9:
+        num = 401
+    else:
+        num = 601
+    return num
 
+for N in range(9,10):
+    num = get_ideal_num(N)
+    x,z = solve_BPS(N,"x0","x1",num)
+    for i in range(1,N):
+        x,z = solve_BPS(N,"w"+str(i),"x1",num)

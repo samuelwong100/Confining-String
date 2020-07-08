@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import matplotlib
 from copy import deepcopy
 from scipy.integrate import simps, trapz
-import numba
 from numba import jit
 from numba import jitclass          # import the decorator
 from numba import int32, float32    # import the types
@@ -1234,7 +1233,7 @@ class Solution_Viewer():
 """
 """ ============== subsection: solve BPS ==================================="""
 @timeit
-def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
+def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=0,plot=True,
               save_plot=True,save_result=True,folder="",
               separation_R=0,top=True):
     #create sigma cirtical point objects for iniitial and final bondary
@@ -1253,12 +1252,12 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
             N,num,vac0,vacf,z_linspace,h)
     #call everything in relaxation algorithm
     x, z_linspace, error = relaxation_1D_algorithm(
-            g=BPS_second_derivative_function,num=num,f0=x0,h=h,tol=tol,
+            g=BPS_second_derivative_function,num=num,f0=x0,h=h,tol=tol,sor=sor,
             continue_condition=BPS_energy_continue_condition)
     #if folder is unspecified, save it in designated BPS solitons folder
     if folder == "":
-        folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={},final_error={}/".format(
-                str(N),vac0_arg,vacf_arg,str(num),str(h),str(tol),
+        folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={},sor={},final_error={}/".format(
+                str(N),vac0_arg,vacf_arg,str(num),str(h),str(tol),str(sor),
                 '{:0.1e}'.format(error[-1]))
     if plot:
         plot_BPS(N,z_linspace,x,num,h,vac0,vacf,save_plot,folder)
@@ -1269,7 +1268,15 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,plot=True,
         create_path(folder)
         with open(folder+"BPS_dict","wb") as file:
             pickle.dump(BPS_dict, file)
-    return x, z_linspace
+    return x, z_linspace, error
+
+def open_BPS_result(folder):
+    pickle_in = open("BPS Solitons/"+folder+"/BPS_dict","rb")
+    BPS_dict = pickle.load(pickle_in)
+    x = BPS_dict["x"]
+    z = BPS_dict["z"]
+    error = BPS_dict["error"]
+    return x,z,error
 
 def get_z_linspace(num,h):
     if num % 2 == 0:
@@ -1393,7 +1400,7 @@ def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
 def default_continue_condition(error,tol,*args):
     return error[-1]>tol
 
-def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,
+def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,sor=0,
                             continue_condition = default_continue_condition):
     """
     Solve the boundary value problem of a set of coupled, second order,
@@ -1407,8 +1414,13 @@ def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,
     """
     h_squared = h**2 #precalculate to save time
     z0,zf,z_linspace = get_z_linspace(num,h)
-    f, error = relaxation_1D_while_loop(g,f0,num,h_squared,tol,
-                                        continue_condition) #run relaxation
+    if sor==0: #no successive over relaxation
+        f, error = relaxation_1D_while_loop(g,f0,num,h_squared,tol,
+                                            continue_condition) #run relaxation
+    else:
+        _validate_sor(sor)
+        f, error = relaxation_1D_while_loop_with_sor(g,f0,num,h_squared,tol,
+                                                     sor,continue_condition)
     return f, z_linspace, error
 
 def relaxation_1D_while_loop(g,f,num,h_squared,tol,
@@ -1432,6 +1444,37 @@ def _realxation_1D_update(g,f_old,num,h_squared):
         #note f is of shape (num,m), where num is number of points,
         #m is number of components
         f_new[k] = (f_new[k-1] + f_new[k+1] - second_derivative[k]*h_squared)/2
+    return f_new
+
+def _validate_sor(sor):
+    if not 1<sor<2:
+        raise Exception("sor parameter must be between 1 and 2.")
+
+def relaxation_1D_while_loop_with_sor(g,f,num,h_squared,tol,sor,
+                             continue_condition = default_continue_condition):
+    error = [tol+1] #initialize a "fake" error so that while loop can run
+    one_minus_sor = 1-sor
+    while continue_condition(error,tol,f):
+        f_new = _realxation_1D_update_with_sor(g,f,num,h_squared,sor,
+                                               one_minus_sor)
+        error.append(np.max(np.abs(f_new - f))/np.max(np.abs(f_new)))
+        f = f_new
+    del error[0] #delete the first, fake error
+    error = np.array(error) #change error into an array
+    return f, error
+
+@jit(nopython=False)
+def _realxation_1D_update_with_sor(g,f_old,num,h_squared,sor,one_minus_sor):
+    # replace each element of f_old with sum of left and right neighbors,
+    # plus a second derivative term
+    f_new = deepcopy(f_old)
+    second_derivative = g(f_new)
+    for k in range(1,num-1): #skip boundaries
+        #note f is of shape (num,m), where num is number of points,
+        #m is number of components
+        f_new[k] = (f_new[k-1] + f_new[k+1] - second_derivative[k]*h_squared)/2
+        #sor is the successive overrelaxation parameter, between 1 and 2
+        f_new[k] = sor*f_new[k] + one_minus_sor*f_old[k]
     return f_new
 
 """ ============== subsection: plot BPS ===================================="""
@@ -1458,7 +1501,7 @@ def plot_BPS(N,z,f,num,h,vac0,vacf,save_plot,folder):
         dphi_numeric.append(np.real(dx_numeric[:,i]))
         dsigma_numeric.append(np.imag(dx_numeric[:,i]))
     
-    fig = plt.figure(figsize=(14,10))
+    fig = plt.figure(figsize=(17,10))
     ax1 = fig.add_subplot(221)
     for i in range(N-1):
         ax1.plot(z,phi[i],label="$\phi_{}$".format(str(i+1)))
