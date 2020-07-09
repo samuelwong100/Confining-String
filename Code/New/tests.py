@@ -6,7 +6,7 @@ Author: Samuel Wong
 """
 import numpy as np
 from source import Dipole_Full_Grid, within_epsilon, relaxation_update_full_grid,\
-relaxation_update_half_grid, relaxation_algorithm
+relaxation_update_half_grid, relaxation_algorithm, Superpotential
 import matplotlib.pyplot as plt
 def test_dipole_full_grid():
     DFG = Dipole_Full_Grid(11,7,3)
@@ -126,6 +126,13 @@ def test_relaxation_algorithm():
         plt.show()
     return x, error,loop
     
+def test_Superpotential_potential_term_on_grid_numba():
+    W=Superpotential(6)
+    x = np.ones(shape=(5,301,301),dtype=complex)*complex(1.23,1.44)
+    assert within_epsilon(W.potential_term_on_grid_numba(x),
+                          W.potential_term_on_grid_vectorized(x))
+    #%timeit W.potential_term_on_grid_vectorized(x)
+    #%timeit W.potential_term_on_grid_numba(x)
     
 #test_dipole_full_grid()
 #test_relaxation_update()

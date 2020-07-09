@@ -7,14 +7,12 @@ Author: Samuel Wong
 import os
 import pickle
 import numpy as np
-from numpy import sqrt, pi, exp
+from numpy import pi, exp
 import matplotlib.pyplot as plt
 import matplotlib
 from copy import deepcopy
 from scipy.integrate import simps, trapz
-from numba import jit
-from numba import jitclass          # import the decorator
-from numba import int32, float32    # import the types
+from numba import jit, jitclass, typeof, from_dtype
 import time
 
 def timeit(method):
@@ -54,12 +52,84 @@ For example, SU.rho = array([rho_1, rho_2, ...., rho_n]), since there is only
 one rho ever.
 
 Subsections:
+numpy vectorize helpers
 SU(N)
 Superpotential
 Sigma Space Critical Points
 Miscellaneous Math
 ===============================================================================
 """
+""" ============== subsection: numpy vectorize helpers 2D =============="""
+@jit(nopython=False)
+def constant_times_scalar_field_numba(constant,scalar_field):
+    m,n = scalar_field.shape
+    result = np.zeros(shape=(m,n),dtype=complex)
+    for row in range(m):
+        for col in range(n):
+            result[row][col] = constant * scalar_field[row][col]
+    return result
+
+@jit(nopython=False)
+def exponentiate_scalar_field_numba(scalar_field):
+    m,n = scalar_field.shape
+    result = np.zeros(shape=(m,n),dtype=complex)
+    for row in range(m):
+        for col in range(n):
+            result[row][col] = np.exp(scalar_field[row][col])
+    return result
+
+def dot_vec_with_vec_field(vec,vec_field):
+    #assume vec is an array of shape (n,)
+    #vector field is an array of shape (n,x,y), where the field has 
+    #n components, and lives on a x-y grid.
+    #return the dot product the the vector and the field at every point
+    #on the grid. The return is a (x,y) grid object
+    return np.sum((vec*(vec_field.T)).T,axis=0)
+
+@jit(nopython=False)
+def dot_vec_with_vec_field_numba(vec,vec_field):
+    #assume vec is an array of shape (n,)
+    #vector field is an array of shape (n,x,y), where the field has 
+    #n components, and lives on a x-y grid.
+    #return the dot product the the vector and the field at every point
+    #on the grid. The return is a (x,y) grid object
+    comp,m,n = vec_field.shape
+    summation = np.zeros(shape=(m,n),dtype=complex)
+    for c in range(comp):
+        for row in range(m):
+            for col in range(n):
+                summation[row][col] += vec[c]*vec_field[c][row][col]
+    return summation
+
+def scalar_field_times_vector(scalar_field,vector):
+    #vector is of shape (components,)
+    #scalar field is of shape (m,n)
+    #return a vector field which is each component of vector multiplied by 
+    #scalar field
+    components = vector.shape[0]
+    m,n = scalar_field.shape
+    outer = np.outer(vector,scalar_field)
+    return outer.reshape(components,m,n)
+
+@jit(nopython=False)
+def scalar_field_times_vector_field_numba(scalar_field,vec_field):
+    #warning: it turns out this is slower than numpy multiply.
+    comp,m,n = vec_field.shape
+    result = np.zeros(shape=(comp,m,n),dtype=complex)
+    for c in range(comp):
+        for row in range(m):
+            for col in range(n):
+                result[c][row][col] = \
+                scalar_field[row][col] * vec_field[c][row][col]
+    return result
+
+""" ============== subsection: numpy vectorize helpers 1D =============="""
+
+def list_of_costants_times_vector(constants_ls,vector):
+    #constants_ls is of shape (size,)
+    #vector is of shape(n,)
+    size=constants_ls.size
+    return constants_ls.reshape(size,1)*vector
 
 """ ============== subsection: SU(N) ======================================="""
 def delta(i,j):
@@ -68,7 +138,6 @@ def delta(i,j):
         return 1
     else:
         return 0
-
 
 class SU():
     """
@@ -98,7 +167,7 @@ class SU():
 
     def _lambda(self,a,A):
         # the mathematical definition of lambda
-        return (1/sqrt(a*(a+1)))*(self._theta(a,A) - a*delta(a+1,A))
+        return (1/np.sqrt(a*(a+1)))*(self._theta(a,A) - a*delta(a+1,A))
 
     def _lambda_modified(self,A,a):
         # to use labmda to create matrix, first switch rows & columns, then
@@ -148,20 +217,13 @@ class SU():
         return summation
 
 """ ============== subsection: Superpotential ============================="""
-def dot_vec_with_vec_field(vec,vec_field):
-    #assume vec is an array of shape (n,)
-    #vector field is an array of shape (n,x,y), where the field has 
-    #n components, and lives on a x-y grid.
-    #return the dot product the the vector and the field at every point
-    #on the grid. The return is a (x,y) grid object
-    return np.sum((vec*(vec_field.T)).T,axis=0)
-
 class Superpotential():
     """
     Superpotential in SU(N).
     """
     def __init__(self,N):
         self.N = N
+        self.N_minus_1 = self.N-1
         self.s = SU(N)
         self.x_min = self._define_x_min() # minimum of superpotential
 
@@ -185,7 +247,8 @@ class Superpotential():
         x_min = np.array(ls)
         return x_min
     
-    def potential_term_on_grid_fast_optimized(self,x):
+    @jit(nopython=False)
+    def potential_term_on_grid_numba(self,x):
         #to optimize, absorb all for loop over grid into numpy vectorization
         #ok to loop over N, since they are small
         x_conj = np.conjugate(x)
@@ -194,7 +257,40 @@ class Superpotential():
         #computes once
         #the following is the equation we get from applying the idenity of
         #alpha_a dot alpha_b in terms of 3 delta function
-        #TODO: try to reduce loop over a into a numpy slice
+        for a in range(self.N):
+            a_minus_1 = (a-1) % self.N
+            a_plus_1 = (a+1) % self.N
+            A = exponentiate_scalar_field_numba(
+                dot_vec_with_vec_field_numba(self.s.alpha[a],x))
+            exp_B = exponentiate_scalar_field_numba(
+                dot_vec_with_vec_field_numba(self.s.alpha[a],x_conj))
+            exp_C = exponentiate_scalar_field_numba(
+                dot_vec_with_vec_field_numba(self.s.alpha[a_minus_1],x_conj))
+            exp_D = exponentiate_scalar_field_numba(
+                dot_vec_with_vec_field_numba(self.s.alpha[a_plus_1],x_conj))
+            #the a-th term in the vector field summation
+            vec_a = np.zeros(shape=x.shape,dtype=complex)
+            for b in range(self.N_minus_1):
+                #the b-th component of the resulting vector field
+                B = constant_times_scalar_field_numba(
+                    self.s.alpha[a][b],exp_B)
+                C = constant_times_scalar_field_numba(
+                    self.s.alpha[a_minus_1][b],exp_C)
+                D = constant_times_scalar_field_numba(
+                    self.s.alpha[a_plus_1][b],exp_D)
+                vec_a[b,:,:] += 2*B-C-D
+            summation += A*vec_a
+        return summation/4
+    
+    def potential_term_on_grid_vectorized(self,x):
+        #to optimize, absorb all for loop over grid into numpy vectorization
+        #ok to loop over N, since they are small
+        x_conj = np.conjugate(x)
+        summation = np.zeros(shape=x.shape,dtype=complex)
+        #loop over a first instead of b, so that terms like exp_B only
+        #computes once
+        #the following is the equation we get from applying the idenity of
+        #alpha_a dot alpha_b in terms of 3 delta function
         for a in range(self.N):
             a_minus_1 = (a-1) % self.N
             a_plus_1 = (a+1) % self.N
@@ -204,12 +300,10 @@ class Superpotential():
             exp_D = np.exp(dot_vec_with_vec_field(self.s.alpha[a_plus_1],x_conj))
             #the a-th term in the vector field summation
             vec_a = np.zeros(shape=x.shape,dtype=complex)
-            for b in range(self.N-1):
-                #the b-th component of the resulting vector field
-                B = exp_B*self.s.alpha[a][b]
-                C = exp_C*self.s.alpha[a_minus_1][b]
-                D = exp_D*self.s.alpha[a_plus_1][b]
-                vec_a[b,:,:] += 2*B-C-D
+            B = scalar_field_times_vector(exp_B,self.s.alpha[a])
+            C = scalar_field_times_vector(exp_C,self.s.alpha[a_minus_1])
+            D = scalar_field_times_vector(exp_D,self.s.alpha[a_plus_1])
+            vec_a += 2*B-C-D
             summation += A*vec_a
         return summation/4
     
@@ -220,14 +314,14 @@ class Superpotential():
             source_term = self._define_full_grid_source_term(DFG,charge_vec)
             
         def laplacian_function(x):
-            return source_term + self.potential_term_on_grid_fast_optimized(x)
+            return source_term + self.potential_term_on_grid_numba(x)
         
         return laplacian_function
     
     def _define_full_grid_source_term(self,DFG,charge_vec):
         """ assumes charge vec contains 2pi factor, and is real """
         # return i 2pi C_a d(delta(y))/dy int_{-R/2}^{R/2} delta(z-z')dz'
-        result = DFG.create_zeros_vector_field(self.N-1)
+        result = DFG.create_zeros_vector_field(self.N_minus_1)
         #the derivative of delta function in y gives something close to infinity
         #for y just below 0 and somthing close to -infinity for y just above 0
         #here, we have x(y = 0^{-}) = 1/h^2 and x(y=0^{+})= -1/h^2
@@ -240,7 +334,7 @@ class Superpotential():
         result[:,:,DFG.right_charge_axis_number+1:]=0 #right_axis included in source
         #multiply everything by charge (outside relevant rows, everything is
         #zero anyway)
-        for i in range(self.N-1):
+        for i in range(self.N_minus_1):
             result[i,:,:] *= charge_vec[i]
         result = 1j*result # overall coefficient
         return result
@@ -649,6 +743,7 @@ def _relaxation_while_loop(x,laplacian_function,grid,tol,update_function):
     error = np.array(error) #change error into an array
     return x, error, loop
 
+@jit(nopython=False)
 def _relaxation_update_full_grid(x_old,laplacian_function,grid):
     # replace each element of x_old with average of 4 neighboring points,
     # minus laplacian
@@ -658,6 +753,7 @@ def _relaxation_update_full_grid(x_old,laplacian_function,grid):
     # so we start loop at 1, avoiding 0. We ignore the last one by -1
     for row in range(1,grid.num_y-1):
         for col in range(1,grid.num_z-1):
+            #TODO: expand an extra for loop
             x[:,row,col] = (x[:,row-1,col] + x[:,row+1,col] +
                           x[:,row,col-1] + x[:,row,col+1]
                           - laplacian[:,row,col]*grid.h_squared)/4
@@ -697,9 +793,11 @@ def _diagnostic_plot(loop,error,grid,x):
                           Confining String Solver
 ===============================================================================
 """
-def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw="BPS",
-           use_half_grid=True,diagnose=False):
-    title = get_title(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,use_half_grid)
+def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,
+                            initial_kw="BPS",use_half_grid=True,
+                            diagnose=False):
+    title = get_title(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
+                      use_half_grid)
     path = get_path(title)
     if os.path.exists(path):
         sol = Solution_Viewer(title)
@@ -709,9 +807,9 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw="BPS",
         charge = Sigma_Critical(N,charge_arg)
         bound = Sigma_Critical(N,bound_arg)
         W = Superpotential(N)
-        laplacian_function = W.create_laplacian_function(DFG,charge.real_vector,
-                                                         use_half_grid)
-        x_initial, BPS_dic = initialize_field(N,DFG,charge,bound,initial_kw)
+        laplacian_function = W.create_laplacian_function(
+            DFG,charge.real_vector, use_half_grid)
+        x_initial = initialize_field(N,DFG,charge,bound,initial_kw,path)
         x, error, loop = relaxation_algorithm(x_initial,laplacian_function,
                                               DFG,tol,use_half_grid)
         store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
@@ -728,7 +826,7 @@ def get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid):
     return title
 
 def get_path(title):
-    path = "Results/Solutions/"+title+"/"
+    path = "Confinement Solutions/"+title+"/"
     return path
     
 def canonical_length_num_conversion(L,w,R,h):
@@ -736,7 +834,9 @@ def canonical_length_num_conversion(L,w,R,h):
         num_z = int(L/h)+1 #this is guranteed to be odd if L is integer
         num_y = int(w/h)+1
         num_R = int(R/h)+1
-    return num_z,num_y,num_R
+        return num_z,num_y,num_R
+    else:
+        raise Exception("length arguments not canonical.")
 
 def store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
            use_half_grid,loop,error,DFG,BPS_dic):
@@ -756,16 +856,15 @@ def store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
     with open(path+"core_dict","wb") as file:
         pickle.dump(core_dict, file)
 
-def initialize_field(N,DFG,charge,bound,initial_kw):
-    BPS_dic = None #initialize
+def initialize_field(N,DFG,charge,bound,initial_kw,path):
     if initial_kw == "constant":
         x0 = DFG.create_constant_vector_field(bound.imaginary_vector)
     elif initial_kw == "zero":
         x0 = DFG.create_zeros_vector_field(N-1)
     elif initial_kw == "BPS":
-        x0, BPS_dic = _BPS_initial_field(N,DFG,charge,bound)
+        x0 = _BPS_initial_field(N,DFG,charge,bound,path)
     x0 = enforce_boundary(x0,DFG,bound.imaginary_vector)
-    return x0, BPS_dic
+    return x0
 
 def enforce_boundary(x_old,grid,bound_vec):
     x = deepcopy(x_old)
@@ -781,15 +880,20 @@ def enforce_boundary(x_old,grid,bound_vec):
     x[:,-1,:] = np.repeat(bound_2d.T,grid.num_z,axis=1)
     return x
     
-def _BPS_initial_field(N,DFG,charge,bound):
+def _BPS_initial_field(N,DFG,charge,bound,path):
     #solve for the two BPS equations
     if str(bound) == "x1":
-        y_half, x_top_half, B_top, x_bottom_half, B_bottom = \
-        _get_BPS_from_ordered_vacua(str(bound),"x0",str(charge),
-                                    str(bound),N,DFG)
+        #canonically, the outside vacua is x1=rho/N, and the inside is x0,
+        #and wk, for the 1-wall solution
+        #other special configuration not using wk need initial conditions
+        #on a case by case basis, like below.
+        y_half, x_top_half, x_bottom_half = \
+            _get_BPS_from_ordered_vacua(str(bound),"x0",str(charge),
+                                        str(bound),N,DFG,path)
     elif str(bound) == "x2" and str(charge) == "w1 -w2 +w3" and N==4:
-        y_half, x_top_half, B_top, x_bottom_half, B_bottom = \
-        _get_BPS_from_ordered_vacua(str(bound),"w2","w1+w3",str(bound),N,DFG)
+        y_half, x_top_half, x_bottom_half = \
+            _get_BPS_from_ordered_vacua(str(bound),"w2","w1+w3",str(bound),N,
+                                        DFG,path)
     #combine the two BPS equations into a single vertical slice
     x_slice = _get_double_BPS_slice(x_top_half,x_bottom_half,N,DFG)
     #initialize result
@@ -798,17 +902,7 @@ def _BPS_initial_field(N,DFG,charge,bound):
     for k in range(DFG.num_z):
         if DFG.left_charge_axis_number <= k <= DFG.right_charge_axis_number:
             x0[:,:,k] = x_slice
-    #create a dictionary to store BPS objects
-    BPS_dic = {}
-    #save BPS and initial grid
-    BPS_dic["B_top"] = B_top #store BPS object
-    BPS_dic["B_bottom"]  = B_bottom
-    BPS_dic["top_BPS"]  = x_top_half
-    BPS_dic["bottom_BPS"]  = x_bottom_half
-    BPS_dic["y_half"]  = y_half
-    BPS_dic["BPS_slice"]  = x_slice
-    BPS_dic["initial_grid"]  = x0
-    return x0, BPS_dic
+    return x0
 
 def _get_double_BPS_slice(x_top_half,x_bottom_half,N,DFG):
     x_top_half_trans = x_top_half.T
@@ -819,19 +913,23 @@ def _get_double_BPS_slice(x_top_half,x_bottom_half,N,DFG):
     x_slice[:,0:half_num] = np.flip(x_bottom_half_trans,1)
     return x_slice
 
-def _get_BPS_from_ordered_vacua(v1,v2,v3,v4,N,DFG):
-    y_half,x_top_half,B_top = _call_BPS(
-            top=True,vac0_arg=v1,vacf_arg=v2,N=N,DFG=DFG)
-    y_half,x_bottom_half,B_bottom = _call_BPS(
-            top=False,vac0_arg=v3,vacf_arg=v4,N=N,DFG=DFG)
-    return y_half, x_top_half, B_top, x_bottom_half, B_bottom
+def _get_BPS_from_ordered_vacua(v1,v2,v3,v4,N,DFG,path):
+    x_top_half,y_half,error = _call_BPS(
+            top=True,vac0_arg=v1,vacf_arg=v2,N=N,DFG=DFG,path=path)
+    x_bottom_half, y_half, error = _call_BPS(
+            top=False,vac0_arg=v3,vacf_arg=v4,N=N,DFG=DFG,path=path)
+    #ignore the BPS error array
+    return y_half, x_top_half, x_bottom_half
 
-def _call_BPS(top,vac0_arg,vacf_arg,N,DFG):
-    vac0_vec = Sigma_Critical(N,vac0_arg).imaginary_vector
-    vacf_vec = Sigma_Critical(N,vacf_arg).imaginary_vector
-    return solve_BPS(N=N, separation_R=DFG.R, top=top, vac0_vec=vac0_vec,
-                    vacf_vec=vacf_vec, z0=DFG.y0, zf=0, h=DFG.h, folder="",
-                    tol=1e-5, save_plot=False)
+def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
+    #call the usual solve BPS function, with the number of points equal to 
+    #half of number of points in y (plus 1 to include the midpoint)
+    #this point will get replaced by one of the 2 BPS upon overlap, doesn't
+    #reallly matter as this is just initial condition
+    return solve_BPS(N=N,vac0_arg=vac0_arg,vacf_arg=vacf_arg,
+                     num=DFG.num_y_half+1,h=DFG.h,tol=1e-9,sor=1.5,plot=True,
+                     save_plot=True,save_result=True,folder=path,
+                     separation_R=DFG.R,top=top)
 
 """
 ===============================================================================
@@ -1247,6 +1345,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
                  separation_R,top,kw="special kink")
     #generate second derivative function for relaxation
+    #TODO: eventually switch to numba version. Sth is wrong at the moment with it
     BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
     #generate continue condition that checks energy as well as error for
     #whether to continue relaxation loop
@@ -1281,8 +1380,6 @@ def open_BPS_result(folder):
     return x,z,error
 
 def get_z_linspace(num,h):
-    if num % 2 == 0:
-        raise Exception("num must be odd.")
     #create z_linspace for future plotting
     zf = (num-1)*h/2
     z0 = -zf
@@ -1318,12 +1415,6 @@ def dot_field_with_all_alpha(alpha,x):
     #return result of shape (num,N), each row is a point, each column is a 
     #result with corresponding alpha
     return np.dot(alpha, x.T).T
-
-def list_of_costants_times_vector(constants_ls,vector):
-    #constants_ls is of shape (size,)
-    #vector is of shape(n,)
-    size=constants_ls.size
-    return constants_ls.reshape(size,1)*vector
 
 def numba_generate_BPS_second_derivative_function(N):
     S = SU(N)
@@ -1416,7 +1507,7 @@ def relaxation_1D_algorithm(g,num,f0,h=0.1,tol=1e-9,sor=1.5,
     """
     h_squared = h**2 #precalculate to save time
     z0,zf,z_linspace = get_z_linspace(num,h)
-    if sor==0: #no successive over relaxation
+    if sor==1: #no successive over relaxation
         f, error = relaxation_1D_while_loop(g,f0,num,h_squared,tol,
                                             continue_condition) #run relaxation
     else:
@@ -1590,7 +1681,7 @@ def plot_error(error,folder):
     loops = np.arange(0,error.size,1)
     plt.plot(loops,np.log10(error))
     plt.ylabel("log(error)")
-    plt.title("Error")
+    plt.title("BPS Error")
     plt.savefig(folder+"Error.png")
     plt.show()
 

@@ -13,8 +13,12 @@ def get_ideal_num(N):
         num = 601
     return num
 
-for N in range(9,10):
+def solve_all_relevant_BPS_in_N(N):
     num = get_ideal_num(N)
-    x,z = solve_BPS(N,"x0","x1",num)
+    x,z,error = solve_BPS(N,"x0","x1",num)
     for i in range(1,N):
-        x,z = solve_BPS(N,"w"+str(i),"x1",num)
+        x,z,error = solve_BPS(N,"w"+str(i),"x1",num)
+
+# for N in range(9,10):
+#     solve_all_relevant_BPS_in_N(N)
+
