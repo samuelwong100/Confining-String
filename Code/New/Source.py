@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from copy import deepcopy
 from scipy.integrate import simps, trapz
-from numba import jit, jitclass, typeof, from_dtype
+from numba import jit
 import time
 
 def timeit(method):
@@ -282,30 +282,30 @@ class Superpotential():
             summation += A*vec_a
         return summation/4
     
-    def potential_term_on_grid_vectorized(self,x):
-        #to optimize, absorb all for loop over grid into numpy vectorization
-        #ok to loop over N, since they are small
-        x_conj = np.conjugate(x)
-        summation = np.zeros(shape=x.shape,dtype=complex)
-        #loop over a first instead of b, so that terms like exp_B only
-        #computes once
-        #the following is the equation we get from applying the idenity of
-        #alpha_a dot alpha_b in terms of 3 delta function
-        for a in range(self.N):
-            a_minus_1 = (a-1) % self.N
-            a_plus_1 = (a+1) % self.N
-            A = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x))
-            exp_B = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x_conj))
-            exp_C = np.exp(dot_vec_with_vec_field(self.s.alpha[a_minus_1],x_conj))
-            exp_D = np.exp(dot_vec_with_vec_field(self.s.alpha[a_plus_1],x_conj))
-            #the a-th term in the vector field summation
-            vec_a = np.zeros(shape=x.shape,dtype=complex)
-            B = scalar_field_times_vector(exp_B,self.s.alpha[a])
-            C = scalar_field_times_vector(exp_C,self.s.alpha[a_minus_1])
-            D = scalar_field_times_vector(exp_D,self.s.alpha[a_plus_1])
-            vec_a += 2*B-C-D
-            summation += A*vec_a
-        return summation/4
+    # def potential_term_on_grid_vectorized(self,x):
+    #     #to optimize, absorb all for loop over grid into numpy vectorization
+    #     #ok to loop over N, since they are small
+    #     x_conj = np.conjugate(x)
+    #     summation = np.zeros(shape=x.shape,dtype=complex)
+    #     #loop over a first instead of b, so that terms like exp_B only
+    #     #computes once
+    #     #the following is the equation we get from applying the idenity of
+    #     #alpha_a dot alpha_b in terms of 3 delta function
+    #     for a in range(self.N):
+    #         a_minus_1 = (a-1) % self.N
+    #         a_plus_1 = (a+1) % self.N
+    #         A = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x))
+    #         exp_B = np.exp(dot_vec_with_vec_field(self.s.alpha[a],x_conj))
+    #         exp_C = np.exp(dot_vec_with_vec_field(self.s.alpha[a_minus_1],x_conj))
+    #         exp_D = np.exp(dot_vec_with_vec_field(self.s.alpha[a_plus_1],x_conj))
+    #         #the a-th term in the vector field summation
+    #         vec_a = np.zeros(shape=x.shape,dtype=complex)
+    #         B = scalar_field_times_vector(exp_B,self.s.alpha[a])
+    #         C = scalar_field_times_vector(exp_C,self.s.alpha[a_minus_1])
+    #         D = scalar_field_times_vector(exp_D,self.s.alpha[a_plus_1])
+    #         vec_a += 2*B-C-D
+    #         summation += A*vec_a
+    #     return summation/4
     
     def create_laplacian_function(self,DFG,charge_vec,use_half_grid):
         if use_half_grid:
@@ -348,7 +348,7 @@ class Superpotential():
 
 """ ============== subsection: Sigma_Critical ============================="""
 
-class Sigma_Critical():
+class Sigma_Critical(): #TODO: make this compatible with N>10
     """
     Full name: Sigma Space Crictical Points
     A class that handles the vector and string name of general ciritical points
@@ -490,6 +490,8 @@ class Grid():
         self._verify_num(num_z,num_y)
         self.num_z = num_z
         self.num_y = num_y
+        self.num_y_minus_1 = self.num_y-1
+        self.num_z_minus_1 = self.num_z-1
         self.h = h
         self.h_squared = self.h**2
         #number of points in each half of grid
@@ -708,7 +710,7 @@ class Dipole_Half_Grid(Grid):
 ===============================================================================
 """    
 def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
-                         use_half_grid):
+                         use_half_grid,diagnose):
     """
     Without regard to whether we use half grid method, create an initial
     vector field on full grid, pass in along with the full grid and laplacian
@@ -717,52 +719,108 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
     the full grid result.
     Note: x_initial needs to have correct boundary condition
     """
-    if use_half_grid:
-        half_grid = full_grid.half_grid
-        x_initial_half = half_grid.full_vector_field_to_half(x_initial)
-        x_half, error, loop = _relaxation_while_loop(x_initial_half,
-                                                    laplacian_function,
-                                                    half_grid,tol,
-                                                    _relaxation_update_half_grid)
-        x_full = half_grid.reflect_vector_field(x_half)
-        return x_full, error, loop
+    if not use_half_grid:
+        # if using full grid, just call the normal relaxation while loop
+        #with the full grid update method
+        return _relaxation_while_loop(
+            x_initial,laplacian_function,full_grid,tol,
+            _relaxation_update_full_grid,diagnose)
     else:
-        return _relaxation_while_loop(x_initial,laplacian_function,full_grid,tol,
-                                   _relaxation_update_full_grid)
+        #if using half grid, first create half grid object
+        half_grid = full_grid.half_grid
+        #fold the x_initial field in half
+        x_initial_half = half_grid.full_vector_field_to_half(x_initial)
+        #run the relaxation while loop, passing in the half grid update method
+        x_half, error = _relaxation_while_loop(
+            x_initial_half,laplacian_function,half_grid,tol,
+            _relaxation_update_half_grid,diagnose)
+        #finally, unfold the half grid field by a reflection and return full
+        #result
+        x_full = half_grid.reflect_vector_field(x_half)
+        return x_full, error
+        
 
-def _relaxation_while_loop(x,laplacian_function,grid,tol,update_function):
+def _relaxation_while_loop(x,laplacian_function,grid,tol,update_function,
+                           diagnose):
+    #wrote two versions, with/without diagnose, to avoid wasting time
+    #checking if diagnose is true every loop
+    if diagnose:
+        return _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,
+                                                    tol,update_function)
+    else:
+        return _relaxation_while_loop_without_diagnose(x,laplacian_function,
+                                                       grid,tol,
+                                                       update_function)
+
+def _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,tol,
+                                         update_function):
     error = [tol+1] #initialize a "fake" error so that while loop can run
-    loop = 0
+    comp = x.shape[0] #number of components of fields
     while error[-1]>tol:
-        x_new = update_function(x,laplacian_function,grid)
+        x_new = update_function(x,laplacian_function,grid,comp)
         error.append(_get_error(x_new,x))
         x = x_new
-        loop += 1
-        _diagnostic_plot(loop,error,grid,x)
+        _diagnostic_plot(error,grid,x)
     del error[0] #delete the first, fake error
     error = np.array(error) #change error into an array
-    return x, error, loop
+    return x, error
 
-@jit(nopython=False)
-def _relaxation_update_full_grid(x_old,laplacian_function,grid):
+def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,tol,
+                                         update_function):
+    error = [tol+1] #initialize a "fake" error so that while loop can run
+    comp = x.shape[0] #number of components of fields
+    while error[-1]>tol:
+        x_new = update_function(x,laplacian_function,grid,comp)
+        error.append(_get_error(x_new,x))
+        x = x_new
+    del error[0] #delete the first, fake error
+    error = np.array(error) #change error into an array
+    return x, error
+    
+
+""" it turned out numba is slower than no numba, commented out for now """
+# @jit(nopython=False)
+# def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
+#     # replace each element of x_old with average of 4 neighboring points,
+#     # minus laplacian
+#     x = deepcopy(x_old) #keep the old field to compare for error later
+#     laplacian = laplacian_function(x)
+#     # we loop over each element in the field grid, skipping over the edge.
+#     # so we start loop at 1, avoiding 0. We ignore the last one by -1
+#     for row in range(1,grid.num_y_minus_1):
+#         row_minus_1 = row-1
+#         row_plus_1 = row+1
+#         for col in range(1,grid.num_z_minus_1):
+#             col_minus_1 = col-1
+#             col_plus_1 = col+1
+#             for c in range(comp):
+#                 x[c,row,col] = (x[c,row_minus_1,col] + x[c,row_plus_1,col] +
+#                               x[c,row,col_minus_1] + x[c,row,col_plus_1]
+#                               - laplacian[c,row,col]*grid.h_squared)/4
+#     # since we skipped over the edge, the Dirichlet boundary is automatically
+#     #enforced. (ie full grid method)
+#     return x
+
+def _relaxation_update_full_grid(x_old,laplacian_function,grid,comp):
     # replace each element of x_old with average of 4 neighboring points,
     # minus laplacian
     x = deepcopy(x_old) #keep the old field to compare for error later
     laplacian = laplacian_function(x)
     # we loop over each element in the field grid, skipping over the edge.
     # so we start loop at 1, avoiding 0. We ignore the last one by -1
-    for row in range(1,grid.num_y-1):
-        for col in range(1,grid.num_z-1):
-            #TODO: expand an extra for loop
-            x[:,row,col] = (x[:,row-1,col] + x[:,row+1,col] +
-                          x[:,row,col-1] + x[:,row,col+1]
-                          - laplacian[:,row,col]*grid.h_squared)/4
+    for row in range(1,grid.num_y_minus_1):
+        row_minus_1 = row-1
+        row_plus_1 = row+1
+        for col in range(1,grid.num_z_minus_1):
+            x[:,row,col] = (x[:,row_minus_1,col] + x[:,row_plus_1,col] +
+                              x[:,row,col-1] + x[:,row,col+1]
+                              - laplacian[:,row,col]*grid.h_squared)/4
     # since we skipped over the edge, the Dirichlet boundary is automatically
     #enforced. (ie full grid method)
     return x
 
-def _relaxation_update_half_grid(x_old,laplacian_function,grid):
-    x=_relaxation_update_full_grid(x_old,laplacian_function,grid)
+def _relaxation_update_half_grid(x_old,laplacian_function,grid,comp):
+    x=_relaxation_update_full_grid(x_old,laplacian_function,grid,comp)
     #set the last column equal to its neighboring column to maintain a
     #Neumann boundary condition. Note that the half grid has y axis on 
     #the right, ie this is a left half grid.
@@ -772,16 +830,18 @@ def _relaxation_update_half_grid(x_old,laplacian_function,grid):
 def _get_error(x_new,x):
     return np.max(np.abs(x_new-x))/np.max(np.abs(x_new))
 
-def _diagnostic_plot(loop,error,grid,x):
+def _diagnostic_plot(error,grid,x):
+    loop = len(error)
     if loop % 100 == 0:
         print("loop =",loop,"error =",error[-1])
         for i in range(x.shape[0]):
+            #plot phi_i
             plt.figure()
             plt.pcolormesh(grid.zv,grid.yv,np.real(x[i,:,:]))
             plt.colorbar()
             plt.title("$\phi$"+str(i+1))
             plt.show()
-
+            #plot sigma_i
             plt.figure()
             plt.pcolormesh(grid.zv,grid.yv,np.imag(x[i,:,:]))
             plt.colorbar()
@@ -796,24 +856,37 @@ def _diagnostic_plot(loop,error,grid,x):
 def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,
                             initial_kw="BPS",use_half_grid=True,
                             diagnose=False):
+    #create the title of the folder with all parameters in name
     title = get_title(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
                       use_half_grid)
+    #get the full path such that the folder is inside the confinement folder
     path = get_path(title)
-    if os.path.exists(path):
+    if os.path.exists(path): #if solution already exists, no need to resolve
         sol = Solution_Viewer(title)
     else:
+        #assuming the input of L,w,R are integers and h=0.1, there is a
+        #canonical way to convert them to a grid with odd number of points
         num_z,num_y,num_R = canonical_length_num_conversion(L,w,R,h)
+        #regradless of whether we use halfgrid, create a full grid object first
         DFG = Dipole_Full_Grid(num_z,num_y,num_R,h)
+        #create the two sigma space critical point objects associated with 
+        #the charge of the quarks and the boundary vacuum
         charge = Sigma_Critical(N,charge_arg)
         bound = Sigma_Critical(N,bound_arg)
+        #create superpotential object, then use it to create laplcian function
+        #which takes into account of whether half grid is in use, since
+        #the source term in laplacian depends on half vs full grid.
         W = Superpotential(N)
         laplacian_function = W.create_laplacian_function(
             DFG,charge.real_vector, use_half_grid)
+        #intitialize field, with kw input that is default to BPS
+        #need path to store the proper BPS result and plots
         x_initial = initialize_field(N,DFG,charge,bound,initial_kw,path)
-        x, error, loop = relaxation_algorithm(x_initial,laplacian_function,
-                                              DFG,tol,use_half_grid)
-        store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
-           use_half_grid,loop,error,DFG,BPS_dic)
+        x, error = relaxation_algorithm(x_initial,laplacian_function,
+                                        DFG,tol,use_half_grid,diagnose)
+        #store all the parameters and results that are not user-defined objects
+        store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,tol,
+                       initial_kw,use_half_grid,error)
         sol = Solution_Viewer(title)
     sol.display_all()
     return sol
@@ -838,19 +911,18 @@ def canonical_length_num_conversion(L,w,R,h):
     else:
         raise Exception("length arguments not canonical.")
 
-def store_solution(path,N,x,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
-           use_half_grid,loop,error,DFG,BPS_dic):
+def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,tol,
+                   initial_kw,use_half_grid,error):
     #store the core result in a dictionary
+    #notice we avoid self created object and only store arrays, numbers, and 
+    #strings, and booleans
     core_dict = {"N":N,
                  "field":x,
+                 "initital field":x_initial,
                  "charge_arg":charge_arg, "bound_arg":bound_arg,
                  "L":L,"w":w,"h":h,"R":R,
                  "tol":tol,
-                 "initial_kw":initial_kw,
-                  "loop":loop,"error":error,
-                  "grid":DFG}
-    if initial_kw == "BPS":
-        core_dict.update(BPS_dic) #combine two dictionaries
+                 "initial_kw":initial_kw,"error":error}
     #create directory for new folder if it doesn't exist
     create_path(path)
     with open(path+"core_dict","wb") as file:
@@ -939,16 +1011,6 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
 class Solution_Viewer():
     """
     Analyzing and displaying the field solution.
-    
-    Variables
-    ----------------------------------------
-    grid (Standard_Dipole_Grid)
-    x (array) = the solution array with complex data type and with shape
-                (m,grid.num_y,grid.num_z)
-    m (int) = the number of dimensions of the solution field
-    error (array) = the list of error
-    loop (int) = number of loops actually ran
-    title (str) = title of file path
     """
     def __init__(self,title):
         # check for the existence of the file path
