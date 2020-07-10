@@ -60,7 +60,7 @@ Miscellaneous Math
 ===============================================================================
 """
 """ ============== subsection: numpy vectorize helpers 2D =============="""
-@jit(nopython=False,warn=False)
+@jit(nopython=False)
 def constant_times_scalar_field_numba(constant,scalar_field):
     m,n = scalar_field.shape
     result = np.zeros(shape=(m,n),dtype=complex)
@@ -69,7 +69,7 @@ def constant_times_scalar_field_numba(constant,scalar_field):
             result[row][col] = constant * scalar_field[row][col]
     return result
 
-@jit(nopython=False,warn=False)
+@jit(nopython=False)
 def exponentiate_scalar_field_numba(scalar_field):
     m,n = scalar_field.shape
     result = np.zeros(shape=(m,n),dtype=complex)
@@ -86,7 +86,7 @@ def dot_vec_with_vec_field(vec,vec_field):
     #on the grid. The return is a (x,y) grid object
     return np.sum((vec*(vec_field.T)).T,axis=0)
 
-@jit(nopython=False,warn=False)
+@jit(nopython=False)
 def dot_vec_with_vec_field_numba(vec,vec_field):
     #assume vec is an array of shape (n,)
     #vector field is an array of shape (n,x,y), where the field has 
@@ -111,7 +111,7 @@ def scalar_field_times_vector(scalar_field,vector):
     outer = np.outer(vector,scalar_field)
     return outer.reshape(components,m,n)
 
-@jit(nopython=False,warn=False)
+@jit(nopython=False)
 def scalar_field_times_vector_field_numba(scalar_field,vec_field):
     #warning: it turns out this is slower than numpy multiply.
     comp,m,n = vec_field.shape
@@ -247,7 +247,7 @@ class Superpotential():
         x_min = np.array(ls)
         return x_min
     
-    @jit(nopython=False,warn=False)
+    @jit(nopython=False)
     def potential_term_on_grid_numba(self,x):
         #to optimize, absorb all for loop over grid into numpy vectorization
         #ok to loop over N, since they are small
@@ -815,7 +815,7 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
         #with the full grid update method
         return _relaxation_while_loop(
             x_initial,laplacian_function,full_grid,tol,
-            _relaxation_update_full_grid,diagnose)
+            _relaxation_update_full_grid_numba,diagnose)
     else:
         #if using half grid, first create half grid object
         half_grid = full_grid.half_grid
@@ -824,7 +824,7 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
         #run the relaxation while loop, passing in the half grid update method
         x_half, error = _relaxation_while_loop(
             x_initial_half,laplacian_function,half_grid,tol,
-            _relaxation_update_half_grid,diagnose)
+            _relaxation_update_half_grid_numba,diagnose)
         #finally, unfold the half grid field by a reflection and return full
         #result
         x_full = half_grid.reflect_vector_field(x_half)
@@ -869,30 +869,10 @@ def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,tol,
     return x, error
     
 
-""" it turned out numba is slower than no numba, commented out for now """
-# @jit(nopython=False,warn=False)
-# def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
-#     # replace each element of x_old with average of 4 neighboring points,
-#     # minus laplacian
-#     x = deepcopy(x_old) #keep the old field to compare for error later
-#     laplacian = laplacian_function(x)
-#     # we loop over each element in the field grid, skipping over the edge.
-#     # so we start loop at 1, avoiding 0. We ignore the last one by -1
-#     for row in range(1,grid.num_y_minus_1):
-#         row_minus_1 = row-1
-#         row_plus_1 = row+1
-#         for col in range(1,grid.num_z_minus_1):
-#             col_minus_1 = col-1
-#             col_plus_1 = col+1
-#             for c in range(comp):
-#                 x[c,row,col] = (x[c,row_minus_1,col] + x[c,row_plus_1,col] +
-#                               x[c,row,col_minus_1] + x[c,row,col_plus_1]
-#                               - laplacian[c,row,col]*grid.h_squared)/4
-#     # since we skipped over the edge, the Dirichlet boundary is automatically
-#     #enforced. (ie full grid method)
-#     return x
-
-def _relaxation_update_full_grid(x_old,laplacian_function,grid,comp):
+@jit(nopython=False)
+def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
+    #despite despite contrary result in one loop test, numba version of 
+    #update is WAY faster!
     # replace each element of x_old with average of 4 neighboring points,
     # minus laplacian
     x = deepcopy(x_old) #keep the old field to compare for error later
@@ -903,15 +883,36 @@ def _relaxation_update_full_grid(x_old,laplacian_function,grid,comp):
         row_minus_1 = row-1
         row_plus_1 = row+1
         for col in range(1,grid.num_z_minus_1):
-            x[:,row,col] = (x[:,row_minus_1,col] + x[:,row_plus_1,col] +
-                              x[:,row,col-1] + x[:,row,col+1]
-                              - laplacian[:,row,col]*grid.h_squared)/4
+            col_minus_1 = col-1
+            col_plus_1 = col+1
+            for c in range(comp):
+                x[c,row,col] = (x[c,row_minus_1,col] + x[c,row_plus_1,col] +
+                              x[c,row,col_minus_1] + x[c,row,col_plus_1]
+                              - laplacian[c,row,col]*grid.h_squared)/4
     # since we skipped over the edge, the Dirichlet boundary is automatically
     #enforced. (ie full grid method)
     return x
 
-def _relaxation_update_half_grid(x_old,laplacian_function,grid,comp):
-    x=_relaxation_update_full_grid(x_old,laplacian_function,grid,comp)
+# def _relaxation_update_full_grid(x_old,laplacian_function,grid,comp):
+#     # replace each element of x_old with average of 4 neighboring points,
+#     # minus laplacian
+#     x = deepcopy(x_old) #keep the old field to compare for error later
+#     laplacian = laplacian_function(x)
+#     # we loop over each element in the field grid, skipping over the edge.
+#     # so we start loop at 1, avoiding 0. We ignore the last one by -1
+#     for row in range(1,grid.num_y_minus_1):
+#         row_minus_1 = row-1
+#         row_plus_1 = row+1
+#         for col in range(1,grid.num_z_minus_1):
+#             x[:,row,col] = (x[:,row_minus_1,col] + x[:,row_plus_1,col] +
+#                               x[:,row,col-1] + x[:,row,col+1]
+#                               - laplacian[:,row,col]*grid.h_squared)/4
+#     # since we skipped over the edge, the Dirichlet boundary is automatically
+#     #enforced. (ie full grid method)
+#     return x
+
+def _relaxation_update_half_grid_numba(x_old,laplacian_function,grid,comp):
+    x=_relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp)
     #set the last column equal to its neighboring column to maintain a
     #Neumann boundary condition. Note that the half grid has y axis on 
     #the right, ie this is a left half grid.
@@ -944,6 +945,7 @@ def _diagnostic_plot(error,grid,x):
                           Confining String Solver
 ===============================================================================
 """
+@timeit
 def confining_string_solver(N,charge_arg,bound_arg,L,w,R,h=0.1,tol=1e-9,
                             initial_kw="BPS",use_half_grid=True,
                             diagnose=False):
@@ -1574,7 +1576,7 @@ def dot_field_with_all_alpha(alpha,x):
 
 def numba_generate_BPS_second_derivative_function(N):
     S = SU(N)
-    @jit(nopython=False,warn=False)
+    @jit(nopython=False)
     def BPS_second_derivative_function(x):
         #returns the second derivative function:
         #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
@@ -1683,7 +1685,7 @@ def relaxation_1D_while_loop(g,f,num,h_squared,tol,
     error = np.array(error) #change error into an array
     return f, error
 
-@jit(nopython=False,warn=False)
+@jit(nopython=False)
 def _realxation_1D_update(g,f_old,num,h_squared):
     # replace each element of f_old with sum of left and right neighbors,
     # plus a second derivative term
@@ -1712,7 +1714,7 @@ def relaxation_1D_while_loop_with_sor(g,f,num,h_squared,tol,sor,
     error = np.array(error) #change error into an array
     return f, error
 
-@jit(nopython=False,warn=False)
+@jit(nopython=False)
 def _realxation_1D_update_with_sor(g,f_old,num,h_squared,sor,one_minus_sor):
     # replace each element of f_old with sum of left and right neighbors,
     # plus a second derivative term
