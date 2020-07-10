@@ -60,7 +60,7 @@ Miscellaneous Math
 ===============================================================================
 """
 """ ============== subsection: numpy vectorize helpers 2D =============="""
-@jit(nopython=False)
+@jit(nopython=False,warn=False)
 def constant_times_scalar_field_numba(constant,scalar_field):
     m,n = scalar_field.shape
     result = np.zeros(shape=(m,n),dtype=complex)
@@ -69,7 +69,7 @@ def constant_times_scalar_field_numba(constant,scalar_field):
             result[row][col] = constant * scalar_field[row][col]
     return result
 
-@jit(nopython=False)
+@jit(nopython=False,warn=False)
 def exponentiate_scalar_field_numba(scalar_field):
     m,n = scalar_field.shape
     result = np.zeros(shape=(m,n),dtype=complex)
@@ -86,7 +86,7 @@ def dot_vec_with_vec_field(vec,vec_field):
     #on the grid. The return is a (x,y) grid object
     return np.sum((vec*(vec_field.T)).T,axis=0)
 
-@jit(nopython=False)
+@jit(nopython=False,warn=False)
 def dot_vec_with_vec_field_numba(vec,vec_field):
     #assume vec is an array of shape (n,)
     #vector field is an array of shape (n,x,y), where the field has 
@@ -111,7 +111,7 @@ def scalar_field_times_vector(scalar_field,vector):
     outer = np.outer(vector,scalar_field)
     return outer.reshape(components,m,n)
 
-@jit(nopython=False)
+@jit(nopython=False,warn=False)
 def scalar_field_times_vector_field_numba(scalar_field,vec_field):
     #warning: it turns out this is slower than numpy multiply.
     comp,m,n = vec_field.shape
@@ -247,7 +247,7 @@ class Superpotential():
         x_min = np.array(ls)
         return x_min
     
-    @jit(nopython=False)
+    @jit(nopython=False,warn=False)
     def potential_term_on_grid_numba(self,x):
         #to optimize, absorb all for loop over grid into numpy vectorization
         #ok to loop over N, since they are small
@@ -341,7 +341,7 @@ class Superpotential():
     
     def _define_half_grid_source_term(self,DFG,charge_vec):
         full_grid_source_term = self._define_full_grid_source_term(DFG,charge_vec)
-        half_grid = self.DFG.half_grid
+        half_grid = DFG.half_grid
         half_grid_source_term = half_grid.full_vector_field_to_half(
                 full_grid_source_term)
         return half_grid_source_term
@@ -870,7 +870,7 @@ def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,tol,
     
 
 """ it turned out numba is slower than no numba, commented out for now """
-# @jit(nopython=False)
+# @jit(nopython=False,warn=False)
 # def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
 #     # replace each element of x_old with average of 4 neighboring points,
 #     # minus laplacian
@@ -924,7 +924,7 @@ def _get_error(x_new,x):
 def _diagnostic_plot(error,grid,x):
     loop = len(error)
     if loop % 100 == 0:
-        print("loop =",loop,"error =",error[-1])
+        print("relaxation 2D: loop =",loop,"error =",error[-1])
         for i in range(x.shape[0]):
             #plot phi_i
             plt.figure()
@@ -944,7 +944,7 @@ def _diagnostic_plot(error,grid,x):
                           Confining String Solver
 ===============================================================================
 """
-def confining_string_solver(N,charge_arg,bound_arg,L,w,h,R,tol,
+def confining_string_solver(N,charge_arg,bound_arg,L,w,R,h=0.1,tol=1e-9,
                             initial_kw="BPS",use_half_grid=True,
                             diagnose=False):
     #create the title of the folder with all parameters in name
@@ -1009,7 +1009,7 @@ def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,tol,
     #strings, and booleans
     core_dict = {"N":N,
                  "field":x,
-                 "initital field":x_initial,
+                 "initial field":x_initial,
                  "charge_arg":charge_arg, "bound_arg":bound_arg,
                  "L":L,"w":w,"h":h,"R":R,
                  "tol":tol,
@@ -1091,10 +1091,19 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
     #half of number of points in y (plus 1 to include the midpoint)
     #this point will get replaced by one of the 2 BPS upon overlap, doesn't
     #reallly matter as this is just initial condition
+    print("BPS call:")
+    print("N=",N)
+    print("vac0_arg",vac0_arg)
+    print("vacf_arg",vacf_arg)
+    print("num =",DFG.num_y_half+1)
+    print("h =",DFG.h)
+    print("sor =",1.5)
+    print("tol=",1e-9)
+    #for now, call BPS for initial condition purpose with only tol=1e-5
     return solve_BPS(N=N,vac0_arg=vac0_arg,vacf_arg=vacf_arg,
-                     num=DFG.num_y_half+1,h=DFG.h,tol=1e-9,sor=1.5,plot=True,
-                     save_plot=True,save_result=True,folder=path,
-                     separation_R=DFG.R,top=top)
+                     num=DFG.num_y_half+1,h=DFG.h,tol=1e-5,sor=1.5,
+                     kw="kink with predicted width",plot=True,save_plot=True,
+                     save_result=True,folder=path,separation_R=DFG.R,top=top)
 
 """
 ===============================================================================
@@ -1131,7 +1140,7 @@ class Solution_Viewer():
             self.error = core_dict["error"]
             self.max_loop = self.error.size
             self.tol = core_dict["tol"]
-            self.initial_kw = core_dict["iniitial_kw"]
+            self.initial_kw = core_dict["initial_kw"]
             #recreate grid object from parameters
             num_z,num_y,num_R = canonical_length_num_conversion(
                 self.L,self.w,self.R,self.h)
@@ -1155,15 +1164,17 @@ class Solution_Viewer():
         print("N =", str(self.N))
         print("charge_arg =", self.charge_arg)
         print("bound_arg =", self.bound_arg)
-        print("L =", str(self.grid.L))
-        print("w =", str(self.grid.w))
-        print("h =", str(self.grid.h))
-        print("R =", str(self.grid.R))
+        print("L =", str(self.L))
+        print("w =", str(self.w))
+        print("h =", str(self.h))
+        print("R =", str(self.R))
         print("use_half_grid =",str(self.use_half_grid))
         print("tolerance =", str(self.tol))
         print("error =", str(self.error[-1]))
         print("max loop =", str(self.max_loop))
         print("initial keyword =",str(self.initial_kw))
+        print("gradient energy =", self.get_gradient_energy())
+        print("potential energy =", self.get_potential_energy())
         print("energy =", str(self.get_energy()))
         print()
             
@@ -1283,7 +1294,7 @@ class Solution_Viewer():
         #Note: simps works best when there are odd number of points, which is
         #always the case for me here, by grid construction.
         gradient_energy = simps(simps(self.get_gradient_energy_density(), 
-                             self.grid.z),self.grid.y)
+                             self.grid.z_linspace),self.grid.y_linspace)
         return gradient_energy
     
     def plot_gradient_energy_density(self):
@@ -1299,8 +1310,8 @@ class Solution_Viewer():
         return ped
                
     def get_potential_energy(self):
-        return simps(simps(self.get_potential_energy_density(),self.grid.z),
-                     self.grid.y)
+        return simps(simps(self.get_potential_energy_density(),self.grid.z_linspace),
+                     self.grid.y_linspace)
     
     def plot_potential_energy_density(self):
         self._quick_plot(self.get_potential_energy_density(),
@@ -1313,7 +1324,8 @@ class Solution_Viewer():
                + self.get_gradient_energy_density()
                
     def get_energy(self):
-        return simps(simps(self.get_energy_density(),self.grid.z),self.grid.y)
+        return simps(simps(self.get_energy_density(),
+                           self.grid.z_linspace),self.grid.y_linspace)
     
     
     def plot_energy_density(self):
@@ -1434,9 +1446,11 @@ class Solution_Viewer():
         #monodromy
         #TODO: inspect whether mondoromy position is correct, and check
         #half grid special case
-        elif j==self.grid.z_axis-1 and self.grid.left_axis<= k <=self.grid.right_axis:
+        elif j==self.grid.z_axis_number-1 and \
+            self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
             result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
-        elif j==self.grid.z_axis and self.grid.left_axis<= k <=self.grid.right_axis:
+        elif j==self.grid.z_axis_number and \
+            self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
             result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
         else: #two sided derivative elsewhere
             result = (self.x[i][j+1][k] - self.x[i][j-1][k])/(2*self.grid.h)
@@ -1475,7 +1489,7 @@ class Solution_Viewer():
 @timeit
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
               save_plot=True,save_result=True,folder="",
-              separation_R=0,top=True):
+              separation_R=0,top=True,kw="special kink"):
     #sor = successive overrelaxation parameter. For h=0.1 in 2D, the ideal
     #value is given by approximately 1.5. For 1D, it's different; just a guess.
     #create sigma cirtical point objects for iniitial and final bondary
@@ -1485,7 +1499,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
     z0,zf,z_linspace = get_z_linspace(num,h)
     #initialize field using speical kink
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
-                 separation_R,top,kw="special kink")
+                 separation_R,top,kw=kw)
     #generate second derivative function for relaxation
     #TODO: eventually switch to numba version. Sth is wrong at the moment with it
     BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
@@ -1560,7 +1574,7 @@ def dot_field_with_all_alpha(alpha,x):
 
 def numba_generate_BPS_second_derivative_function(N):
     S = SU(N)
-    @jit(nopython=False)
+    @jit(nopython=False,warn=False)
     def BPS_second_derivative_function(x):
         #returns the second derivative function:
         #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
@@ -1618,7 +1632,7 @@ def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
         greater_than_tol = default_continue_condition(error,tol)
         loop = len(error)
         if loop > 10000 and loop % 1000 ==0:
-            print("loop=",loop,"error=",error[-1])
+            print("Relaxation 1D: loop=",loop,"error=",error[-1])
             #after 10,000 loops, check energy condition once every 1000 loops
             #this ensures we don't stop prematurely and don't waste time
             #computing energy too foten
@@ -1669,7 +1683,7 @@ def relaxation_1D_while_loop(g,f,num,h_squared,tol,
     error = np.array(error) #change error into an array
     return f, error
 
-@jit(nopython=False)
+@jit(nopython=False,warn=False)
 def _realxation_1D_update(g,f_old,num,h_squared):
     # replace each element of f_old with sum of left and right neighbors,
     # plus a second derivative term
@@ -1698,7 +1712,7 @@ def relaxation_1D_while_loop_with_sor(g,f,num,h_squared,tol,sor,
     error = np.array(error) #change error into an array
     return f, error
 
-@jit(nopython=False)
+@jit(nopython=False,warn=False)
 def _realxation_1D_update_with_sor(g,f_old,num,h_squared,sor,one_minus_sor):
     # replace each element of f_old with sum of left and right neighbors,
     # plus a second derivative term
