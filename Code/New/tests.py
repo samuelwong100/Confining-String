@@ -134,6 +134,15 @@ def test_Superpotential_potential_term_on_grid_numba():
     #%timeit W.potential_term_on_grid_vectorized(x)
     #%timeit W.potential_term_on_grid_numba(x)
     
+def test_relaxation_full_grid_update_speed():
+    DFG=Dipole_Full_Grid(301,301,101)
+    W=Superpotential(6)
+    charge_vec= Sigma_Critical(6,"w1").real_vector
+    lap=W.create_laplacian_function(DFG,charge_vec,use_half_grid=False)
+    x_old = np.ones(shape=(5,301,301),dtype=complex)
+    _relaxation_update_full_grid(x_old,lap,DFG,5)
+    %timeit _relaxation_update_full_grid(x_old,lap,DFG,5)
+    
 #test_dipole_full_grid()
 #test_relaxation_update()
 #test_half_grid_reflect()
