@@ -279,7 +279,8 @@ class Superpotential():
                 D = constant_times_scalar_field_numba(
                     self.s.alpha[a_plus_1][b],exp_D)
                 vec_a[b,:,:] += 2*B-C-D
-            summation += A*vec_a
+            #summation += A*vec_a
+            summation += scalar_field_times_vector_field_numba(A,vec_a)
         return summation/4
     
     # def potential_term_on_grid_vectorized(self,x):
@@ -800,7 +801,7 @@ class Dipole_Half_Grid(Grid):
                                     Relaxation
 ===============================================================================
 """    
-def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
+def relaxation_algorithm(x_initial,laplacian_function,full_grid,sor,tol,
                          use_half_grid,diagnose):
     """
     Without regard to whether we use half grid method, create an initial
@@ -814,8 +815,8 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
         # if using full grid, just call the normal relaxation while loop
         #with the full grid update method
         return _relaxation_while_loop(
-            x_initial,laplacian_function,full_grid,tol,
-            _relaxation_update_full_grid_numba,diagnose)
+            x_initial,laplacian_function,full_grid,sor,tol,
+            _relaxation_update_full_grid_with_sor_numba,diagnose)
     else:
         #if using half grid, first create half grid object
         half_grid = full_grid.half_grid
@@ -823,32 +824,32 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,tol,
         x_initial_half = half_grid.full_vector_field_to_half(x_initial)
         #run the relaxation while loop, passing in the half grid update method
         x_half, error = _relaxation_while_loop(
-            x_initial_half,laplacian_function,half_grid,tol,
-            _relaxation_update_half_grid_numba,diagnose)
+            x_initial_half,laplacian_function,half_grid,sor,tol,
+            _relaxation_update_half_grid_with_sor_numba,diagnose)
         #finally, unfold the half grid field by a reflection and return full
         #result
         x_full = half_grid.reflect_vector_field(x_half)
         return x_full, error
         
 
-def _relaxation_while_loop(x,laplacian_function,grid,tol,update_function,
+def _relaxation_while_loop(x,laplacian_function,grid,sor,tol,update_function,
                            diagnose):
     #wrote two versions, with/without diagnose, to avoid wasting time
     #checking if diagnose is true every loop
     if diagnose:
         return _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,
-                                                    tol,update_function)
+                                                    sor,tol,update_function)
     else:
-        return _relaxation_while_loop_without_diagnose(x,laplacian_function,
-                                                       grid,tol,
-                                                       update_function)
+        return _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,
+                                                    sor,tol,update_function)
 
-def _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,tol,
+def _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,sor,tol,
                                          update_function):
     error = [tol+1] #initialize a "fake" error so that while loop can run
     comp = x.shape[0] #number of components of fields
+    one_minus_sor = 1-sor
     while error[-1]>tol:
-        x_new = update_function(x,laplacian_function,grid,comp)
+        x_new = update_function(x,laplacian_function,sor,one_minus_sor,grid,comp)
         error.append(_get_error(x_new,x))
         x = x_new
         _diagnostic_plot(error,grid,x)
@@ -856,12 +857,13 @@ def _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,tol,
     error = np.array(error) #change error into an array
     return x, error
 
-def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,tol,
+def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,sor,tol,
                                          update_function):
     error = [tol+1] #initialize a "fake" error so that while loop can run
     comp = x.shape[0] #number of components of fields
+    one_minus_sor = 1-sor
     while error[-1]>tol:
-        x_new = update_function(x,laplacian_function,grid,comp)
+        x_new = update_function(x,laplacian_function,sor,one_minus_sor,grid,comp)
         error.append(_get_error(x_new,x))
         x = x_new
     del error[0] #delete the first, fake error
@@ -870,7 +872,8 @@ def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,tol,
     
 
 @jit(nopython=False)
-def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
+def _relaxation_update_full_grid_with_sor_numba(x_old,laplacian_function,sor,
+                                                one_minus_sor,grid,comp):
     #despite despite contrary result in one loop test, numba version of 
     #update is WAY faster!
     # replace each element of x_old with average of 4 neighboring points,
@@ -889,8 +892,19 @@ def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
                 x[c,row,col] = (x[c,row_minus_1,col] + x[c,row_plus_1,col] +
                               x[c,row,col_minus_1] + x[c,row,col_plus_1]
                               - laplacian[c,row,col]*grid.h_squared)/4
+                x[c,row,col] = sor*x[c,row,col] + one_minus_sor*x_old[c,row,col]
     # since we skipped over the edge, the Dirichlet boundary is automatically
     #enforced. (ie full grid method)
+    return x
+
+def _relaxation_update_half_grid_with_sor_numba(x_old,laplacian_function,sor,
+                                                one_minus_sor,grid,comp):
+    x=_relaxation_update_full_grid_with_sor_numba(x_old,laplacian_function,sor,
+                                                one_minus_sor,grid,comp)
+    #set the last column equal to its neighboring column to maintain a
+    #Neumann boundary condition. Note that the half grid has y axis on 
+    #the right, ie this is a left half grid.
+    x[:,:,-1] = x[:,:,-2]
     return x
 
 # def _relaxation_update_full_grid(x_old,laplacian_function,grid,comp):
@@ -910,14 +924,6 @@ def _relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp):
 #     # since we skipped over the edge, the Dirichlet boundary is automatically
 #     #enforced. (ie full grid method)
 #     return x
-
-def _relaxation_update_half_grid_numba(x_old,laplacian_function,grid,comp):
-    x=_relaxation_update_full_grid_numba(x_old,laplacian_function,grid,comp)
-    #set the last column equal to its neighboring column to maintain a
-    #Neumann boundary condition. Note that the half grid has y axis on 
-    #the right, ie this is a left half grid.
-    x[:,:,-1] = x[:,:,-2]
-    return x
 
 def _get_error(x_new,x):
     return np.max(np.abs(x_new-x))/np.max(np.abs(x_new))
@@ -946,11 +952,16 @@ def _diagnostic_plot(error,grid,x):
 ===============================================================================
 """
 @timeit
-def confining_string_solver(N,charge_arg,bound_arg,L,w,R,h=0.1,tol=1e-9,
+def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
                             initial_kw="BPS",use_half_grid=True,
                             diagnose=False):
+    #if no sor given, use default sor
+    if sor==0:
+        sor = best_sor_for_N[N]
+    else:
+        _validate_sor(sor)
     #create the title of the folder with all parameters in name
-    title = get_title(N,charge_arg,bound_arg,L,w,h,R,tol,initial_kw,
+    title = get_title(N,charge_arg,bound_arg,L,w,h,R,sor,tol,initial_kw,
                       use_half_grid)
     #get the full path such that the folder is inside the confinement folder
     path = get_path(title)
@@ -976,19 +987,28 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,h=0.1,tol=1e-9,
         #need path to store the proper BPS result and plots
         x_initial = initialize_field(N,DFG,charge,bound,initial_kw,path)
         x, error = relaxation_algorithm(x_initial,laplacian_function,
-                                        DFG,tol,use_half_grid,diagnose)
+                                        DFG,sor,tol,use_half_grid,
+                                        diagnose)
         #store all the parameters and results that are not user-defined objects
-        store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,tol,
+        store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
                        initial_kw,use_half_grid,error)
         sol = Solution_Viewer(title)
     sol.display_all()
     return sol
 
-def get_title(N,charge,bound,L,w,h,R,tol,initial_kw,use_half_grid):
+def best_sor_for_N(N):
+    sor_dict = {2:1.96,3:1.96,4:1.96}
+    if N in sor_dict:
+        return sor_dict[N]
+    else:
+        return 1.9 #conservative guess
+
+def get_title(N,charge,bound,L,w,h,R,sor,tol,initial_kw,use_half_grid):
     title =\
-    ('CS(N={},charge={},bound={},L={},w={},h={},R={},'+ \
+    ('CS(N={},charge={},bound={},L={},w={},h={},R={},sor={},'+ \
     'tol={},initial_kw={},use_half_grid={})').format(str(N),charge,
-    bound,str(L),str(w),str(h),str(R),str(tol),initial_kw,str(use_half_grid))
+    bound,str(L),str(w),str(h),str(R),str(sor),str(tol),initial_kw,
+    str(use_half_grid))
     return title
 
 def get_path(title):
@@ -1004,7 +1024,7 @@ def canonical_length_num_conversion(L,w,R,h):
     else:
         raise Exception("length arguments not canonical.")
 
-def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,tol,
+def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
                    initial_kw,use_half_grid,error):
     #store the core result in a dictionary
     #notice we avoid self created object and only store arrays, numbers, and 
@@ -1014,6 +1034,7 @@ def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,tol,
                  "initial field":x_initial,
                  "charge_arg":charge_arg, "bound_arg":bound_arg,
                  "L":L,"w":w,"h":h,"R":R,
+                 "sor":sor,
                  "tol":tol,
                  "initial_kw":initial_kw,
                  "use_half_grid":use_half_grid,
@@ -1141,6 +1162,7 @@ class Solution_Viewer():
             #unload error and number of loops
             self.error = core_dict["error"]
             self.max_loop = self.error.size
+            self.sor = core_dict["sor"]
             self.tol = core_dict["tol"]
             self.initial_kw = core_dict["initial_kw"]
             #recreate grid object from parameters
@@ -1171,6 +1193,7 @@ class Solution_Viewer():
         print("h =", str(self.h))
         print("R =", str(self.R))
         print("use_half_grid =",str(self.use_half_grid))
+        print("sor =", str(self.sor))
         print("tolerance =", str(self.tol))
         print("error =", str(self.error[-1]))
         print("max loop =", str(self.max_loop))
@@ -1332,7 +1355,8 @@ class Solution_Viewer():
     
     def plot_energy_density(self):
         self._quick_plot(self.get_energy_density(),
-                         "Energy Density",
+                         "Energy Density (E={})".format(
+                             str(round(self.get_energy(),3))),
                          "Energy_Density",
                          cmap='jet')
         
@@ -1346,6 +1370,83 @@ class Solution_Viewer():
                              "initial_sigma_{}".format(str(n+1)))
             
     #TODO: write a function that takes any cross section
+    def get_cross_section_from_z_position(self,z):
+        #takes the vertical cross section at z_position
+        n_z = self.grid.z_position_to_z_number(z)
+        return self.get_cross_section_from_z_number(n_z)
+    
+    def get_cross_section_from_z_number(self,n_z):
+        #takes the vertical cross section of the fields at z_number
+        #get all fields, at all rows, at a fixed column
+        return self.x[:,:,n_z]
+    
+    def plot_cross_section_from_z_position(self,z):
+        x_cross = self.get_cross_section_from_z_position(z)
+        phi_cross = np.real(x_cross)
+        sigma_cross = np.imag(x_cross)
+        z_linspace = self.grid.z_linspace
+        
+        fig = plt.figure(figsize=(20,10))
+        ax1 = fig.add_subplot(121)
+        for i in range(self.m):
+            ax1.plot(z_linspace,phi_cross[i],
+                     label=r"$\phi_{}$".format(str(i+1)))
+        ax1.legend()
+
+        ax2 = fig.add_subplot(122)
+        for i in range(self.m):
+            ax2.plot(z_linspace,sigma_cross[i],
+                     label=r"$\sigma_{}$".format(str(i+1)))
+        ax2.legend()
+
+        fig.suptitle("Cross Section at z={}".format(str(z)),size=20)
+        fig.savefig(self.path+"Cross_Section_at_z={}.png".format(str(z)), dpi=300)
+        
+            
+    def plot_middle_cross_section_comparison(self):
+        z_linspace = self.grid.z_linspace
+        #cross section at center
+        x_cross = self.get_cross_section_from_z_position(0)
+        phi_cross = np.real(x_cross)
+        sigma_cross = np.imag(x_cross)
+        #BPS at center
+        x_initial_cross = self.x_initial[:,:,self.grid.y_axis_number]
+        phi_BPS = np.real(x_initial_cross)
+        sigma_BPS = np.imag(x_initial_cross)
+        
+        fig = plt.figure(figsize=(20,20))
+        ax1 = fig.add_subplot(221)
+        for i in range(self.m):
+            ax1.plot(z_linspace,phi_cross[i],
+                     label=r"$\phi_{}$".format(str(i+1)))
+        ax1.legend(fontsize=15)
+        ax1.set_title("$\phi$ Cross Section at z=0",size=20)
+
+        ax2 = fig.add_subplot(222)
+        for i in range(self.m):
+            ax2.plot(z_linspace,sigma_cross[i],
+                     label=r"$\sigma_{}$".format(str(i+1)))
+        ax2.legend(fontsize=15)
+        ax2.set_title("$\sigma$ Cross Section at z=0",size=20)
+        
+        ax3 = fig.add_subplot(223)
+        for i in range(self.m):
+            ax3.plot(z_linspace,phi_BPS[i],
+                     label=r"$\phi_{}$".format(str(i+1)))
+        ax3.legend(fontsize=15)
+        ax3.set_title("BPS $\phi$",size=20)
+
+        ax4 = fig.add_subplot(224)
+        for i in range(self.m):
+            ax4.plot(z_linspace,sigma_BPS[i],
+                     label=r"$\sigma_{}$".format(str(i+1)))
+        ax4.legend(fontsize=15)
+        ax4.set_title("BPS $\sigma$",size=20)
+        
+        fig.suptitle("SU({}), {}, R={}, Middle Cross Section Comparison".format(
+            str(self.N),self.charge_arg,str(self.R)),size=30)
+        fig.savefig(self.path+"Middle_Cross_Section_Comparison.png",dpi=300)
+        
     #TODO: extracts middle BPS
     # def compare_slice_with_BPS(self):
     #     for n in range(self.m):
@@ -1446,8 +1547,6 @@ class Solution_Viewer():
         elif j==self.grid.num_y-1: #one sided derivative on the edge
             result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
         #monodromy
-        #TODO: inspect whether mondoromy position is correct, and check
-        #half grid special case
         elif j==self.grid.z_axis_number-1 and \
             self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
             result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
