@@ -1590,7 +1590,7 @@ class Solution_Viewer():
 @timeit
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
               save_plot=True,save_result=True,folder="",
-              separation_R=0,top=True,kw="special kink"):
+              separation_R=0,top=True,kw="special kink",kink_bd_distance=None):
     #sor = successive overrelaxation parameter. For h=0.1 in 2D, the ideal
     #value is given by approximately 1.5. For 1D, it's different; just a guess.
     #create sigma cirtical point objects for iniitial and final bondary
@@ -1600,7 +1600,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
     z0,zf,z_linspace = get_z_linspace(num,h)
     #initialize field using speical kink
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
-                 separation_R,top,kw=kw)
+                 kink_bd_distance,separation_R,top,kw=kw)
     #generate second derivative function for relaxation
     #TODO: eventually switch to numba version. Sth is wrong at the moment with it
     BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
@@ -1702,7 +1702,7 @@ def numba_generate_BPS_second_derivative_function(N):
 def exp_alpha_dot_x(a,i,S,x):
     return np.exp(np.dot(S.alpha[a],x[i]))
 
-def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,R=0,top=True,
+def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,kink_bd_distance,R=0,top=True,
             kw=None):
     #m is number of fields, m = N-1
     if kw is None:
@@ -1712,6 +1712,15 @@ def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,R=0,top=True,
         half = num // 2
         x0[0:half,:] = vac0_vec
         x0[half:-1,:] = vacf_vec
+    elif kw == "special kink customized center":
+        x0 = np.ones(shape=(num,m),dtype=complex)
+        ratio = kink_bd_distance/np.abs(zf - z0)
+        if top:
+            kink_pixel_number = int((1-ratio)*num)
+        else:
+            kink_pixel_number = int(ratio*num)
+        x0[0:kink_pixel_number,:] = vac0_vec
+        x0[kink_pixel_number:-1,:] = vacf_vec
     elif kw == "kink with predicted width":
         x0 = np.ones(shape=(num,m),dtype=complex)
         #predict the width to be d/2 = y(R/2) = ln(R/2+1)-R/(R+2)
@@ -1914,6 +1923,11 @@ def BPS_Energy(N,num,vac0,vacf,x,z,h):
     W=Superpotential(N)    
     theoretic_energy = np.abs(W(np.array([vacf.imaginary_vector])) -\
                               W(np.array([vac0.imaginary_vector])))[0][0]
+    numeric_energy = get_BPS_numeric_energy(N,x,z,h)
+    return (theoretic_energy,numeric_energy)
+
+def get_BPS_numeric_energy(N,x,z,h):
+    W=Superpotential(N)    
     #get the derivaitve of field
     dxdz = derivative_sample(x,h)
     # initialize first term
@@ -1928,7 +1942,7 @@ def BPS_Energy(N,num,vac0,vacf,x,z,h):
     for i in range(N-1):
         sum2 += trapz(np.abs(dWdx[:,i])**2,z)
     numeric_energy = sum1 + sum2/4
-    return (theoretic_energy,numeric_energy)
+    return numeric_energy
 
 def plot_error(error,folder):
     """
