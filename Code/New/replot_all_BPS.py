@@ -6,7 +6,6 @@ Author: Samuel Wong
 """
 import os
 import pickle
-from Source import plot_BPS
 
 def get_all_folders():
     folders = []
@@ -16,11 +15,7 @@ def get_all_folders():
     return folders
 
 folders = get_all_folders()
-for folder in folders:
-    pickle_in = open(folder+"BPS_dict","rb")
-    BPS_dict = pickle.load(pickle_in)
+# for folder in folders:
+#     pickle_in = open(folder+"BPS_dict","rb")
+#     BPS_dict = pickle.load(pickle_in)
 
-        
-    
-
-#plot_BPS(N,z,f,num,h,vac0,vacf,save_plot,folder)

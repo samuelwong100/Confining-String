@@ -6,14 +6,25 @@ Author: Samuel Wong
 """
 import os
 import pickle
-import numpy as np
-from numpy import pi, exp
-import matplotlib.pyplot as plt
-import matplotlib
 from copy import deepcopy
-from scipy.integrate import simps, trapz
-from numba import jit
 import time
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from scipy.integrate import simps, trapz
+from scipy.optimize import curve_fit
+from numba import jit
+import sympy
+from sympy import init_printing
+from sympy.matrices import Matrix
+import warnings
+warnings.filterwarnings('ignore') #ignore numba warnings
+
+"""
+===============================================================================
+                                 General Helper Functions
+===============================================================================
+"""
 
 def timeit(method):
     def timed(*args, **kw):
@@ -131,6 +142,23 @@ def list_of_costants_times_vector(constants_ls,vector):
     size=constants_ls.size
     return constants_ls.reshape(size,1)*vector
 
+@jit(nopython=False)
+def exponentiate_scalar_field_1D_numba(scalar_field):
+    points = scalar_field.size
+    result = np.zeros(shape=(points,),dtype=complex)
+    for point in range(points):
+            result[point] = np.exp(scalar_field[point])
+    return result
+
+@jit(nopython=False)
+def dot_vec_with_vec_field_1D_numba(vec,vec_field):
+    points, comps = vec_field.shape
+    summation = np.zeros(shape=(points,),dtype=complex)
+    for point in range(points):
+        for comp in range(comps):
+                summation[point] += vec[comp]*vec_field[point][comp]
+    return summation
+
 """ ============== subsection: SU(N) ======================================="""
 def delta(i,j):
     #kronecker delta
@@ -148,7 +176,10 @@ class SU():
     Convention: sets of vectors are stored as rows of a matrix. To acess the
     first nu vector, for example, call SU.nu[0,:].
     """
-    def __init__(self,N):
+    def __init__(self,N,analytic=False):
+        self.analytic = analytic # whether in analytic mode
+        if self.analytic:
+            init_printing()
         self.N = N #rank of gauge group
         self.nu = self._define_nu() # weight of fundamental representation
         self.alpha = self._define_alpha() # simple roots and affine root
@@ -166,8 +197,11 @@ class SU():
             return 0
 
     def _lambda(self,a,A):
-        # the mathematical definition of lambda
-        return (1/np.sqrt(a*(a+1)))*(self._theta(a,A) - a*delta(a+1,A))
+        if not self.analytic:
+            # the mathematical definition of lambda
+            return (1/np.sqrt(a*(a+1)))*(self._theta(a,A) - a*delta(a+1,A))
+        else:
+            return (1/sympy.sqrt(a*(a+1)))*(self._theta(a,A) - a*delta(a+1,A))
 
     def _lambda_modified(self,A,a):
         # to use labmda to create matrix, first switch rows & columns, then
@@ -175,46 +209,82 @@ class SU():
         return self._lambda(a+1,A+1)
 
     def _define_nu(self):
-        # create a N by N-1 matrix that is defined by lambda
-        # there are N nu vectors, each N-1 dimensional
-        # the rows are the nu vectors
-        nu = np.empty(shape=(self.N,self.N-1))
-        for A in range(self.N):
-            for a in range(self.N-1):
-                nu[A][a] = self._lambda_modified(A,a)
-        return nu
+        if not self.analytic:
+            # create a N by N-1 matrix that is defined by lambda
+            # there are N nu vectors, each N-1 dimensional
+            # the rows are the nu vectors
+            nu = np.empty(shape=(self.N,self.N-1))
+            for A in range(self.N):
+                for a in range(self.N-1):
+                    nu[A][a] = self._lambda_modified(A,a)
+            return nu
+        else:
+            return Matrix(self.N,self.N-1,self._lambda_modified)
 
     def _define_alpha(self):
-        #initialize an empty list
-        ls=[]
-        summation= 0
-        # define the first N-1 alpha vectors
-        for a in range(0,self.N-1):
-            ls.append(self.nu[a,:] - self.nu[a+1,:])
-            summation += self.nu[a,:] - self.nu[a+1,:]
-        # the last alpha is the negative of the sum of the previous alpha
-        ls.append(-1*summation)
-        alpha = np.array(ls)
-        return alpha
+        if not self.analytic:
+            #initialize an empty list
+            ls=[]
+            summation= 0
+            # define the first N-1 alpha vectors
+            for a in range(0,self.N-1):
+                ls.append(self.nu[a,:] - self.nu[a+1,:])
+                summation += self.nu[a,:] - self.nu[a+1,:]
+            # the last alpha is the negative of the sum of the previous alpha
+            ls.append(-1*summation)
+            alpha = np.array(ls)
+            return alpha
+        else:
+            #initialize an empty list
+            ls=[]
+            summation= Matrix.zeros(1,self.N-1)
+            # define the first N-1 alpha vectors
+            for A in range(0,self.N-1):
+                ls.append(self.nu.row(A) - self.nu.row(A+1))
+                summation += self.nu.row(A) - self.nu.row(A+1)
+            # the last alpha is the negative of the sum of the previous alpha
+            ls.append(-1*summation)
+            alpha = Matrix(ls)
+            return alpha
 
     def _define_w(self):
-        # the i-th w is the sum of the first i nu
-        # it is only defined up to the N-1th W
-        # w is N-1 by N-1 matrix.
-        w = np.zeros(shape=(self.N-1,self.N-1))
-        summation = np.zeros(self.N-1)
-        for A in range(0,self.N-1):
-            # for every row of w, add up increasingly more nu vectors
-            summation += self.nu[A,:]
-            w[A,:] = deepcopy(summation)        
-        return w
+        if not self.analytic:
+            # the i-th w is the sum of the first i nu
+            # it is only defined up to the N-1th W
+            # w is N-1 by N-1 matrix.
+            w = np.zeros(shape=(self.N-1,self.N-1))
+            summation = np.zeros(self.N-1)
+            for A in range(0,self.N-1):
+                # for every row of w, add up increasingly more nu vectors
+                summation += self.nu[A,:]
+                w[A,:] = deepcopy(summation)        
+            return w
+        else:
+            # the i-th w is the sum of the first i nu
+            # it is only defined up to the N-1th W
+            # w is N-1 by N-1 matrix.
+            ls=[]
+            summation= Matrix.zeros(1,self.N-1)
+            for A in range(0,self.N-1):
+                # for every row of w, add up increasingly more nu vectors
+                summation += self.nu.row(A)
+                ls.append(summation)
+            w = Matrix(ls)
+            return w
 
     def _define_rho(self):
-        summation= np.zeros(self.N-1)
-        # rho is a N-1 dimensional row vector
-        for A in range(0,self.N-1):
-            summation += self.w[A,:]
-        return summation
+        if not self.analytic:
+            summation= np.zeros(self.N-1)
+            # rho is a N-1 dimensional row vector
+            for A in range(0,self.N-1):
+                summation += self.w[A,:]
+            return summation
+        else:
+            summation= Matrix.zeros(1,self.N-1)
+            # rho is a N-1 dimensional row vector
+            for A in range(0,self.N-1):
+                summation += self.w.row(A)
+            return summation
 
 """ ============== subsection: Superpotential ============================="""
 class Superpotential():
@@ -235,7 +305,7 @@ class Superpotential():
         for row in range(num):
             summation = 0
             for i in range(0,self.N):
-                summation += exp(np.dot(self.s.alpha[i,:],x[row,:]))
+                summation += np.exp(np.dot(self.s.alpha[i,:],x[row,:]))
             result[row] = summation
         return result
 
@@ -243,7 +313,7 @@ class Superpotential():
         ls = []
         #there are N minimum vectors, each is 1 by N-1 dimensional
         for k in range(0,self.N+1):
-            ls.append(1j*(2*pi/self.N)*k*self.s.rho)
+            ls.append(1j*(2*np.pi/self.N)*k*self.s.rho)
         x_min = np.array(ls)
         return x_min
     
@@ -361,6 +431,27 @@ class Superpotential():
                 dot_vec_with_vec_field_numba(self.s.alpha[(a+1) % self.N],x_conj))
             exp_alpha_a_minus1_x_conj = exponentiate_scalar_field_numba(
                 dot_vec_with_vec_field_numba(self.s.alpha[(a-1) % self.N],x_conj))
+            summation += exp_alpha_a_x * (
+                2*exp_alpha_a_x_conj
+                - exp_alpha_a_plus1_x_conj
+                - exp_alpha_a_minus1_x_conj)
+        return summation
+    
+    def dWdx_absolute_square(self,x):
+        #the same function as above but for BPS 1D field
+        #use the formula for dot product of alpha in terms of 3 delta function
+        x_conj = np.conjugate(x)
+        points,comps = x.shape #shape of 1D field convention
+        summation = np.zeros(shape=(points,),dtype=complex)
+        for a in range(self.N):
+            exp_alpha_a_x = exponentiate_scalar_field_1D_numba(
+                dot_vec_with_vec_field_1D_numba(self.s.alpha[a],x))
+            exp_alpha_a_x_conj = exponentiate_scalar_field_1D_numba(
+                dot_vec_with_vec_field_1D_numba(self.s.alpha[a],x_conj))
+            exp_alpha_a_plus1_x_conj = exponentiate_scalar_field_1D_numba(
+                dot_vec_with_vec_field_1D_numba(self.s.alpha[(a+1) % self.N],x_conj))
+            exp_alpha_a_minus1_x_conj = exponentiate_scalar_field_1D_numba(
+                dot_vec_with_vec_field_1D_numba(self.s.alpha[(a-1) % self.N],x_conj))
             summation += exp_alpha_a_x * (
                 2*exp_alpha_a_x_conj
                 - exp_alpha_a_plus1_x_conj
@@ -494,7 +585,7 @@ class Sigma_Critical(): #TODO: make this compatible with N>10
                     #the usual w is already real
                     #the zeroth w corresponds to w1, need a shift
                     #the sigma space critical point is 2pi times w
-                    summation += sign*2*pi*np.real(self.S.w[k-1,:])
+                    summation += sign*2*np.pi*np.real(self.S.w[k-1,:])
                 elif term[0] == 'x':
                     #the usual x_min is stored as purely imaginary
                     #want to convert to a real vector
@@ -957,7 +1048,7 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
                             diagnose=False):
     #if no sor given, use default sor
     if sor==0:
-        sor = best_sor_for_N[N]
+        sor = best_sor_for_N(N)
     else:
         _validate_sor(sor)
     #create the title of the folder with all parameters in name
@@ -993,15 +1084,17 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
         store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
                        initial_kw,use_half_grid,error)
         sol = Solution_Viewer(title)
-    sol.display_all()
+    #sol.display_all()
     return sol
 
 def best_sor_for_N(N):
-    sor_dict = {2:1.96,3:1.96,4:1.96}
+    #need to test using tol=e-5
+    #still need to test 5, 6 for 1.97
+    sor_dict = {2:1.96,3:1.96,4:1.96,5:1.96,6:1.96,7:1.97} 
     if N in sor_dict:
         return sor_dict[N]
     else:
-        return 1.9 #conservative guess
+        return 1.96 # guess
 
 def get_title(N,charge,bound,L,w,h,R,sor,tol,initial_kw,use_half_grid):
     title =\
@@ -1130,459 +1223,6 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
 
 """
 ===============================================================================
-                                Solution Viewer
-===============================================================================
-"""    
-class Solution_Viewer():
-    """
-    Analyzing and displaying the field solution.
-    """
-    def __init__(self,title):
-        #get the path and file name from title (this makes it easy to call
-        #the solution by just copy and paste the name of the folder)
-        path = get_path(title)
-        file_name = path+"core_dict"
-        if os.path.exists(file_name):
-            #read the core dictionary from pickle
-            pickle_in = open(file_name,"rb")
-            core_dict = pickle.load(pickle_in)
-            self.folder_title = title
-            self.path = path
-            #unload the most important results and parameters first
-            self.x, self.x_initial = \
-                core_dict["field"], core_dict["initial field"]
-            self.bound_arg, self.charge_arg = \
-                core_dict["bound_arg"],core_dict["charge_arg"]
-            # m is number of components of field
-            self.N, self.m = core_dict["N"], self.x.shape[0]
-            #unload all grid related parameters
-            self.L,self.w,self.R,self.h  = \
-                core_dict["L"], core_dict["w"], core_dict["R"], core_dict["h"]
-            self.use_half_grid = core_dict["use_half_grid"]
-            #unload error and number of loops
-            self.error = core_dict["error"]
-            self.max_loop = self.error.size
-            self.sor = core_dict["sor"]
-            self.tol = core_dict["tol"]
-            self.initial_kw = core_dict["initial_kw"]
-            #recreate grid object from parameters
-            num_z,num_y,num_R = canonical_length_num_conversion(
-                self.L,self.w,self.R,self.h)
-            self.grid = Dipole_Full_Grid(num_z,num_y,num_R,self.h)
-        else:
-            raise Exception("Solution file does not exist.")
-            
-    def display_all(self):
-        self.print_attributes()
-        self.plot_potential_energy_density()
-        self.plot_error()
-        self.plot_x_all()
-        self.plot_x_initial()
-        self.plot_gradient_energy_density()
-        self.plot_energy_density()
-        #self.plot_laplacian_all() #implementation needs to be updated
-            
-    def print_attributes(self):
-        print()
-        print("Attributes:")
-        print("N =", str(self.N))
-        print("charge_arg =", self.charge_arg)
-        print("bound_arg =", self.bound_arg)
-        print("L =", str(self.L))
-        print("w =", str(self.w))
-        print("h =", str(self.h))
-        print("R =", str(self.R))
-        print("use_half_grid =",str(self.use_half_grid))
-        print("sor =", str(self.sor))
-        print("tolerance =", str(self.tol))
-        print("error =", str(self.error[-1]))
-        print("max loop =", str(self.max_loop))
-        print("initial keyword =",str(self.initial_kw))
-        print("gradient energy =", self.get_gradient_energy())
-        print("potential energy =", self.get_potential_energy())
-        print("energy =", str(self.get_energy()))
-        print()
-            
-    def get_phi_n(self,n):
-        """
-        Return the real part of the nth component of the vector field.
-        
-        Input
-        -------------------------------------------
-        n (int) = the component of the vector field
-    
-        Output
-        --------------------------------------------
-        result (array) = an array of shape (grid.num_y,grid.num_z);
-                  the real part of the nth layer of the vector field.
-        """
-        if n >= self.m:
-            raise Exception("n must be less than or equal to m-1.")
-        return np.real(self.x)[n,:,:]
-    
-    def get_sigma_n(self,n):
-        """
-        Return the imaginary part of the nth component of the vector field.
-        
-        Input
-        -------------------------------------------
-        n (int) = the component of the vector field
-    
-        Output
-        --------------------------------------------
-        result (array) = an array of shape (grid.num_y,grid.num_z);
-                  the imaginary part of the nth layer of the vector field.
-        """
-        if n >= self.m:
-            raise Exception("n must be less than or equal to m-1.")
-        return np.imag(self.x)[n,:,:]
-    
-    def plot_phi_n(self,n):
-        """
-        Plot the real part of the nth component of the vector field.
-        
-        Input
-        -------------------------------------------
-        n (int) = the component of the vector field
-        """
-        self._quick_plot(self.get_phi_n(n),
-                         "$\phi_{}$".format(str(n+1)), "phi_"+str(n+1))
-        
-    def plot_sigma_n(self,n):
-        """
-        Plot the imaginary part of the nth component of the vector field.
-        
-        Input
-        -------------------------------------------
-        n (int) = the component of the vector field
-        """
-        self._quick_plot(self.get_sigma_n(n),
-                         "$\sigma_{}$".format(str(n+1)), "sigma_"+str(n+1))
-        
-    def plot_x_all(self):
-        for n in range(self.m):
-            self.plot_phi_n(n)
-            self.plot_sigma_n(n)
-
-    def plot_error(self):
-        plt.figure()
-        plt.plot(np.arange(0,self.max_loop,1),np.log10(self.error))
-        plt.ylabel("log(error)")
-        plt.title("Error")
-        plt.savefig(self.path+"Error.png")
-        plt.show()
-        
-    # def get_laplacian(self):
-    #     #initialize second derivative in each direction
-    #     d2xdz = np.zeros(shape=self.x.shape,dtype=complex)
-    #     d2xdy = np.zeros(shape=self.x.shape,dtype=complex)
-    #     for i in range(self.m): #loop over each layer
-    #         for j in range(self.grid.num_y): #loop over each row
-    #             for k in range(self.grid.num_z): #loop over each column
-    #                 d2xdz[i][j][k] = self._get_d2xdz_ijk(i,j,k)
-    #                 d2xdy[i][j][k] = self._get_d2xdy_ijk(i,j,k)
-    #     return d2xdz + d2xdy
-
-    # def plot_laplacian_all(self):
-    #     """
-    #     Plot and compare the numerical and theoretical Laplacian to verify
-    #     that the solution actually solves the PDE
-    #     """
-    #     lap_num = self.get_laplacian()
-    #     lap_theo = self._get_lap_theo()
-    #     for n in range(self.m):
-    #         self._plot_laplacian_n(n,lap_num,lap_theo)
-    
-    def get_gradient_energy_density(self):
-        """
-        Return the energy density from gradient of the field
-        
-        Output
-        --------------------------------------------
-        energy_density (array) = the energy density from gradient of the field;
-                                 an array of shape (grid.num_y,grid.num_z).
-        """
-        dxdz,dxdy = self._get_derivative() #derivative in each direction
-        dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
-        gradient_energy_density = dx_squared.sum(axis=0) #sum over components
-        return gradient_energy_density
-
-    def get_gradient_energy(self):
-        """
-        Return the value of the gradient energy
-        
-        Output
-        --------------------------------------------
-        gradient_energy (float) = the total gradient energy
-        """
-        #integrate to get energy
-        #Note: simps works best when there are odd number of points, which is
-        #always the case for me here, by grid construction.
-        gradient_energy = simps(simps(self.get_gradient_energy_density(), 
-                             self.grid.z_linspace),self.grid.y_linspace)
-        return gradient_energy
-    
-    def plot_gradient_energy_density(self):
-        self._quick_plot(self.get_gradient_energy_density(),
-                         "Gradient Energy Density",
-                         "Gradient_Energy_Density",
-                         cmap='jet')
-
-    def get_potential_energy_density(self):
-        W = Superpotential(self.N)
-        ped = (1/4)*W.dWdx_absolute_square_on_grid(self.x)
-        ped = np.real(ped) #it is real anyway, doing this for plotting
-        return ped
-               
-    def get_potential_energy(self):
-        return simps(simps(self.get_potential_energy_density(),self.grid.z_linspace),
-                     self.grid.y_linspace)
-    
-    def plot_potential_energy_density(self):
-        self._quick_plot(self.get_potential_energy_density(),
-                         "Potential Energy Density",
-                         "Potential_Energy_Density",
-                         cmap='jet')
-        
-    def get_energy_density(self):
-        return self.get_potential_energy_density() \
-               + self.get_gradient_energy_density()
-               
-    def get_energy(self):
-        return simps(simps(self.get_energy_density(),
-                           self.grid.z_linspace),self.grid.y_linspace)
-    
-    
-    def plot_energy_density(self):
-        self._quick_plot(self.get_energy_density(),
-                         "Energy Density (E={})".format(
-                             str(round(self.get_energy(),3))),
-                         "Energy_Density",
-                         cmap='jet')
-        
-    def plot_x_initial(self):
-        for n in range(self.m):
-            phi_n = np.real(self.x_initial[n,:,:])
-            sigma_n = np.imag(self.x_initial[n,:,:])
-            self._quick_plot(phi_n,"initial phi_{}".format(str(n+1)),
-                             "initial_phi_{}".format(str(n+1)))
-            self._quick_plot(sigma_n,"initial sigma_{}".format(str(n+1)),
-                             "initial_sigma_{}".format(str(n+1)))
-            
-    #TODO: write a function that takes any cross section
-    def get_cross_section_from_z_position(self,z):
-        #takes the vertical cross section at z_position
-        n_z = self.grid.z_position_to_z_number(z)
-        return self.get_cross_section_from_z_number(n_z)
-    
-    def get_cross_section_from_z_number(self,n_z):
-        #takes the vertical cross section of the fields at z_number
-        #get all fields, at all rows, at a fixed column
-        return self.x[:,:,n_z]
-    
-    def plot_cross_section_from_z_position(self,z):
-        x_cross = self.get_cross_section_from_z_position(z)
-        phi_cross = np.real(x_cross)
-        sigma_cross = np.imag(x_cross)
-        z_linspace = self.grid.z_linspace
-        
-        fig = plt.figure(figsize=(20,10))
-        ax1 = fig.add_subplot(121)
-        for i in range(self.m):
-            ax1.plot(z_linspace,phi_cross[i],
-                     label=r"$\phi_{}$".format(str(i+1)))
-        ax1.legend()
-
-        ax2 = fig.add_subplot(122)
-        for i in range(self.m):
-            ax2.plot(z_linspace,sigma_cross[i],
-                     label=r"$\sigma_{}$".format(str(i+1)))
-        ax2.legend()
-
-        fig.suptitle("Cross Section at z={}".format(str(z)),size=20)
-        fig.savefig(self.path+"Cross_Section_at_z={}.png".format(str(z)), dpi=300)
-        
-            
-    def plot_middle_cross_section_comparison(self):
-        z_linspace = self.grid.z_linspace
-        #cross section at center
-        x_cross = self.get_cross_section_from_z_position(0)
-        phi_cross = np.real(x_cross)
-        sigma_cross = np.imag(x_cross)
-        #BPS at center
-        x_initial_cross = self.x_initial[:,:,self.grid.y_axis_number]
-        phi_BPS = np.real(x_initial_cross)
-        sigma_BPS = np.imag(x_initial_cross)
-        
-        fig = plt.figure(figsize=(20,20))
-        ax1 = fig.add_subplot(221)
-        for i in range(self.m):
-            ax1.plot(z_linspace,phi_cross[i],
-                     label=r"$\phi_{}$".format(str(i+1)))
-        ax1.legend(fontsize=15)
-        ax1.set_title("$\phi$ Cross Section at z=0",size=20)
-
-        ax2 = fig.add_subplot(222)
-        for i in range(self.m):
-            ax2.plot(z_linspace,sigma_cross[i],
-                     label=r"$\sigma_{}$".format(str(i+1)))
-        ax2.legend(fontsize=15)
-        ax2.set_title("$\sigma$ Cross Section at z=0",size=20)
-        
-        ax3 = fig.add_subplot(223)
-        for i in range(self.m):
-            ax3.plot(z_linspace,phi_BPS[i],
-                     label=r"$\phi_{}$".format(str(i+1)))
-        ax3.legend(fontsize=15)
-        ax3.set_title("BPS $\phi$",size=20)
-
-        ax4 = fig.add_subplot(224)
-        for i in range(self.m):
-            ax4.plot(z_linspace,sigma_BPS[i],
-                     label=r"$\sigma_{}$".format(str(i+1)))
-        ax4.legend(fontsize=15)
-        ax4.set_title("BPS $\sigma$",size=20)
-        
-        fig.suptitle("SU({}), {}, R={}, Middle Cross Section Comparison".format(
-            str(self.N),self.charge_arg,str(self.R)),size=30)
-        fig.savefig(self.path+"Middle_Cross_Section_Comparison.png",dpi=300)
-        
-    #TODO: extracts middle BPS
-    # def compare_slice_with_BPS(self):
-    #     for n in range(self.m):
-    #         plt.figure()
-    #         #take a vertical slice through middle
-    #         middle_col = int(self.grid.num_z/2)
-    #         plt.plot(self.grid.y, self.get_phi_n(n)[:,middle_col],
-    #                  label="final $\phi_{}$".format(str(n+1)))
-    #         plt.plot(self.grid.y, np.real(self.BPS_slice[n,:]),
-    #                  label="BPS $\phi_{}$".format(str(n+1)))
-    #         plt.legend()
-    #         plt.title("compare slice with BPS phi_{}".format(str(n+1)))
-    #         plt.savefig(self.folder_title +
-    #                     "compare_slice_with_BPS_phi_{}.png".format(str(n+1)))
-    #         plt.show()
-            
-    #         plt.figure()
-    #         plt.plot(self.grid.y, self.get_sigma_n(n)[:,middle_col],
-    #                  label="final $\sigma_{}$".format(str(n+1)))
-    #         plt.plot(self.grid.y, np.imag(self.BPS_slice[n,:]),
-    #                  label="BPS $\sigma_{}$".format(str(n+1)))
-    #         plt.legend()
-    #         plt.title("compare slice with BPS sigma_{}".format(str(n+1)))
-    #         plt.savefig(self.folder_title +
-    #                 "compare_slice_with_BPS_sigma_{}.png".format(str(n+1)))
-    #         plt.show()
-            
-
-    def _quick_plot(self,field,plot_title,file_title,cmap=None):
-        plt.figure()
-        plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
-        plt.colorbar()
-        plt.title(plot_title)
-        plt.savefig(self.path+file_title+".png")
-        plt.show()
-        
-    # def _quick_plot_laplacian(self,field,ax,title,fig):
-    #     im = ax.pcolormesh(self.grid.zv,self.grid.yv,field)
-    #     ax.set_title(title)
-    #     fig.colorbar(im,ax=ax)
-        
-    # def _plot_laplacian_n(self,n,lap_num,lap_theo):
-    #     #row= real & imag of fields; col= numeric vs theoretic
-    #     fig, axs = plt.subplots(2, 2) 
-    #     fig.subplots_adjust(hspace=0.7)
-    #     fig.subplots_adjust(wspace=0.7)
-    #     self._quick_plot_laplacian(np.real(lap_num[n,:,:]),axs[0, 0],
-    #                     "$\\nabla^2 \phi_{}$ numeric".format(str(n+1)),
-    #                                fig)
-    #     self._quick_plot_laplacian(np.real(lap_theo[n,:,:]),axs[0,1],
-    #                     "$\\nabla^2 \phi_{}$ theoretic".format(str(n+1)),
-    #                                fig)
-    #     self._quick_plot_laplacian(np.imag(lap_num[n,:,:]),axs[1, 0],
-    #                     "$\\nabla^2 \sigma_{}$ numeric".format(str(n+1)),
-    #                                fig)
-    #     self._quick_plot_laplacian(np.imag(lap_theo[n,:,:]),axs[1,1],
-    #                     "$\\nabla^2 \sigma_{}$ theoretic".format(str(n+1)),
-    #                         fig)
-    #     #add axis label such that repeated are avoided
-    #     #for ax in axs.flat:
-    #         #ax.set(xlabel='z', ylabel='y')
-    #     # Hide x labels and tick labels for top plots and y ticks for right plots.
-    #     #for ax in axs.flat:
-    #         #ax.label_outer()
-    #     fig.savefig(self.folder_title+"Laplacian_{}.png".format(str(n+1)))
-            
-    # def _get_lap_theo(self):
-    #     #return theoretical laplacian
-    #     charge = Sigma_Critical(self.N,self.charge_arg)
-    #     bound = Sigma_Critical(self.N,self.bound_arg)
-    #     relax = Relaxation(self.grid,self.N,bound,charge,
-    #                        self.max_loop,x0=None,diagnose=False)
-    #     return relax._full_grid_EOM(self.x)
-    
-    def _get_derivative(self):
-        #initialize derivative in each direction
-        dxdz = np.zeros(shape=self.x.shape,dtype=complex)
-        dxdy = np.zeros(shape=self.x.shape,dtype=complex)
-        for i in range(self.m): #loop over each layer
-            for j in range(self.grid.num_y): #loop over each row
-                for k in range(self.grid.num_z): #loop over each column
-                    dxdz[i][j][k] = self._get_dxdz_ijk(i,j,k)
-                    dxdy[i][j][k] = self._get_dxdy_ijk(i,j,k)
-        return dxdz, dxdy
-
-    def _get_dxdz_ijk(self,i,j,k):
-        if k == 0: #one sided derivative on the edge
-            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
-        elif k==self.grid.num_z-1: #one sided derivative on the edge
-            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
-        else: #two sided derivative elsewhere
-            result = (self.x[i][j][k+1] - self.x[i][j][k-1])/(2*self.grid.h)
-        return result
-    
-    def _get_dxdy_ijk(self,i,j,k):
-        if j == 0: #one sided derivative on the edge
-            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
-        elif j==self.grid.num_y-1: #one sided derivative on the edge
-            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
-        #monodromy
-        elif j==self.grid.z_axis_number-1 and \
-            self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
-            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
-        elif j==self.grid.z_axis_number and \
-            self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
-            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
-        else: #two sided derivative elsewhere
-            result = (self.x[i][j+1][k] - self.x[i][j-1][k])/(2*self.grid.h)
-        return result
-    
-    # def _get_d2xdz_ijk(self,i,j,k):
-    #     if k == 0: #one sided second derivative on the edge (forward difference)
-    #         result = (self.x[i][j][k+2] - 2*self.x[i][j][k+1] +
-    #                   self.x[i][j][k])/(self.grid.h**2)
-    #     elif k==self.grid.num_z-1: #one sided second derivative on the edge
-    #         result = (self.x[i][j][k] - 2*self.x[i][j][k-1] +
-    #                   self.x[i][j][k-2])/(self.grid.h**2)
-    #     else: #two sided second derivative elsewhere
-    #         result = (self.x[i][j][k+1] - 2*self.x[i][j][k] +
-    #                   self.x[i][j][k-1])/(self.grid.h**2)
-    #     return result
-    
-    # def _get_d2xdy_ijk(self,i,j,k):
-    #     if j == 0: #one sided derivative on the edge
-    #         result = (self.x[i][j+2][k] - 2*self.x[i][j+1][k] +
-    #                   self.x[i][j][k])/(self.grid.h**2)
-    #     elif j==self.grid.num_y-1: #one sided derivative on the edge
-    #         result = (self.x[i][j][k] - 2*self.x[i][j-1][k] +
-    #                   self.x[i][j-2][k])/(self.grid.h**2)
-    #     else: #two sided derivative elsewhere
-    #         result = (self.x[i][j+1][k] - 2*self.x[i][j][k] +
-    #                   self.x[i][j-1][k])/(self.grid.h**2)
-    #     return result
-    
-"""
-===============================================================================
                                     BPS
 ===============================================================================
 """
@@ -1590,7 +1230,8 @@ class Solution_Viewer():
 @timeit
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
               save_plot=True,save_result=True,folder="",
-              separation_R=0,top=True,kw="special kink",kink_bd_distance=None):
+              separation_R=0,top=True,kw="special kink",kink_bd_distance=None,
+              continue_kw="BPS_Energy"):
     #sor = successive overrelaxation parameter. For h=0.1 in 2D, the ideal
     #value is given by approximately 1.5. For 1D, it's different; just a guess.
     #create sigma cirtical point objects for iniitial and final bondary
@@ -1602,16 +1243,18 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
                  kink_bd_distance,separation_R,top,kw=kw)
     #generate second derivative function for relaxation
-    #TODO: eventually switch to numba version. Sth is wrong at the moment with it
     BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
     #generate continue condition that checks energy as well as error for
     #whether to continue relaxation loop
-    BPS_energy_continue_condition = generate_BPS_energy_continue_condition(
-            N,num,vac0,vacf,z_linspace,h)
+    if continue_kw == "BPS_Energy":
+        continue_condition = generate_BPS_energy_continue_condition(
+                N,num,vac0,vacf,z_linspace,h)
+    elif continue_kw == "default":
+        continue_condition = default_continue_condition
     #call everything in relaxation algorithm
     x, z_linspace, error = relaxation_1D_algorithm(
             g=BPS_second_derivative_function,num=num,f0=x0,h=h,tol=tol,sor=sor,
-            continue_condition=BPS_energy_continue_condition)
+            continue_condition=continue_condition)
     #if folder is unspecified, save it in designated BPS solitons folder
     if folder == "":
         folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={},sor={},final_error={}/".format(
@@ -1673,31 +1316,32 @@ def dot_field_with_all_alpha(alpha,x):
     #result with corresponding alpha
     return np.dot(alpha, x.T).T
 
-def numba_generate_BPS_second_derivative_function(N):
-    S = SU(N)
-    @jit(nopython=False)
-    def BPS_second_derivative_function(x):
-        #returns the second derivative function:
-        #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
-        # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
-        summation = np.zeros(shape=x.shape,dtype=complex)
-        x_conj = np.conj(x)
-        for a in range(0,N): #loop over alpha componenets
-            a_minus_1 = (a-1) % N
-            a_plus_1 = (a+1) % N
-            for i in range(x.shape[0]): #loop over points
-                exp_alpha_x = exp_alpha_dot_x(a,i,S,x)
-                exp_alpha_x_conj = exp_alpha_dot_x(a,i,S,x_conj)
-                exp_alpha_x_conj_a_minus_1 = exp_alpha_dot_x(a_minus_1,i,S,x_conj)
-                exp_alpha_x_conj_a_plus_1 = exp_alpha_dot_x(a_plus_1,i,S,x_conj)
-                for j in range(x.shape[1]): #loop over field components
-                    a_term = exp_alpha_x_conj*S.alpha[a][j]
-                    a_minus_1_term = exp_alpha_x_conj_a_minus_1*S.alpha[a_minus_1][j]
-                    a_plus_1_term = exp_alpha_x_conj_a_plus_1*S.alpha[a_plus_1][j]
-                    summation[i][j] += exp_alpha_x * (
-                            2*a_term - a_minus_1_term - a_plus_1_term)
-        return summation/4
-    return BPS_second_derivative_function
+#Warning: for some reasons the numba version of this is very slow.
+# def numba_generate_BPS_second_derivative_function(N):
+#     S = SU(N)
+#     @jit(nopython=False)
+#     def BPS_second_derivative_function(x):
+#         #returns the second derivative function:
+#         #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
+#         # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
+#         summation = np.zeros(shape=x.shape,dtype=complex)
+#         x_conj = np.conj(x)
+#         for a in range(0,N): #loop over alpha componenets
+#             a_minus_1 = (a-1) % N
+#             a_plus_1 = (a+1) % N
+#             for i in range(x.shape[0]): #loop over points
+#                 exp_alpha_x = exp_alpha_dot_x(a,i,S,x)
+#                 exp_alpha_x_conj = exp_alpha_dot_x(a,i,S,x_conj)
+#                 exp_alpha_x_conj_a_minus_1 = exp_alpha_dot_x(a_minus_1,i,S,x_conj)
+#                 exp_alpha_x_conj_a_plus_1 = exp_alpha_dot_x(a_plus_1,i,S,x_conj)
+#                 for j in range(x.shape[1]): #loop over field components
+#                     a_term = exp_alpha_x_conj*S.alpha[a][j]
+#                     a_minus_1_term = exp_alpha_x_conj_a_minus_1*S.alpha[a_minus_1][j]
+#                     a_plus_1_term = exp_alpha_x_conj_a_plus_1*S.alpha[a_plus_1][j]
+#                     summation[i][j] += exp_alpha_x * (
+#                             2*a_term - a_minus_1_term - a_plus_1_term)
+#         return summation/4
+#     return BPS_second_derivative_function
 
 def exp_alpha_dot_x(a,i,S,x):
     return np.exp(np.dot(S.alpha[a],x[i]))
@@ -1730,6 +1374,8 @@ def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,kink_bd_distance,R=0,top=True,
             kink_pixel_number = int((1-ratio)*num)
         else:
             kink_pixel_number = int(ratio*num)
+        print("kpn = ",kink_pixel_number)
+        print("num=",num)
         x0[0:kink_pixel_number,:] = vac0_vec
         x0[kink_pixel_number:-1,:] = vacf_vec
     #enforce boundary
@@ -1920,28 +1566,30 @@ def BPS_dx(N,x,vac0,vacf):
     return (alpha/2)*dWdx_
 
 def BPS_Energy(N,num,vac0,vacf,x,z,h):
+    theoretic_energy = get_BPS_theoretic_energy(N,vac0,vacf)
+    numeric_energy = get_BPS_numeric_energy(N,x,z,h)
+    return (theoretic_energy,numeric_energy)
+
+def get_BPS_theoretic_energy(N,vac0,vacf):
     W=Superpotential(N)    
     theoretic_energy = np.abs(W(np.array([vacf.imaginary_vector])) -\
                               W(np.array([vac0.imaginary_vector])))[0][0]
-    numeric_energy = get_BPS_numeric_energy(N,x,z,h)
-    return (theoretic_energy,numeric_energy)
+    return theoretic_energy
 
 def get_BPS_numeric_energy(N,x,z,h):
     W=Superpotential(N)    
     #get the derivaitve of field
     dxdz = derivative_sample(x,h)
     # initialize first term
-    sum1 = 0
+    kin_sum = 0
+    dxdz_absolute_square = np.abs(dxdz**2)
     for i in range(N-1):
         # integrate the absolute square of each complex field and sum them up
-        sum1 += trapz(np.abs(dxdz[:,i])**2,z)
-    # get the gradient of superpotential
-    dWdx = grad(W,x)
+        kin_sum += trapz(dxdz_absolute_square[:,i],z)
     # initialize second term
-    sum2 = 0
-    for i in range(N-1):
-        sum2 += trapz(np.abs(dWdx[:,i])**2,z)
-    numeric_energy = sum1 + sum2/4
+    dWdx_absolute_square = np.real(W.dWdx_absolute_square(x))
+    int_dWdx_absolute_square = trapz(dWdx_absolute_square,z)
+    numeric_energy = kin_sum + int_dWdx_absolute_square/4
     return numeric_energy
 
 def plot_error(error,folder):
@@ -1956,6 +1604,692 @@ def plot_error(error,folder):
     plt.savefig(folder+"Error.png")
     plt.show()
 
-if __name__ == "__main__":
-    pass
+"""
+===============================================================================
+                                Solution Viewer
+===============================================================================
+"""    
+class Solution_Viewer():
+    """
+    Analyzing and displaying the field solution.
+    """
+    def __init__(self,title):
+        #get the path and file name from title (this makes it easy to call
+        #the solution by just copy and paste the name of the folder)
+        path = get_path(title)
+        file_name = path+"core_dict"
+        if os.path.exists(file_name):
+            #read the core dictionary from pickle
+            pickle_in = open(file_name,"rb")
+            core_dict = pickle.load(pickle_in)
+            self.folder_title = title
+            self.path = path
+            #unload the most important results and parameters first
+            self.x, self.x_initial = \
+                core_dict["field"], core_dict["initial field"]
+            self.bound_arg, self.charge_arg = \
+                core_dict["bound_arg"],core_dict["charge_arg"]
+            # m is number of components of field
+            self.N, self.m = core_dict["N"], self.x.shape[0]
+            #unload all grid related parameters
+            self.L,self.w,self.R,self.h  = \
+                core_dict["L"], core_dict["w"], core_dict["R"], core_dict["h"]
+            self.use_half_grid = core_dict["use_half_grid"]
+            #unload error and number of loops
+            self.error = core_dict["error"]
+            self.max_loop = self.error.size
+            self.sor = core_dict["sor"]
+            self.tol = core_dict["tol"]
+            self.initial_kw = core_dict["initial_kw"]
+            #recreate grid object from parameters
+            num_z,num_y,num_R = canonical_length_num_conversion(
+                self.L,self.w,self.R,self.h)
+            self.grid = Dipole_Full_Grid(num_z,num_y,num_R,self.h)
+        else:
+            raise Exception("Solution file does not exist.")
+            
+    def display_all(self):
+        self.print_attributes()
+        self.plot_potential_energy_density()
+        self.plot_error()
+        self.plot_x_all()
+        self.plot_x_initial()
+        self.plot_gradient_energy_density()
+        self.plot_energy_density()
+        self.plot_middle_cross_section_comparison()
+        #self.plot_laplacian_all() #implementation needs to be updated
+            
+    def print_attributes(self):
+        print()
+        print("Attributes:")
+        print("N =", str(self.N))
+        print("charge_arg =", self.charge_arg)
+        print("bound_arg =", self.bound_arg)
+        print("L =", str(self.L))
+        print("w =", str(self.w))
+        print("h =", str(self.h))
+        print("R =", str(self.R))
+        print("use_half_grid =",str(self.use_half_grid))
+        print("sor =", str(self.sor))
+        print("tolerance =", str(self.tol))
+        print("error =", str(self.error[-1]))
+        print("max loop =", str(self.max_loop))
+        print("initial keyword =",str(self.initial_kw))
+        print("gradient energy =", self.get_gradient_energy())
+        print("potential energy =", self.get_potential_energy())
+        print("energy =", str(self.get_energy()))
+        print("separation =", str(self.get_string_separation()))
+        print()
+            
+    def get_phi_n(self,n):
+        """
+        Return the real part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
     
+        Output
+        --------------------------------------------
+        result (array) = an array of shape (grid.num_y,grid.num_z);
+                  the real part of the nth layer of the vector field.
+        """
+        if n >= self.m:
+            raise Exception("n must be less than or equal to m-1.")
+        return np.real(self.x)[n,:,:]
+    
+    def get_sigma_n(self,n):
+        """
+        Return the imaginary part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+    
+        Output
+        --------------------------------------------
+        result (array) = an array of shape (grid.num_y,grid.num_z);
+                  the imaginary part of the nth layer of the vector field.
+        """
+        if n >= self.m:
+            raise Exception("n must be less than or equal to m-1.")
+        return np.imag(self.x)[n,:,:]
+    
+    def plot_phi_n(self,n):
+        """
+        Plot the real part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+        """
+        self._quick_plot(self.get_phi_n(n),
+                         "$\phi_{}$".format(str(n+1)), "phi_"+str(n+1))
+        
+    def plot_sigma_n(self,n):
+        """
+        Plot the imaginary part of the nth component of the vector field.
+        
+        Input
+        -------------------------------------------
+        n (int) = the component of the vector field
+        """
+        self._quick_plot(self.get_sigma_n(n),
+                         "$\sigma_{}$".format(str(n+1)), "sigma_"+str(n+1))
+        
+    def plot_x_all(self):
+        for n in range(self.m):
+            self.plot_phi_n(n)
+            self.plot_sigma_n(n)
+
+    def plot_error(self):
+        plt.figure()
+        plt.plot(np.arange(0,self.max_loop,1),np.log10(self.error))
+        plt.ylabel("log(error)")
+        plt.title("Error")
+        plt.savefig(self.path+"Error.png")
+        plt.show()
+        
+    # def get_laplacian(self):
+    #     #initialize second derivative in each direction
+    #     d2xdz = np.zeros(shape=self.x.shape,dtype=complex)
+    #     d2xdy = np.zeros(shape=self.x.shape,dtype=complex)
+    #     for i in range(self.m): #loop over each layer
+    #         for j in range(self.grid.num_y): #loop over each row
+    #             for k in range(self.grid.num_z): #loop over each column
+    #                 d2xdz[i][j][k] = self._get_d2xdz_ijk(i,j,k)
+    #                 d2xdy[i][j][k] = self._get_d2xdy_ijk(i,j,k)
+    #     return d2xdz + d2xdy
+
+    # def plot_laplacian_all(self):
+    #     """
+    #     Plot and compare the numerical and theoretical Laplacian to verify
+    #     that the solution actually solves the PDE
+    #     """
+    #     lap_num = self.get_laplacian()
+    #     lap_theo = self._get_lap_theo()
+    #     for n in range(self.m):
+    #         self._plot_laplacian_n(n,lap_num,lap_theo)
+    
+    def get_gradient_energy_density(self):
+        """
+        Return the energy density from gradient of the field
+        
+        Output
+        --------------------------------------------
+        energy_density (array) = the energy density from gradient of the field;
+                                 an array of shape (grid.num_y,grid.num_z).
+        """
+        dxdz,dxdy = self._get_derivative() #derivative in each direction
+        dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
+        gradient_energy_density = dx_squared.sum(axis=0) #sum over components
+        return gradient_energy_density
+
+    def get_gradient_energy(self):
+        """
+        Return the value of the gradient energy
+        
+        Output
+        --------------------------------------------
+        gradient_energy (float) = the total gradient energy
+        """
+        #integrate to get energy
+        #Note: simps works best when there are odd number of points, which is
+        #always the case for me here, by grid construction.
+        gradient_energy = simps(simps(self.get_gradient_energy_density(), 
+                             self.grid.z_linspace),self.grid.y_linspace)
+        return gradient_energy
+    
+    def plot_gradient_energy_density(self):
+        self._quick_plot(self.get_gradient_energy_density(),
+                         "Gradient Energy Density",
+                         "Gradient_Energy_Density",
+                         cmap='jet')
+
+    def get_potential_energy_density(self):
+        W = Superpotential(self.N)
+        ped = (1/4)*W.dWdx_absolute_square_on_grid(self.x)
+        ped = np.real(ped) #it is real anyway, doing this for plotting
+        return ped
+               
+    def get_potential_energy(self):
+        return simps(simps(self.get_potential_energy_density(),self.grid.z_linspace),
+                     self.grid.y_linspace)
+    
+    def plot_potential_energy_density(self):
+        self._quick_plot(self.get_potential_energy_density(),
+                         "Potential Energy Density",
+                         "Potential_Energy_Density",
+                         cmap='jet')
+        
+    def get_energy_density(self):
+        return self.get_potential_energy_density() \
+               + self.get_gradient_energy_density()
+               
+    def get_energy(self):
+        return simps(simps(self.get_energy_density(),
+                           self.grid.z_linspace),self.grid.y_linspace)
+    
+    
+    def plot_energy_density(self):
+        self._quick_plot(self.get_energy_density(),
+                         "Energy Density (E={})".format(
+                             str(round(self.get_energy(),3))),
+                         "Energy_Density",
+                         cmap='jet')
+        
+    def plot_x_initial(self):
+        for n in range(self.m):
+            phi_n = np.real(self.x_initial[n,:,:])
+            sigma_n = np.imag(self.x_initial[n,:,:])
+            self._quick_plot(phi_n,"initial phi_{}".format(str(n+1)),
+                             "initial_phi_{}".format(str(n+1)))
+            self._quick_plot(sigma_n,"initial sigma_{}".format(str(n+1)),
+                             "initial_sigma_{}".format(str(n+1)))
+            
+    def get_cross_section_from_z_position(self,z):
+        #takes the vertical cross section at z_position
+        n_z = self.grid.z_position_to_z_number(z)
+        return self.get_cross_section_from_z_number(n_z)
+    
+    def get_cross_section_from_z_number(self,n_z):
+        #takes the vertical cross section of the fields at z_number
+        #get all fields, at all rows, at a fixed column
+        return self.x[:,:,n_z]
+    
+    def plot_cross_section_from_z_position(self,z):
+        x_cross = self.get_cross_section_from_z_position(z)
+        phi_cross = np.real(x_cross)
+        sigma_cross = np.imag(x_cross)
+        z_linspace = self.grid.z_linspace
+        
+        fig = plt.figure(figsize=(20,10))
+        ax1 = fig.add_subplot(121)
+        for i in range(self.m):
+            ax1.plot(z_linspace,phi_cross[i],
+                     label=r"$\phi_{}$".format(str(i+1)))
+        ax1.legend()
+
+        ax2 = fig.add_subplot(122)
+        for i in range(self.m):
+            ax2.plot(z_linspace,sigma_cross[i],
+                     label=r"$\sigma_{}$".format(str(i+1)))
+        ax2.legend()
+
+        fig.suptitle("Cross Section at z={}".format(str(z)),size=20)
+        fig.savefig(self.path+"Cross_Section_at_z={}.png".format(str(z)), dpi=300)
+        
+            
+    def plot_middle_cross_section_comparison(self):
+        z_linspace = self.grid.z_linspace
+        #cross section at center
+        x_cross = self.get_cross_section_from_z_position(0)
+        phi_cross = np.real(x_cross)
+        sigma_cross = np.imag(x_cross)
+        #BPS at center
+        x_initial_cross = self.x_initial[:,:,self.grid.y_axis_number]
+        phi_BPS = np.real(x_initial_cross)
+        sigma_BPS = np.imag(x_initial_cross)
+        
+        fig = plt.figure(figsize=(20,20))
+        ax1 = fig.add_subplot(221)
+        for i in range(self.m):
+            ax1.plot(z_linspace,phi_cross[i],
+                     label=r"$\phi_{}$".format(str(i+1)))
+        ax1.legend(fontsize=15)
+        ax1.set_title("$\phi$ Cross Section at z=0",size=20)
+
+        ax2 = fig.add_subplot(222)
+        for i in range(self.m):
+            ax2.plot(z_linspace,sigma_cross[i],
+                     label=r"$\sigma_{}$".format(str(i+1)))
+        ax2.legend(fontsize=15)
+        ax2.set_title("$\sigma$ Cross Section at z=0",size=20)
+        
+        ax3 = fig.add_subplot(223)
+        for i in range(self.m):
+            ax3.plot(z_linspace,phi_BPS[i],
+                     label=r"$\phi_{}$".format(str(i+1)))
+        ax3.legend(fontsize=15)
+        ax3.set_title("BPS $\phi$",size=20)
+
+        ax4 = fig.add_subplot(224)
+        for i in range(self.m):
+            ax4.plot(z_linspace,sigma_BPS[i],
+                     label=r"$\sigma_{}$".format(str(i+1)))
+        ax4.legend(fontsize=15)
+        ax4.set_title("BPS $\sigma$",size=20)
+        
+        fig.suptitle("SU({}), {}, R={}, Middle Cross Section Comparison".format(
+            str(self.N),self.charge_arg,str(self.R)),size=30)
+        fig.savefig(self.path+"Middle_Cross_Section_Comparison.png",dpi=300)
+    
+    def get_string_separation(self):
+        pe = self.get_potential_energy_density()
+        center = self.grid.y_axis_number
+        pe_top = pe[0:self.grid.z_axis_number,center]
+        pe_bottom = pe[self.grid.z_axis_number:,center]
+        top_arg = np.argmax(pe_top)
+        bottom_arg = np.argmax(pe_bottom) + pe_top.size
+        d = self.grid.y_linspace[bottom_arg]-self.grid.y_linspace[top_arg]
+        return d
+    
+    # def compare_slice_with_BPS(self):
+    #     for n in range(self.m):
+    #         plt.figure()
+    #         #take a vertical slice through middle
+    #         middle_col = int(self.grid.num_z/2)
+    #         plt.plot(self.grid.y, self.get_phi_n(n)[:,middle_col],
+    #                  label="final $\phi_{}$".format(str(n+1)))
+    #         plt.plot(self.grid.y, np.real(self.BPS_slice[n,:]),
+    #                  label="BPS $\phi_{}$".format(str(n+1)))
+    #         plt.legend()
+    #         plt.title("compare slice with BPS phi_{}".format(str(n+1)))
+    #         plt.savefig(self.folder_title +
+    #                     "compare_slice_with_BPS_phi_{}.png".format(str(n+1)))
+    #         plt.show()
+            
+    #         plt.figure()
+    #         plt.plot(self.grid.y, self.get_sigma_n(n)[:,middle_col],
+    #                  label="final $\sigma_{}$".format(str(n+1)))
+    #         plt.plot(self.grid.y, np.imag(self.BPS_slice[n,:]),
+    #                  label="BPS $\sigma_{}$".format(str(n+1)))
+    #         plt.legend()
+    #         plt.title("compare slice with BPS sigma_{}".format(str(n+1)))
+    #         plt.savefig(self.folder_title +
+    #                 "compare_slice_with_BPS_sigma_{}.png".format(str(n+1)))
+    #         plt.show()
+            
+
+    def _quick_plot(self,field,plot_title,file_title,cmap=None):
+        plt.figure()
+        plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
+        plt.colorbar()
+        plt.title(plot_title)
+        plt.savefig(self.path+file_title+".png")
+        plt.show()
+        
+    # def _quick_plot_laplacian(self,field,ax,title,fig):
+    #     im = ax.pcolormesh(self.grid.zv,self.grid.yv,field)
+    #     ax.set_title(title)
+    #     fig.colorbar(im,ax=ax)
+        
+    # def _plot_laplacian_n(self,n,lap_num,lap_theo):
+    #     #row= real & imag of fields; col= numeric vs theoretic
+    #     fig, axs = plt.subplots(2, 2) 
+    #     fig.subplots_adjust(hspace=0.7)
+    #     fig.subplots_adjust(wspace=0.7)
+    #     self._quick_plot_laplacian(np.real(lap_num[n,:,:]),axs[0, 0],
+    #                     "$\\nabla^2 \phi_{}$ numeric".format(str(n+1)),
+    #                                fig)
+    #     self._quick_plot_laplacian(np.real(lap_theo[n,:,:]),axs[0,1],
+    #                     "$\\nabla^2 \phi_{}$ theoretic".format(str(n+1)),
+    #                                fig)
+    #     self._quick_plot_laplacian(np.imag(lap_num[n,:,:]),axs[1, 0],
+    #                     "$\\nabla^2 \sigma_{}$ numeric".format(str(n+1)),
+    #                                fig)
+    #     self._quick_plot_laplacian(np.imag(lap_theo[n,:,:]),axs[1,1],
+    #                     "$\\nabla^2 \sigma_{}$ theoretic".format(str(n+1)),
+    #                         fig)
+    #     #add axis label such that repeated are avoided
+    #     #for ax in axs.flat:
+    #         #ax.set(xlabel='z', ylabel='y')
+    #     # Hide x labels and tick labels for top plots and y ticks for right plots.
+    #     #for ax in axs.flat:
+    #         #ax.label_outer()
+    #     fig.savefig(self.folder_title+"Laplacian_{}.png".format(str(n+1)))
+            
+    # def _get_lap_theo(self):
+    #     #return theoretical laplacian
+    #     charge = Sigma_Critical(self.N,self.charge_arg)
+    #     bound = Sigma_Critical(self.N,self.bound_arg)
+    #     relax = Relaxation(self.grid,self.N,bound,charge,
+    #                        self.max_loop,x0=None,diagnose=False)
+    #     return relax._full_grid_EOM(self.x)
+    
+    def _get_derivative(self):
+        #initialize derivative in each direction
+        dxdz = np.zeros(shape=self.x.shape,dtype=complex)
+        dxdy = np.zeros(shape=self.x.shape,dtype=complex)
+        for i in range(self.m): #loop over each layer
+            for j in range(self.grid.num_y): #loop over each row
+                for k in range(self.grid.num_z): #loop over each column
+                    dxdz[i][j][k] = self._get_dxdz_ijk(i,j,k)
+                    dxdy[i][j][k] = self._get_dxdy_ijk(i,j,k)
+        return dxdz, dxdy
+
+    def _get_dxdz_ijk(self,i,j,k):
+        if k == 0: #one sided derivative on the edge
+            result = (self.x[i][j][k+1] - self.x[i][j][k])/self.grid.h
+        elif k==self.grid.num_z-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - self.x[i][j][k-1])/self.grid.h
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j][k+1] - self.x[i][j][k-1])/(2*self.grid.h)
+        return result
+    
+    def _get_dxdy_ijk(self,i,j,k):
+        if j == 0: #one sided derivative on the edge
+            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
+        elif j==self.grid.num_y-1: #one sided derivative on the edge
+            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
+        #monodromy
+        elif j==self.grid.z_axis_number-1 and \
+            self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
+            result = (self.x[i][j][k] - self.x[i][j-1][k])/self.grid.h
+        elif j==self.grid.z_axis_number and \
+            self.grid.left_charge_axis_number<= k <=self.grid.right_charge_axis_number:
+            result = (self.x[i][j+1][k] - self.x[i][j][k])/self.grid.h
+        else: #two sided derivative elsewhere
+            result = (self.x[i][j+1][k] - self.x[i][j-1][k])/(2*self.grid.h)
+        return result
+    
+    # def _get_d2xdz_ijk(self,i,j,k):
+    #     if k == 0: #one sided second derivative on the edge (forward difference)
+    #         result = (self.x[i][j][k+2] - 2*self.x[i][j][k+1] +
+    #                   self.x[i][j][k])/(self.grid.h**2)
+    #     elif k==self.grid.num_z-1: #one sided second derivative on the edge
+    #         result = (self.x[i][j][k] - 2*self.x[i][j][k-1] +
+    #                   self.x[i][j][k-2])/(self.grid.h**2)
+    #     else: #two sided second derivative elsewhere
+    #         result = (self.x[i][j][k+1] - 2*self.x[i][j][k] +
+    #                   self.x[i][j][k-1])/(self.grid.h**2)
+    #     return result
+    
+    # def _get_d2xdy_ijk(self,i,j,k):
+    #     if j == 0: #one sided derivative on the edge
+    #         result = (self.x[i][j+2][k] - 2*self.x[i][j+1][k] +
+    #                   self.x[i][j][k])/(self.grid.h**2)
+    #     elif j==self.grid.num_y-1: #one sided derivative on the edge
+    #         result = (self.x[i][j][k] - 2*self.x[i][j-1][k] +
+    #                   self.x[i][j-2][k])/(self.grid.h**2)
+    #     else: #two sided derivative elsewhere
+    #         result = (self.x[i][j+1][k] - 2*self.x[i][j][k] +
+    #                   self.x[i][j-1][k])/(self.grid.h**2)
+    #     return result
+    
+"""
+===============================================================================
+                            Analyzing Solutions Group
+===============================================================================
+After having solved some solutions, analyze a group of solutions in conjunction
+
+Subsection:
+Tensions
+String Separation
+===============================================================================
+"""    
+def get_all_CS_folder_names():
+    folders = []
+    for x in os.walk("Confinement Solutions"):
+        #take out the big folder name in front
+        folders.append(x[0].replace("Confinement Solutions\\",""))
+    folders.remove("Confinement Solutions") #remove big folder name
+    return folders
+
+def get_all_fully_solved_N_p_folder_names(N,charge_arg,R_greater_than_five=False):
+    folders = get_all_CS_folder_names()
+    unwanted_folders = []
+    important_strings = ["tol=1e-09",
+                        "N={},".format(str(N)),
+                        "charge={},".format(charge_arg)]
+    for folder in folders:
+        for string in important_strings:
+            if string not in folder:
+                #add a folder into garbage list if it doesn't contain
+                #important key phrase
+                unwanted_folders.append(folder)
+            if R_greater_than_five:
+                if _get_R_from_folder_title(folder) <= 5:
+                    #add folder to grabage list if R is too small
+                    unwanted_folders.append(folder)
+    #the fullly solved folders are the set difference
+    result = list(set(folders) - set(unwanted_folders))
+    return result
+
+def _get_R_from_folder_title(folder):
+    #the index of the letter 'R' in 'R='
+    index_R = folder.find("R=")
+    index_equal_sign = index_R + 1
+    #get the index of the comma immediately after the R number
+    #start search at index_equal_sign
+    index_comma = folder.find(",",index_equal_sign)
+    R_str = folder[index_equal_sign+1:index_comma]
+    R = int(R_str)
+    return R
+
+""" ============== subsection: Tensions ===================================="""
+def get_R_and_energy_array(N,charge_arg):
+    #initialze lists
+    R_list = []
+    energy_list = []
+    folders = get_all_fully_solved_N_p_folder_names(N,charge_arg,
+                                                    R_greater_than_five=True)
+    for folder in folders:
+        sol = Solution_Viewer(folder)
+        R_list.append(sol.R)
+        energy_list.append(sol.get_energy())
+    #convert back to array
+    R_array = np.array(R_list)
+    energy_array = np.array(energy_list)
+    return R_array, energy_array
+
+#a dictionary that given N, gives the optimal L,w
+N_Lw_dict = {4:[30,30],
+               5:[30,30],
+               6:[30,30],
+               7:[30,30]}
+
+def compute_energy(N,charge_arg,L,w):
+    #initialze lists
+    R_list = []
+    energy_list = []
+    for R in range(10,26,5): #using what I ran, but skipping the first R=5
+        if N==7 and charge_arg == "w3": #use the sor I ran with
+            sor = 1.97
+        else:
+            sor = 1.96
+        sol = confining_string_solver(N=N,charge_arg=charge_arg,
+                                      bound_arg="x1",L=L,
+                                      w=w,R=R,sor=sor,tol=1e-9)
+        R_list.append(R)
+        energy_list.append(sol.get_energy())
+    #convert back to array
+    R_array = np.array(R_list)
+    energy_array = np.array(energy_list)
+    return R_array, energy_array
+
+def plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L):
+    plt.figure()
+    plt.scatter(x=R_array,y=energy_array)
+    x = np.linspace(1,L,1000)
+    y = linear_model(x,m,b)
+    plt.plot(x,y,label=r"$E=TR+b$")
+    #assumes BPS 1 wall theoretical energy
+    vac0 = Sigma_Critical(N,"x0")
+    vacf = Sigma_Critical(N,"x1")
+    two_T_BPS = 2*get_BPS_theoretic_energy(N,vac0,vacf)
+    plt.plot(x,linear_model(x,two_T_BPS,b),
+             label=r"$E=2T_{BPS 1}R+b$",linestyle="--")
+    y_min = np.nanmin(y)
+    y_max = np.nanmax(y)
+    plt.text(x=20,y=y_min+0.3*(y_max-y_min),s="T = {} $\pm$ {}".format(
+        str(round(m,3)),str(round(dm,3))))
+    plt.text(x=20,y=y_min+0.2*(y_max-y_min),s=r"$2 T(BPS1) = {}$".format(
+        str(round(two_T_BPS,3))))
+    # plt.text(x=20,y=y[0],s="b = {} $\pm$ {}".format(
+    #     str(round(b,3)),str(round(db,3))))
+    plt.xlabel("R")
+    plt.ylabel("Energy")
+    plt.legend()
+    plt.title("Energy vs Distance (N={}, p={})".format(str(N),str(p)))
+    plt.savefig(
+            "Tensions/Energy vs Distance (N={}, p={}).png".format(
+            str(N),str(p)))
+    plt.show()
+    
+def linear_model(x,m,b):
+    return m*x + b
+
+def compute_tension(N,p,solve_when_needed=False):
+    #p is N-ality
+    charge_arg='w'+str(p)
+    L,w = N_Lw_dict[N]
+    if solve_when_needed:
+        R_array, energy_array = compute_energy(N,charge_arg,L,w)
+    else:
+        R_array, energy_array = get_R_and_energy_array(N,charge_arg)
+    potp, pcov = curve_fit(linear_model,xdata=R_array,ydata=energy_array)
+    m,b = potp #slope and y-intercept
+    dm = np.sqrt(pcov[0][0]) #standard deviation of slope
+    db = np.sqrt(pcov[1][1])
+    plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L)
+    #write to file in append mode
+    # with open("Tensions/tensions.txt", "a") as text_file:
+    #     text_file.write("{} {} {} {}\n".format(str(N),str(p),str(m),str(dm)))
+    return m, dm
+
+""" ============== subsection: String Separation Log Growth ===============""" 
+def plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L):
+    plt.figure()
+    #scatter plot of data
+    plt.scatter(x=R_array,y=d_array)
+    #plot best fit model
+    x = np.linspace(1,L,1000)
+    y = log_model(x,a,b,c)
+    plt.plot(x,y,label=r"$d = a \cdot \ln(R-b) + c $")
+    #print parameters
+    y_min = np.nanmin(y)
+    y_max = np.nanmax(y)
+    plt.text(x=20,y=y_min+0.3*(y_max-y_min),s=r"a = {} $\pm$ {}".format(
+        str(round(a,3)),str(round(da,3))))
+    plt.text(x=20,y=y_min+0.2*(y_max-y_min),s=r"b = {} $\pm$ {}".format(
+        str(round(b,3)),str(round(db,3))))
+    plt.text(x=20,y=y_min+0.1*(y_max-y_min),s=r"c = {} $\pm$ {}".format(
+        str(round(c,3)),str(round(dc,3))))
+    plt.xlabel("R")
+    plt.ylabel("d")
+    plt.legend()
+    plt.title("String Separation vs Distance (N={}, p={})".format(str(N),str(p)))
+    plt.savefig(
+            "String Separation/String Separation vs Distance (N={}, p={}).png".format(
+            str(N),str(p)))
+    plt.show()
+    
+def plot_d_vs_R_for_p1(R_array,d_array,N,p):
+    plt.figure()
+    #scatter plot of data
+    plt.scatter(x=R_array,y=d_array)
+    plt.xlabel("R")
+    plt.ylabel("d")
+    plt.title("String Separation vs Distance (N={}, p={})".format(str(N),str(p)))
+    plt.savefig(
+            "String Separation/String Separation vs Distance (N={}, p={}).png".format(
+            str(N),str(p)))
+    plt.show()
+    
+
+def get_R_and_d_array(N,charge_arg):
+    #initialze lists
+    R_list = []
+    d_list = []
+    folders = get_all_fully_solved_N_p_folder_names(N,charge_arg)
+    for folder in folders:
+        sol = Solution_Viewer(folder)
+        print(sol.R)
+        print(sol.get_string_separation())
+        R_list.append(sol.R)
+        d_list.append(sol.get_string_separation())
+    #convert back to array
+    R_array = np.array(R_list)
+    d_array = np.array(d_list)
+    return R_array, d_array
+
+def log_model(x,a,b,c):
+    return a*np.log(x-b) + c
+
+def compute_string_separation(N,p):
+    #p is N-ality
+    charge_arg='w'+str(p)
+    L,w = N_Lw_dict[N]
+    R_array, d_array = get_R_and_d_array(N,charge_arg)
+    if not p == 1:
+        potp, pcov = curve_fit(log_model,xdata=R_array,ydata=d_array)
+        a,b,c = potp
+        da = np.sqrt(pcov[0][0])
+        db = np.sqrt(pcov[1][1])
+        dc = np.sqrt(pcov[2][2])
+        plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L)
+    else:
+        plot_d_vs_R_for_p1(R_array,d_array,N,p)
+    return R_array,d_array
+
+if __name__ == "__main__":
+    # sol = confining_string_solver(N=3,charge_arg="w1",bound_arg="x1",
+    #                               L=30,w=30,R=9,h=0.1,
+    #                               initial_kw="BPS",
+    #                               use_half_grid=True)
+    Np_list = [(4,1),(4,2),(5,1),(5,2),(6,1),(6,2),(6,3),(7,1),(7,2),(7,3)]
+    for tup in Np_list:
+        N,p = tup
+        compute_tension(N,p)
+        compute_string_separation(N,p)
