@@ -4,7 +4,7 @@ Created on Fri Jul 10 00:56:46 2020
 
 @author: samue
 """
-from Source import confining_string_solver
+from confinepy.source import confining_string_solver
 
 N=7
 bound_arg = "x1"

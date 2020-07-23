@@ -5,7 +5,7 @@ Purpose:
 Author: Samuel Wong
 """
 import numpy as np
-from source import Dipole_Full_Grid, within_epsilon, relaxation_update_full_grid,\
+from confinepy.source import Dipole_Full_Grid, within_epsilon, relaxation_update_full_grid,\
 relaxation_update_half_grid, relaxation_algorithm, Superpotential
 import matplotlib.pyplot as plt
 def test_dipole_full_grid():

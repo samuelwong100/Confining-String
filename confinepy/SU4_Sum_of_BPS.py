@@ -4,15 +4,9 @@ Created on Wed Jul 15 18:42:48 2020
 
 @author: samue
 """
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jul 15 15:47:41 2020
-
-@author: samue
-"""
 import numpy as np
 import matplotlib.pyplot as plt
-from Source import Sigma_Critical,get_BPS_numeric_energy,\
+from confinepy.source import Sigma_Critical,get_BPS_numeric_energy,\
     get_BPS_theoretic_energy, solve_BPS
 #from SU5_Sum_of_BPS import sum_kink_energy
 
@@ -63,7 +57,7 @@ def sum_kink_energy(N,monodromy_arg,kink_separation):
     
     return energy
 
-N=6
+N=4
 #reference 2 BPS energy
 theoretic_BPS_energy = get_BPS_theoretic_energy(N,Sigma_Critical(N,"x0"),
                                                 Sigma_Critical(N,"x1"))
@@ -80,8 +74,8 @@ plt.figure()
 plt.scatter(a_array,w1_energy_array)
 plt.hlines(two_theoretic_energy,a_list[0],a_list[-1],label=r"$2 E_{BPS 1}$")
 plt.legend()
-plt.title("SU(6) w1 Energy vs Kink Separation")
-plt.savefig("SU(6)_w1_Energy_vs_Kink_Separation.png")
+plt.title("SU(4) w1 Energy vs Kink Separation")
+plt.savefig("SU(4)_w1_Energy_vs_Kink_Separation.png")
 
 a_list = np.arange(1,21)
 a_array = np.array(a_list)
@@ -94,33 +88,42 @@ plt.figure()
 plt.scatter(a_array,w2_energy_array)
 plt.hlines(two_theoretic_energy,a_list[0],a_list[-1],label=r"$2 E_{BPS 1}$")
 plt.legend()
-plt.title("SU(6) w2 Energy vs Kink Separation")
-plt.savefig("SU(6)_w2_Energy_vs_Kink_Separation.png")
-
-a_list = np.arange(1,21)
-a_array = np.array(a_list)
-energy_list_3 = []
-for a in a_list:
-    energy = sum_kink_energy(N=N,monodromy_arg = "w3",kink_separation = a)    
-    energy_list_3.append(energy)
-w3_energy_array = np.array(energy_list_3)
-plt.figure()
-plt.scatter(a_array,w3_energy_array)
-plt.hlines(two_theoretic_energy,a_list[0],a_list[-1],label=r"$2 E_{BPS 1}$")
-plt.legend()
-plt.title("SU(6) w3 Energy vs Kink Separation")
-plt.savefig("SU(6)_w3_Energy_vs_Kink_Separation.png")
+plt.title("SU(4) w2 Energy vs Kink Separation")
+plt.savefig("SU(4)_w2_Energy_vs_Kink_Separation.png")
 
 plt.figure()
-plt.scatter(a_array,w3_energy_array,label="w3")
 plt.scatter(a_array,w2_energy_array,label="w2")
 plt.scatter(a_array,w1_energy_array,label="w1")
 plt.hlines(two_theoretic_energy,a_list[0]-1,a_list[-1]+1,label=r"$2 E_{BPS 1}$",linestyles="--")
 plt.xlabel("Kink Separation")
 plt.ylabel("Energy")
 plt.legend()
-plt.title("SU(6) Energy vs Kink Separation for Sum of BPS")
-plt.savefig("SU(6)_Energy_vs_Kink_Separation_for_Sum_of_BPS.png")
+plt.title("SU(4) Energy vs Kink Separation for Sum of BPS")
+plt.savefig("SU(4)_Energy_vs_Kink_Separation_for_Sum_of_BPS.png")
+
+a_list = np.arange(1,21)
+a_array = np.array(a_list)
+energy_list_2 = []
+for a in a_list:
+    energy = sum_kink_energy(N=N,monodromy_arg = "w2",kink_separation = a)    
+    energy_list_2.append(energy)
+w2_energy_array = np.array(energy_list_2)
+plt.figure()
+plt.scatter(a_array,w2_energy_array)
+plt.hlines(two_theoretic_energy,a_list[0],a_list[-1],label=r"$2 E_{BPS 1}$")
+plt.legend()
+plt.title("SU(4) w2 Energy vs Kink Separation")
+plt.savefig("SU(4)_w2_Energy_vs_Kink_Separation.png")
+
+plt.figure()
+plt.scatter(a_array,w2_energy_array,label="w2")
+plt.scatter(a_array,w1_energy_array,label="w1")
+plt.hlines(two_theoretic_energy,a_list[0]-1,a_list[-1]+1,label=r"$2 E_{BPS 1}$",linestyles="--")
+plt.xlabel("Kink Separation")
+plt.ylabel("Energy")
+plt.legend()
+plt.title("SU(4) Energy vs Kink Separation for Sum of BPS")
+plt.savefig("SU(4)_Energy_vs_Kink_Separation_for_Sum_of_BPS.png")
 
 
 

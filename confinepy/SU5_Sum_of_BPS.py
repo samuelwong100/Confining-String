@@ -6,7 +6,7 @@ Created on Wed Jul 15 15:47:41 2020
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from Source import solve_BPS, get_BPS_numeric_energy, Sigma_Critical,\
+from confinepy.source import solve_BPS, get_BPS_numeric_energy, Sigma_Critical,\
     get_BPS_theoretic_energy
 
 def sum_kink_energy(N,monodromy_arg,kink_separation):

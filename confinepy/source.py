@@ -2083,6 +2083,7 @@ def get_all_CS_folder_names():
     for x in os.walk("Confinement Solutions"):
         #take out the big folder name in front
         folders.append(x[0].replace("Confinement Solutions\\",""))
+    print("folders=",folders)
     folders.remove("Confinement Solutions") #remove big folder name
     return folders
 
@@ -2134,10 +2135,11 @@ def get_R_and_energy_array(N,charge_arg):
     return R_array, energy_array
 
 #a dictionary that given N, gives the optimal L,w
-N_Lw_dict = {4:[30,30],
-               5:[30,30],
-               6:[30,30],
-               7:[30,30]}
+N_Lw_dict = {3:[30,30],
+             4:[30,30],
+             5:[30,30],
+             6:[30,30],
+             7:[30,30]}
 
 def compute_energy(N,charge_arg,L,w):
     #initialze lists

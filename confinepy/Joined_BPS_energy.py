@@ -6,7 +6,7 @@ Created on Mon Jul 13 17:11:09 2020
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from Source import solve_BPS, get_BPS_numeric_energy
+from confinepy.source import solve_BPS, get_BPS_numeric_energy
 
 def joined_kink_energy(N,monodromy_arg,a):
     kink_separation=a
