@@ -2137,6 +2137,7 @@ def get_R_and_energy_array(N,charge_arg):
     folders = get_all_fully_solved_N_p_folder_names(N,charge_arg,
                                                     R_greater_than_five=True)
     for folder in folders:
+        print(folder)
         sol = Solution_Viewer(folder)
         R_list.append(sol.R)
         energy_list.append(sol.get_energy())
