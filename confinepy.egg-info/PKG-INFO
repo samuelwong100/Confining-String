@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: confinepy
+Version: 0.1.dev0
+Summary: A package for studying confining string
+Home-page: https://github.com/samuelwong100/Confining-String
+Author: Samuel S.Y. Wong
+Author-email: samswong@stanford.edu
+License: UNKNOWN
+Description: # Confining-String
+        Computing string tensions of confining strings in compactified supersymmetric Yang-Mills Theory. Senior thesis project & 2020 summer undergrad research.
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown

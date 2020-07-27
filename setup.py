@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jul 22 18:40:53 2020
-
-@author: samue
-"""
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -25,5 +20,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=['numpy', 'scipy', 'numba','sympy','matplotlib']
 )
 

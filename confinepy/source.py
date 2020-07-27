@@ -20,6 +20,11 @@ from sympy.matrices import Matrix
 import warnings
 warnings.filterwarnings('ignore') #ignore numba warnings
 
+#before script starts, check if running as a package from Confining-String folder
+#if so, change path to confinepy folder
+if os.path.basename(os.getcwd()) == "Confining-String":
+    os.chdir(os.path.join(os.getcwd(),"confinepy"))
+
 """
 ===============================================================================
                                  General Helper Functions
@@ -1231,7 +1236,7 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
               save_plot=True,save_result=True,folder="",
               separation_R=0,top=True,kw="special kink",kink_bd_distance=None,
-              continue_kw="BPS_Energy"):
+              continue_kw="BPS_Energy",x0_given=None):
     #sor = successive overrelaxation parameter. For h=0.1 in 2D, the ideal
     #value is given by approximately 1.5. For 1D, it's different; just a guess.
     #create sigma cirtical point objects for iniitial and final bondary
@@ -1241,7 +1246,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,tol=1e-9,sor=1.5,plot=True,
     z0,zf,z_linspace = get_z_linspace(num,h)
     #initialize field using speical kink
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
-                 kink_bd_distance,separation_R,top,kw=kw)
+                 kink_bd_distance,separation_R,top,kw=kw,x0_given=x0_given)
     #generate second derivative function for relaxation
     BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
     #generate continue condition that checks energy as well as error for
@@ -1347,7 +1352,7 @@ def exp_alpha_dot_x(a,i,S,x):
     return np.exp(np.dot(S.alpha[a],x[i]))
 
 def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,kink_bd_distance,R=0,top=True,
-            kw=None):
+            kw=None,x0_given=None):
     #m is number of fields, m = N-1
     if kw is None:
         x0 = np.ones(shape=(num,m),dtype=complex)
@@ -1378,9 +1383,14 @@ def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,kink_bd_distance,R=0,top=True,
         print("num=",num)
         x0[0:kink_pixel_number,:] = vac0_vec
         x0[kink_pixel_number:-1,:] = vacf_vec
-    #enforce boundary
-    x0[0]= vac0_vec
-    x0[-1]= vacf_vec
+        
+    if not kw == "x0_given":
+        #always enforce boundary unless x0 is given
+        x0[0]= vac0_vec
+        x0[-1]= vacf_vec
+    
+    if kw == "x0_given":
+        x0 = x0_given
     return x0
 
 def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
@@ -1433,7 +1443,9 @@ def relaxation_1D_while_loop(g,f,num,h_squared,tol,
     error = [tol+1] #initialize a "fake" error so that while loop can run
     while continue_condition(error,tol,f):
         f_new = _realxation_1D_update(g,f,num,h_squared)
-        error.append(np.max(np.abs(f_new - f))/np.max(np.abs(f_new)))
+        new_error = np.max(np.abs(f_new - f))/np.max(np.abs(f_new))
+        print(new_error)
+        error.append(new_error)
         f = f_new
     del error[0] #delete the first, fake error
     error = np.array(error) #change error into an array
@@ -2083,7 +2095,6 @@ def get_all_CS_folder_names():
     for x in os.walk("Confinement Solutions"):
         #take out the big folder name in front
         folders.append(x[0].replace("Confinement Solutions\\",""))
-    print("folders=",folders)
     folders.remove("Confinement Solutions") #remove big folder name
     return folders
 
@@ -2141,18 +2152,14 @@ N_Lw_dict = {3:[30,30],
              6:[30,30],
              7:[30,30]}
 
-def compute_energy(N,charge_arg,L,w):
+def get_R_and_energy_array_solve_new(N,charge_arg,L,w,R_min,R_max,R_interval):
     #initialze lists
     R_list = []
     energy_list = []
-    for R in range(10,26,5): #using what I ran, but skipping the first R=5
-        if N==7 and charge_arg == "w3": #use the sor I ran with
-            sor = 1.97
-        else:
-            sor = 1.96
+    for R in range(R_min,R_max,R_interval):
         sol = confining_string_solver(N=N,charge_arg=charge_arg,
                                       bound_arg="x1",L=L,
-                                      w=w,R=R,sor=sor,tol=1e-9)
+                                      w=w,R=R)
         R_list.append(R)
         energy_list.append(sol.get_energy())
     #convert back to array
@@ -2192,12 +2199,14 @@ def plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L):
 def linear_model(x,m,b):
     return m*x + b
 
-def compute_tension(N,p,solve_when_needed=False):
+def compute_tension(N,p,solve_new=False,R_min=None,R_max=None,R_interval=None):
     #p is N-ality
     charge_arg='w'+str(p)
     L,w = N_Lw_dict[N]
-    if solve_when_needed:
-        R_array, energy_array = compute_energy(N,charge_arg,L,w)
+    if solve_new:
+        _validate_R_arguments(R_min,R_max,R_interval)
+        R_array, energy_array = get_R_and_energy_array_solve_new(
+            N,charge_arg,L,w,R_min,R_max,R_interval)
     else:
         R_array, energy_array = get_R_and_energy_array(N,charge_arg)
     potp, pcov = curve_fit(linear_model,xdata=R_array,ydata=energy_array)
@@ -2209,6 +2218,11 @@ def compute_tension(N,p,solve_when_needed=False):
     # with open("Tensions/tensions.txt", "a") as text_file:
     #     text_file.write("{} {} {} {}\n".format(str(N),str(p),str(m),str(dm)))
     return m, dm
+
+def _validate_R_arguments(R_min,R_max,R_interval):
+    if (R_min is None) or (R_max is None) or (R_interval is None):
+        raise Exception("If you want to solve new solutions,"+
+                        " you must specified R_min,R_max,R_interval.")
 
 """ ============== subsection: String Separation Log Growth ===============""" 
 def plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L):
@@ -2290,8 +2304,9 @@ if __name__ == "__main__":
     #                               L=30,w=30,R=9,h=0.1,
     #                               initial_kw="BPS",
     #                               use_half_grid=True)
-    Np_list = [(4,1),(4,2),(5,1),(5,2),(6,1),(6,2),(6,3),(7,1),(7,2),(7,3)]
-    for tup in Np_list:
-        N,p = tup
-        compute_tension(N,p)
-        compute_string_separation(N,p)
+    # Np_list = [(4,1),(4,2),(5,1),(5,2),(6,1),(6,2),(6,3),(7,1),(7,2),(7,3)]
+    # for tup in Np_list:
+    #     N,p = tup
+    #     compute_tension(N,p)
+    #     compute_string_separation(N,p)
+    pass
