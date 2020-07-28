@@ -20,11 +20,6 @@ from sympy.matrices import Matrix
 import warnings
 warnings.filterwarnings('ignore') #ignore numba warnings
 
-#before script starts, check if running as a package from Confining-String folder
-#if so, change path to confinepy folder
-if os.path.basename(os.getcwd()) == "confinepy package":
-    os.chdir(os.path.join(os.getcwd(),"confinepy"))
-
 """
 ===============================================================================
                                  General Helper Functions
@@ -1620,7 +1615,7 @@ def plot_error(error,folder):
 ===============================================================================
                                 Solution Viewer
 ===============================================================================
-"""    
+"""
 class Solution_Viewer():
     """
     Analyzing and displaying the field solution.
