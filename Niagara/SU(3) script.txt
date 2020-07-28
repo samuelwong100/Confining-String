@@ -1,17 +1,19 @@
 #SBATCH --time=1:00:00
 #SBATCH --job-name SU3
-#SBATCH --output=out/%x-%j.out #what is this
+#SBATCH --output=out/%x-%j.out #text output
 #SBATCH --mail-user=samuelsy.wong@mail.utoronto.ca
-#SBATCH --mail-type=ALL
+#SBATCH --mail-type=ALL #email you everything
 
 cd $SLURM_SUBMIT_DIR # Equivalent to /scratch/e/epoppitz/mwbub/jobs/confinement/SU5
 
 # Load modules and Python virtual environment
-module restore confinement
-source ~/.virtualenvs/confinement/bin/activate
+module restore confine_module
+source ~/.virtualenvs/confine_envs/bin/activate
 
 # Run serial jobs
 timeout 59m ./SU5_run_parallel.sh $k
+#parallel "python <scriptname>.py {script parameters}" ::: <list of script parameters>
+#parallel "python SU5.py {}" ::: {5..100}
 EXIT=$?
 
 # Resubmit if timed out

@@ -1,0 +1,13 @@
+1. Load everything
+
+2. Process command line arguments
+
+3. Check if the solution is already done (check for a saved .npz)
+   - If yes, quit
+   - If no, continue
+
+4. Check if a checkpoint file exists (check for a saved .npz)
+   - If it exists, load it
+   - If not, make a new field/solution
+
+5. Relax for X iterations (X = 1000)

@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore') #ignore numba warnings
 
 #before script starts, check if running as a package from Confining-String folder
 #if so, change path to confinepy folder
-if os.path.basename(os.getcwd()) == "Confining-String":
+if os.path.basename(os.getcwd()) == "confinepy package":
     os.chdir(os.path.join(os.getcwd(),"confinepy"))
 
 """
