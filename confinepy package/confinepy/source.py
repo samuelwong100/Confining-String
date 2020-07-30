@@ -1313,6 +1313,19 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
                      kw="kink with predicted width",plot=True,save_plot=True,
                      save_result=True,folder=path,separation_R=DFG.R,top=top)
 
+""" ============== subsection: Solver-Related Function ===================="""
+def get_canonical_Lw(N,R):
+    #note this is a continually developing function that might get changed
+    #as we implement quantum correction and as we probe more.
+    w = 25 # it appears this is always good enough, for now at least
+    if R<=20:
+        L = 30 #minimum L
+    else:
+        L = R + 10 #at least 5 space on each side
+    return L,w
+    
+
+
 """
 ===============================================================================
                                     BPS
