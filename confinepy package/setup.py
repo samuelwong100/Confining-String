@@ -20,6 +20,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['numpy', 'scipy', 'numba','sympy','matplotlib']
+    install_requires=['numpy', 'scipy', 'numba','sympy','matplotlib','pickle',
+                      'dill']
 )
 

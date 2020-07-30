@@ -6,6 +6,7 @@ Author: Samuel Wong
 """
 import os
 import pickle
+import dill
 from copy import deepcopy
 import time
 import numpy as np
@@ -893,7 +894,8 @@ class Dipole_Half_Grid(Grid):
 ===============================================================================
 """    
 def relaxation_algorithm(x_initial,laplacian_function,full_grid,sor,tol,
-                         use_half_grid,diagnose):
+                         use_half_grid,check_point_limit=10000,
+                         diagnose=False,old_error=None):
     """
     Without regard to whether we use half grid method, create an initial
     vector field on full grid, pass in along with the full grid and laplacian
@@ -905,9 +907,10 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,sor,tol,
     if not use_half_grid:
         # if using full grid, just call the normal relaxation while loop
         #with the full grid update method
-        return _relaxation_while_loop(
+        x_full, error = _relaxation_while_loop(
             x_initial,laplacian_function,full_grid,sor,tol,
-            _relaxation_update_full_grid_with_sor_numba,diagnose)
+            _relaxation_update_full_grid_with_sor_numba,check_point_limit,
+            diagnose,old_error)
     else:
         #if using half grid, first create half grid object
         half_grid = full_grid.half_grid
@@ -916,50 +919,59 @@ def relaxation_algorithm(x_initial,laplacian_function,full_grid,sor,tol,
         #run the relaxation while loop, passing in the half grid update method
         x_half, error = _relaxation_while_loop(
             x_initial_half,laplacian_function,half_grid,sor,tol,
-            _relaxation_update_half_grid_with_sor_numba,diagnose)
+            _relaxation_update_half_grid_with_sor_numba,check_point_limit,
+            diagnose,old_error)
         #finally, unfold the half grid field by a reflection and return full
         #result
         x_full = half_grid.reflect_vector_field(x_half)
-        return x_full, error
+    return x_full, error
         
 
 def _relaxation_while_loop(x,laplacian_function,grid,sor,tol,update_function,
-                           diagnose):
+                           check_point_limit,diagnose,old_error):
     #wrote two versions, with/without diagnose, to avoid wasting time
     #checking if diagnose is true every loop
     if diagnose:
-        return _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,
-                                                    sor,tol,update_function)
+        return _relaxation_while_loop_with_diagnose(
+            x,laplacian_function,grid,sor,tol,update_function,
+            check_point_limit,old_error)
     else:
-        return _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,
-                                                    sor,tol,update_function)
+        return _relaxation_while_loop_without_diagnose(
+            x,laplacian_function,grid,sor,tol,update_function,
+            check_point_limit,old_error)
 
 def _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,sor,tol,
-                                         update_function):
+                                         update_function,check_point_limit,
+                                         old_error):
     error = [tol+1] #initialize a "fake" error so that while loop can run
     comp = x.shape[0] #number of components of fields
     one_minus_sor = 1-sor
-    while error[-1]>tol:
+    while error[-1]>tol and len(error)<check_point_limit:
         x_new = update_function(x,laplacian_function,sor,one_minus_sor,grid,comp)
         error.append(_get_error(x_new,x))
         x = x_new
         _diagnostic_plot(error,grid,x)
     del error[0] #delete the first, fake error
     error = np.array(error) #change error into an array
-    return x, error
+    if old_error is not None: #combine new error with old error
+        combined_error = np.concatenate((old_error,error))        
+    return x, combined_error
 
 def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,sor,tol,
-                                         update_function):
+                                         update_function,check_point_limit,
+                                         old_error):
     error = [tol+1] #initialize a "fake" error so that while loop can run
     comp = x.shape[0] #number of components of fields
     one_minus_sor = 1-sor
-    while error[-1]>tol:
+    while error[-1]>tol and len(error)<check_point_limit:
         x_new = update_function(x,laplacian_function,sor,one_minus_sor,grid,comp)
         error.append(_get_error(x_new,x))
         x = x_new
     del error[0] #delete the first, fake error
     error = np.array(error) #change error into an array
-    return x, error
+    if old_error is not None: #combine new error with old error
+        combined_error = np.concatenate((old_error,error))        
+    return x, combined_error
     
 
 @jit(nopython=False)
@@ -1045,48 +1057,108 @@ def _diagnostic_plot(error,grid,x):
 @timeit
 def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
                             initial_kw="BPS",use_half_grid=True,
-                            diagnose=False):
-    #if no sor given, use default sor
-    if sor==0:
-        sor = best_sor_for_N(N)
-    else:
-        _validate_sor(sor)
+                            check_point_limit=10000,diagnose=False):
+    sor = _get_sor(sor,N) #process the given sor to get the actual sor
     #create the title of the folder with all parameters in name
     title = get_title(N,charge_arg,bound_arg,L,w,h,R,sor,tol,initial_kw,
                       use_half_grid)
     #get the full path such that the folder is inside the confinement folder
     path = get_path(title)
-    if os.path.exists(path): #if solution already exists, no need to resolve
+    status = get_solution_status(path)
+    if status == "finished solution":
         sol = Solution_Viewer(title)
     else:
-        #assuming the input of L,w,R are integers and h=0.1, there is a
-        #canonical way to convert them to a grid with odd number of points
-        num_z,num_y,num_R = canonical_length_num_conversion(L,w,R,h)
-        #regradless of whether we use halfgrid, create a full grid object first
-        DFG = Dipole_Full_Grid(num_z,num_y,num_R,h)
-        #create the two sigma space critical point objects associated with 
-        #the charge of the quarks and the boundary vacuum
-        charge = Sigma_Critical(N,charge_arg)
-        bound = Sigma_Critical(N,bound_arg)
-        #create superpotential object, then use it to create laplcian function
-        #which takes into account of whether half grid is in use, since
-        #the source term in laplacian depends on half vs full grid.
-        W = Superpotential(N)
-        laplacian_function = W.create_laplacian_function(
-            DFG,charge.real_vector, use_half_grid)
-        #intitialize field, with kw input that is default to BPS
-        #need path to store the proper BPS result and plots
-        x_initial = initialize_field(N,DFG,charge,bound,initial_kw,path)
-        x, error = relaxation_algorithm(x_initial,laplacian_function,
-                                        DFG,sor,tol,use_half_grid,
-                                        diagnose)
-        #store all the parameters and results that are not user-defined objects
-        store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
-                       initial_kw,use_half_grid,error)
-        sol = Solution_Viewer(title)
-    #sol.display_all()
+        x_continue, x_initial, laplacian_function, DFG, old_error = \
+            _get_prep_material_by_status(status,N,L,w,R,h,charge_arg,bound_arg,
+                                         initial_kw,path,use_half_grid)
+        #apply relaxation algorithm on x_continue, the field to be continued
+        x, error = relaxation_algorithm(
+            x_continue,laplacian_function,DFG,sor,tol,use_half_grid,
+            check_point_limit,diagnose,old_error)
+        # if solution is finished, delete old checkpoint. otherwise, save check
+        # point. In either case, return whether solution is finished.
+        finished_solution = _save_or_delete_checkpoint(
+            error,tol,x,x_initial,laplacian_function,DFG,path)
+        if finished_solution:
+            #store all the parameters and results that are not user-defined objects
+            store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
+                           initial_kw,use_half_grid,error)
+            sol = Solution_Viewer(title)
+        else: #recursion
+            sol = confining_string_solver(N,charge_arg,bound_arg,L,w,R,
+                                          sor,h,tol,initial_kw,use_half_grid,
+                                          check_point_limit,diagnose)
     return sol
+        
+def get_solution_status(path):
+    if os.path.exists(path):
+        if checkpoint_exists(path):
+            #if folder exists but there is a checkpoint, this was solved halfway
+            return "halfway solution"
+        else:
+            #if folder exists and there is no checkpoint file, then solution
+            #finished already
+            return "finished solution"
+    else: # if folder doesn't even exists, completely new solution
+        return "new solution"
+    
+def _get_prep_material_by_status(status,N,L,w,R,h,charge_arg,bound_arg,
+                                 initial_kw,path,use_half_grid):
+    if status == "new solution":
+        x_initial, laplacian_function, DFG = _prep_for_new_solution(
+            N,L,w,R,h,charge_arg,bound_arg,initial_kw,path,use_half_grid)
+        #for a new solution, the field to continue solving is the same as 
+        #initial field
+        x_continue = x_initial
+        old_error = None
+    elif status == "halfway solution":
+        x_continue, x_initial, laplacian_function, DFG, old_error = \
+            restore_checkpoint(path)
+    return x_continue, x_initial, laplacian_function, DFG, old_error
 
+
+def _prep_for_new_solution(N,L,w,R,h,charge_arg,bound_arg,initial_kw,path,
+                          use_half_grid):
+    #assuming the input of L,w,R are integers and h=0.1, there is a
+    #canonical way to convert them to a grid with odd number of points
+    num_z,num_y,num_R = canonical_length_num_conversion(L,w,R,h)
+    #regradless of whether we use halfgrid, create a full grid object first
+    DFG = Dipole_Full_Grid(num_z,num_y,num_R,h)
+    #create the two sigma space critical point objects associated with 
+    #the charge of the quarks and the boundary vacuum
+    charge = Sigma_Critical(N,charge_arg)
+    bound = Sigma_Critical(N,bound_arg)
+    #create superpotential object, then use it to create laplcian function
+    #which takes into account of whether half grid is in use, since
+    #the source term in laplacian depends on half vs full grid.
+    W = Superpotential(N)
+    laplacian_function = W.create_laplacian_function(
+        DFG,charge.real_vector, use_half_grid)
+    #intitialize field, with kw input that is default to BPS
+    #need path to store the proper BPS result and plots
+    x_initial = initialize_field(N,DFG,charge,bound,initial_kw,path)
+    return x_initial, laplacian_function, DFG
+
+def _save_or_delete_checkpoint(error,tol,x,x_initial,laplacian_function,DFG,
+                               path):
+    #check the while loop exit reason. if tolerance has not been reached yet,
+    #need to save checkpoint
+    finished_solution=False
+    if error[-1]>tol:
+        save_checkpoint(path,x,x_initial,error,laplacian_function,DFG)
+    else:
+        delete_checkpoint(path)
+        finished_solution = True
+    return finished_solution
+
+def _get_sor(sor,N):
+    #if no sor given, use default sor
+    if sor==0:
+        sor = best_sor_for_N(N)
+    else:
+        _validate_sor(sor)
+    return sor
+    
 def best_sor_for_N(N):
     #need to test using tol=e-5
     #still need to test 5, 6 for 1.97
@@ -1107,6 +1179,30 @@ def get_title(N,charge,bound,L,w,h,R,sor,tol,initial_kw,use_half_grid):
 def get_path(title):
     path = "Confinement Solutions/"+title+"/"
     return path
+
+def save_checkpoint(path,x,x_initial,error,laplacian_function,DFG):
+    checkpoint_dict = {"x_continue":x,"x_initial":x_initial,"error":error,
+                       "laplacian_function":laplacian_function,"DFG":DFG}
+    with open(path+"checkpoint","wb") as file:
+        dill.dump(checkpoint_dict, file)
+    print("save checkpoint")
+    
+def delete_checkpoint(path):
+    os.remove(path+"checkpoint")
+    
+def restore_checkpoint(path):
+    pickle_in = open(path+"checkpoint","rb")
+    checkpoint_dict = dill.load(pickle_in)
+    x_continue = checkpoint_dict["x_continue"]
+    x_initial = checkpoint_dict["x_initial"]
+    laplacian_function = checkpoint_dict["laplacian_function"]
+    DFG = checkpoint_dict["DFG"]
+    old_error = checkpoint_dict["error"]
+    print("restore checkpoint")
+    return x_continue, x_initial, laplacian_function, DFG, old_error
+
+def checkpoint_exists(path):
+    return os.path.exists(path+"checkpoint")
     
 def canonical_length_num_conversion(L,w,R,h):
     if isinstance(L,int) and isinstance(w,int) and isinstance(R,int) and h==0.1:
@@ -1888,7 +1984,7 @@ class Solution_Viewer():
         
             
     def plot_middle_cross_section_comparison(self):
-        z_linspace = self.grid.z_linspace
+        y_linspace = self.grid.y_linspace
         #cross section at center
         x_cross = self.get_cross_section_from_z_position(0)
         phi_cross = np.real(x_cross)
@@ -1901,28 +1997,28 @@ class Solution_Viewer():
         fig = plt.figure(figsize=(20,20))
         ax1 = fig.add_subplot(221)
         for i in range(self.m):
-            ax1.plot(z_linspace,phi_cross[i],
+            ax1.plot(y_linspace,phi_cross[i],
                      label=r"$\phi_{}$".format(str(i+1)))
         ax1.legend(fontsize=15)
         ax1.set_title("$\phi$ Cross Section at z=0",size=20)
 
         ax2 = fig.add_subplot(222)
         for i in range(self.m):
-            ax2.plot(z_linspace,sigma_cross[i],
+            ax2.plot(y_linspace,sigma_cross[i],
                      label=r"$\sigma_{}$".format(str(i+1)))
         ax2.legend(fontsize=15)
         ax2.set_title("$\sigma$ Cross Section at z=0",size=20)
         
         ax3 = fig.add_subplot(223)
         for i in range(self.m):
-            ax3.plot(z_linspace,phi_BPS[i],
+            ax3.plot(y_linspace,phi_BPS[i],
                      label=r"$\phi_{}$".format(str(i+1)))
         ax3.legend(fontsize=15)
         ax3.set_title("BPS $\phi$",size=20)
 
         ax4 = fig.add_subplot(224)
         for i in range(self.m):
-            ax4.plot(z_linspace,sigma_BPS[i],
+            ax4.plot(y_linspace,sigma_BPS[i],
                      label=r"$\sigma_{}$".format(str(i+1)))
         ax4.legend(fontsize=15)
         ax4.set_title("BPS $\sigma$",size=20)
