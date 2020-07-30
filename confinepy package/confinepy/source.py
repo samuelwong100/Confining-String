@@ -970,9 +970,8 @@ def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,sor,tol,
     del error[0] #delete the first, fake error
     error = np.array(error) #change error into an array
     if old_error is not None: #combine new error with old error
-        combined_error = np.concatenate((old_error,error))        
-    return x, combined_error
-    
+        error = np.concatenate((old_error,error))        
+    return x, error
 
 @jit(nopython=False)
 def _relaxation_update_full_grid_with_sor_numba(x_old,laplacian_function,sor,
@@ -1057,7 +1056,7 @@ def _diagnostic_plot(error,grid,x):
 @timeit
 def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
                             initial_kw="BPS",use_half_grid=True,
-                            check_point_limit=10000,diagnose=False):
+                            check_point_limit=1000,diagnose=False):
     sor = _get_sor(sor,N) #process the given sor to get the actual sor
     #create the title of the folder with all parameters in name
     title = get_title(N,charge_arg,bound_arg,L,w,h,R,sor,tol,initial_kw,
@@ -1091,13 +1090,18 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
     return sol
         
 def get_solution_status(path):
-    if os.path.exists(path):
+    if os.path.exists(path): #if solution folder exists
         if checkpoint_exists(path):
             #if folder exists but there is a checkpoint, this was solved halfway
             return "halfway solution"
+        elif not os.path.exists(path+"core_dict"):
+            #if folder exists but there is no solution file, this must have
+            #been interrupted before the first checkpoint was created.
+            #treat as a new solution and start over
+            return "new solution"
         else:
-            #if folder exists and there is no checkpoint file, then solution
-            #finished already
+            #if folder exists and there is no checkpoint file, but there is 
+            #a solution file, then solution finished already
             return "finished solution"
     else: # if folder doesn't even exists, completely new solution
         return "new solution"
@@ -1462,8 +1466,6 @@ def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,kink_bd_distance,R=0,top=True,
             kink_pixel_number = int((1-ratio)*num)
         else:
             kink_pixel_number = int(ratio*num)
-        print("kpn = ",kink_pixel_number)
-        print("num=",num)
         x0[0:kink_pixel_number,:] = vac0_vec
         x0[kink_pixel_number:-1,:] = vacf_vec
         
@@ -1481,7 +1483,7 @@ def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
         greater_than_tol = default_continue_condition(error,tol)
         loop = len(error)
         if loop > 10000 and loop % 1000 ==0:
-            print("Relaxation 1D: loop=",loop,"error=",error[-1])
+            #print("Relaxation 1D: loop=",loop,"error=",error[-1])
             #after 10,000 loops, check energy condition once every 1000 loops
             #this ensures we don't stop prematurely and don't waste time
             #computing energy too foten
@@ -2180,6 +2182,12 @@ def get_all_CS_folder_names():
         folders.append(x[0].replace("Confinement Solutions\\",""))
     folders.remove("Confinement Solutions") #remove big folder name
     return folders
+
+def list_all_N_p_results(N,charge_arg,R_greater_than_five=False):
+    result_list = get_all_fully_solved_N_p_folder_names(N,charge_arg,
+                                                        R_greater_than_five)
+    for item in result_list:
+        print(item)
 
 def get_all_fully_solved_N_p_folder_names(N,charge_arg,R_greater_than_five=False):
     folders = get_all_CS_folder_names()
