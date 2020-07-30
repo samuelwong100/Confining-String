@@ -954,8 +954,8 @@ def _relaxation_while_loop_with_diagnose(x,laplacian_function,grid,sor,tol,
     del error[0] #delete the first, fake error
     error = np.array(error) #change error into an array
     if old_error is not None: #combine new error with old error
-        combined_error = np.concatenate((old_error,error))        
-    return x, combined_error
+        error = np.concatenate((old_error,error))        
+    return x, error
 
 def _relaxation_while_loop_without_diagnose(x,laplacian_function,grid,sor,tol,
                                          update_function,check_point_limit,
@@ -1303,14 +1303,6 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
     #half of number of points in y (plus 1 to include the midpoint)
     #this point will get replaced by one of the 2 BPS upon overlap, doesn't
     #reallly matter as this is just initial condition
-    print("BPS call:")
-    print("N=",N)
-    print("vac0_arg",vac0_arg)
-    print("vacf_arg",vacf_arg)
-    print("num =",DFG.num_y_half+1)
-    print("h =",DFG.h)
-    print("sor =",1.5)
-    print("tol=",1e-9)
     #for now, call BPS for initial condition purpose with only tol=1e-5
     return solve_BPS(N=N,vac0_arg=vac0_arg,vacf_arg=vacf_arg,
                      num=DFG.num_y_half+1,h=DFG.h,tol=1e-5,sor=1.5,
