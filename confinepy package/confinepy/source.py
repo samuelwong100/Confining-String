@@ -1030,9 +1030,9 @@ def _relaxation_update_half_grid_with_sor_numba(x_old,laplacian_function,sor,
 def _get_error(x_new,x):
     return np.max(np.abs(x_new-x))/np.max(np.abs(x_new))
 
-def _diagnostic_plot(error,grid,x):
+def _diagnostic_plot(error,grid,x,period=100):
     loop = len(error)
-    if loop % 100 == 0:
+    if loop % period == 0:
         print("relaxation 2D: loop =",loop,"error =",error[-1])
         for i in range(x.shape[0]):
             #plot phi_i
@@ -1151,7 +1151,8 @@ def _save_or_delete_checkpoint(error,tol,x,x_initial,laplacian_function,DFG,
     if error[-1]>tol:
         save_checkpoint(path,x,x_initial,error,laplacian_function,DFG)
     else:
-        delete_checkpoint(path)
+        if checkpoint_exists(path): #in case it finishes before first checkpoint
+            delete_checkpoint(path)
         finished_solution = True
     return finished_solution
 
@@ -1187,6 +1188,7 @@ def get_path(title):
 def save_checkpoint(path,x,x_initial,error,laplacian_function,DFG):
     checkpoint_dict = {"x_continue":x,"x_initial":x_initial,"error":error,
                        "laplacian_function":laplacian_function,"DFG":DFG}
+    create_path(path)
     with open(path+"checkpoint","wb") as file:
         dill.dump(checkpoint_dict, file)
     print("save checkpoint")
@@ -1242,8 +1244,12 @@ def initialize_field(N,DFG,charge,bound,initial_kw,path):
         x0 = DFG.create_constant_vector_field(bound.imaginary_vector)
     elif initial_kw == "zero":
         x0 = DFG.create_zeros_vector_field(N-1)
+    elif initial_kw == "random":
+        x0 = get_random_initial_field(N,DFG)
     elif initial_kw == "BPS":
         x0 = _BPS_initial_field(N,DFG,charge,bound,path)
+    else:
+        raise Exception("initial keyword not recognized.")
     x0 = enforce_boundary(x0,DFG,bound.imaginary_vector)
     return x0
 
@@ -1260,6 +1266,18 @@ def enforce_boundary(x_old,grid,bound_vec):
     x[:,0,:] = np.repeat(bound_2d.T,grid.num_z,axis=1)
     x[:,-1,:] = np.repeat(bound_2d.T,grid.num_z,axis=1)
     return x
+
+def get_random_initial_field(N,DFG):
+    #return a field with random complex number with each component between
+    #-1 and 1
+    a = random_mp_one(N-1,DFG.num_y,DFG.num_z)
+    b = random_mp_one(N-1,DFG.num_y,DFG.num_z)
+    return a+1j*b
+    
+def random_mp_one(*arg):
+    #convert numpy random to range between -1 and 1
+    #return -1+2*np.random.rand(*arg)
+    return np.random.rand(*arg)
     
 def _BPS_initial_field(N,DFG,charge,bound,path):
     #solve for the two BPS equations
@@ -1317,15 +1335,16 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
 def get_canonical_Lw(N,R):
     #note this is a continually developing function that might get changed
     #as we implement quantum correction and as we probe more.
-    w = 25 # it appears this is always good enough, for now at least
+    if N<7:
+        w=25
+    else:
+        w=35
     if R<=20:
         L = 30 #minimum L
     else:
         L = R + 10 #at least 5 space on each side
     return L,w
     
-
-
 """
 ===============================================================================
                                     BPS
@@ -1562,7 +1581,7 @@ def _realxation_1D_update(g,f_old,num,h_squared):
     return f_new
 
 def _validate_sor(sor):
-    if not 1<sor<2:
+    if not 1<=sor<2:
         raise Exception("sor parameter must be between 1 and 2.")
 
 def relaxation_1D_while_loop_with_sor(g,f,num,h_squared,tol,sor,
@@ -1928,7 +1947,8 @@ class Solution_Viewer():
     
     def plot_potential_energy_density(self):
         self._quick_plot(self.get_potential_energy_density(),
-                         "Potential Energy Density",
+                         "Potential Energy Density (E={})".format(
+                             str(round(self.get_energy(),3))),
                          "Potential_Energy_Density",
                          cmap='jet')
         
@@ -1952,9 +1972,9 @@ class Solution_Viewer():
         for n in range(self.m):
             phi_n = np.real(self.x_initial[n,:,:])
             sigma_n = np.imag(self.x_initial[n,:,:])
-            self._quick_plot(phi_n,"initial phi_{}".format(str(n+1)),
+            self._quick_plot(phi_n,"initial $\phi_{}$".format(str(n+1)),
                              "initial_phi_{}".format(str(n+1)))
-            self._quick_plot(sigma_n,"initial sigma_{}".format(str(n+1)),
+            self._quick_plot(sigma_n,"initial $\sigma_{}$".format(str(n+1)),
                              "initial_sigma_{}".format(str(n+1)))
             
     def get_cross_section_from_z_position(self,z):
