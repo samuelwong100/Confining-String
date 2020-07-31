@@ -19,10 +19,7 @@ R = int(sys.argv[3])
 
 #get appropriate size of grid
 L,w = get_canonical_Lw(N,R)
-#solve
 sol = confining_string_solver(N=N,charge_arg="w"+str(k),bound_arg="x1",L=L,
                               w=w,R=R,check_point_limit=200)
-#exit if job is finished
-sys.exit(0)
 
 
