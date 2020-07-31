@@ -1335,7 +1335,10 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
 def get_canonical_Lw(N,R):
     #note this is a continually developing function that might get changed
     #as we implement quantum correction and as we probe more.
-    w = 25 # it appears this is always good enough, for now at least
+    if N<7:
+        w=25
+    else:
+        w=35
     if R<=20:
         L = 30 #minimum L
     else:
