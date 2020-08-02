@@ -1,0 +1,172 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  42.16 ms
+'confining_string_solver'  57.47 ms
+'confining_string_solver'  56.00 ms
+'confining_string_solver'  89.17 ms
+'confining_string_solver'  41.19 ms
+'confining_string_solver'  43.09 ms
+'confining_string_solver'  38.54 ms
+'confining_string_solver'  47.71 ms
+'confining_string_solver'  55.10 ms
+'confining_string_solver'  75.41 ms
+'confining_string_solver'  51.66 ms
+'confining_string_solver'  45.89 ms
+'confining_string_solver'  71.67 ms
+'confining_string_solver'  65.77 ms
+'confining_string_solver'  64.03 ms
+'confining_string_solver'  112.42 ms
+'confining_string_solver'  97.34 ms
+'confining_string_solver'  75.62 ms
+'confining_string_solver'  46.23 ms
+'confining_string_solver'  47.32 ms
+'confining_string_solver'  74.28 ms
+'confining_string_solver'  77.51 ms
+'confining_string_solver'  67.65 ms
+'confining_string_solver'  80.30 ms
+'confining_string_solver'  116.29 ms
+'confining_string_solver'  47.57 ms
+'confining_string_solver'  88.68 ms
+'confining_string_solver'  95.46 ms
+'confining_string_solver'  84.03 ms
+'confining_string_solver'  52.68 ms
+'confining_string_solver'  71.98 ms
+'confining_string_solver'  45.13 ms
+'confining_string_solver'  67.06 ms
+'confining_string_solver'  51.85 ms
+'confining_string_solver'  46.68 ms
+'confining_string_solver'  84.13 ms
+'confining_string_solver'  106.26 ms
+'confining_string_solver'  67.34 ms
+'confining_string_solver'  63.92 ms
+'confining_string_solver'  78.79 ms
+'confining_string_solver'  57.12 ms
+'confining_string_solver'  89.42 ms
+'confining_string_solver'  55.32 ms
+'confining_string_solver'  60.93 ms
+'confining_string_solver'  100.87 ms
+'confining_string_solver'  133.59 ms
+'confining_string_solver'  78.17 ms
+'confining_string_solver'  82.67 ms
+'confining_string_solver'  66.94 ms
+'confining_string_solver'  70.71 ms
+'confining_string_solver'  65.76 ms
+'confining_string_solver'  77.56 ms
+'confining_string_solver'  96.60 ms
+'confining_string_solver'  94.17 ms
+'confining_string_solver'  61.09 ms
+'confining_string_solver'  71.88 ms
+'confining_string_solver'  61.17 ms
+'confining_string_solver'  67.27 ms
+'confining_string_solver'  88.94 ms
+'confining_string_solver'  79.07 ms
+'confining_string_solver'  78.02 ms
+'confining_string_solver'  86.19 ms
+'confining_string_solver'  75.93 ms
+'confining_string_solver'  66.90 ms
+'confining_string_solver'  78.47 ms
+'confining_string_solver'  84.43 ms
+'confining_string_solver'  88.44 ms
+restore checkpoint
+'confining_string_solver'  197063.73 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  24132.46 ms
+'confining_string_solver'  494735.70 ms
+'confining_string_solver'  978867.06 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  3064.57 ms
+'confining_string_solver'  1189455.33 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  400718.30 ms
+'confining_string_solver'  1351235.33 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  534625.24 ms
+'confining_string_solver'  1292069.28 ms
+'confining_string_solver'  2056650.28 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  97021.45 ms
+'confining_string_solver'  780011.43 ms
+'confining_string_solver'  1465731.47 ms
+'confining_string_solver'  2144876.71 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  1025956.32 ms
+'confining_string_solver'  2222162.93 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  509111.86 ms
+'confining_string_solver'  1526830.32 ms
+'confining_string_solver'  2556703.10 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  86580.50 ms
+'confining_string_solver'  856393.31 ms
+'confining_string_solver'  1628700.09 ms
+'confining_string_solver'  2398239.30 ms
+'confining_string_solver'  3182307.87 ms
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Submitted batch job 3833184
+
+scontrol show jobid 3832996
+JobId=3832996 JobName=CS_k_1
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=1658125 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:58:04 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-07-31T15:31:59 EligibleTime=2020-07-31T15:31:59
+   AccrueTime=2020-07-31T15:31:59
+   StartTime=2020-07-31T15:32:11 EndTime=2020-07-31T16:30:15 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-07-31T15:32:11
+   Partition=compute AllocNode:Sid=nia-login01:220258
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia0377
+   BatchHost=nia0377
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/trial_run_script.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3832996.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3832996.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3832996
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3832996          CS_k_1 def-epopp+   00:58:04                         02:56:52 3-01:39:11      0:0 
+3832996.bat+      batch def-epopp+   00:58:04 289919748K  27397524K   02:56:52 3-01:39:11      0:0 
+3832996.ext+     extern def-epopp+   00:58:04    137232K      1044K   00:00:00   00:00:00      0:0 

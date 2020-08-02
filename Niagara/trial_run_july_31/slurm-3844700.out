@@ -1,0 +1,227 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  55.65 ms
+'confining_string_solver'  56.52 ms
+'confining_string_solver'  60.80 ms
+'confining_string_solver'  56.32 ms
+'confining_string_solver'  74.49 ms
+'confining_string_solver'  66.58 ms
+'confining_string_solver'  70.30 ms
+'confining_string_solver'  71.61 ms
+'confining_string_solver'  64.34 ms
+'confining_string_solver'  119.78 ms
+'confining_string_solver'  79.52 ms
+'confining_string_solver'  108.50 ms
+'confining_string_solver'  85.99 ms
+'confining_string_solver'  77.04 ms
+'confining_string_solver'  114.70 ms
+'confining_string_solver'  100.77 ms
+'confining_string_solver'  112.55 ms
+'confining_string_solver'  119.16 ms
+'confining_string_solver'  70.22 ms
+'confining_string_solver'  81.24 ms
+'confining_string_solver'  122.22 ms
+'confining_string_solver'  135.14 ms
+'confining_string_solver'  93.50 ms
+'confining_string_solver'  75.42 ms
+'confining_string_solver'  62.48 ms
+'confining_string_solver'  105.25 ms
+'confining_string_solver'  136.99 ms
+'confining_string_solver'  103.18 ms
+'confining_string_solver'  91.32 ms
+'confining_string_solver'  99.45 ms
+'confining_string_solver'  95.30 ms
+'confining_string_solver'  125.56 ms
+'confining_string_solver'  66.08 ms
+'confining_string_solver'  98.07 ms
+'confining_string_solver'  84.51 ms
+'confining_string_solver'  147.23 ms
+'confining_string_solver'  115.71 ms
+'confining_string_solver'  101.24 ms
+'confining_string_solver'  96.78 ms
+'confining_string_solver'  134.14 ms
+'confining_string_solver'  111.40 ms
+'confining_string_solver'  70.46 ms
+'confining_string_solver'  110.85 ms
+'confining_string_solver'  83.96 ms
+'confining_string_solver'  88.72 ms
+'confining_string_solver'  118.64 ms
+'confining_string_solver'  91.92 ms
+'confining_string_solver'  113.65 ms
+'confining_string_solver'  119.94 ms
+'confining_string_solver'  123.11 ms
+'confining_string_solver'  90.75 ms
+'confining_string_solver'  108.61 ms
+'confining_string_solver'  58.15 ms
+'confining_string_solver'  110.53 ms
+'confining_string_solver'  129.89 ms
+'confining_string_solver'  95.78 ms
+'confining_string_solver'  101.52 ms
+'confining_string_solver'  70.69 ms
+'confining_string_solver'  130.21 ms
+'confining_string_solver'  90.10 ms
+'confining_string_solver'  125.75 ms
+'confining_string_solver'  158.34 ms
+'confining_string_solver'  93.82 ms
+'confining_string_solver'  149.36 ms
+'confining_string_solver'  144.73 ms
+'confining_string_solver'  148.16 ms
+'confining_string_solver'  162.41 ms
+'confining_string_solver'  91.30 ms
+'confining_string_solver'  90.14 ms
+'confining_string_solver'  87.20 ms
+'confining_string_solver'  121.25 ms
+'confining_string_solver'  67.36 ms
+'confining_string_solver'  101.99 ms
+'confining_string_solver'  151.49 ms
+'confining_string_solver'  75.97 ms
+'confining_string_solver'  85.06 ms
+'confining_string_solver'  138.58 ms
+'confining_string_solver'  108.14 ms
+'confining_string_solver'  116.02 ms
+'confining_string_solver'  107.98 ms
+'confining_string_solver'  71.27 ms
+'confining_string_solver'  82.80 ms
+'confining_string_solver'  65.91 ms
+'confining_string_solver'  95.91 ms
+'confining_string_solver'  66.56 ms
+'confining_string_solver'  52.52 ms
+'confining_string_solver'  77.07 ms
+'confining_string_solver'  69.19 ms
+'confining_string_solver'  56.32 ms
+'confining_string_solver'  72.66 ms
+'confining_string_solver'  78.68 ms
+'confining_string_solver'  67.01 ms
+'confining_string_solver'  80.11 ms
+'confining_string_solver'  85.32 ms
+'confining_string_solver'  55.31 ms
+'confining_string_solver'  97.29 ms
+'confining_string_solver'  76.14 ms
+'confining_string_solver'  64.24 ms
+'confining_string_solver'  83.82 ms
+'confining_string_solver'  70.11 ms
+'confining_string_solver'  82.09 ms
+'confining_string_solver'  88.52 ms
+'confining_string_solver'  100.38 ms
+'confining_string_solver'  71.81 ms
+'confining_string_solver'  96.72 ms
+'confining_string_solver'  79.48 ms
+'confining_string_solver'  121.64 ms
+'confining_string_solver'  90.73 ms
+'confining_string_solver'  95.90 ms
+'confining_string_solver'  73.42 ms
+'confining_string_solver'  92.60 ms
+'confining_string_solver'  106.55 ms
+'confining_string_solver'  112.89 ms
+'confining_string_solver'  124.67 ms
+'confining_string_solver'  111.63 ms
+'confining_string_solver'  96.19 ms
+'confining_string_solver'  99.41 ms
+'confining_string_solver'  130.64 ms
+'confining_string_solver'  135.10 ms
+'confining_string_solver'  116.75 ms
+'confining_string_solver'  108.58 ms
+'confining_string_solver'  92.38 ms
+'confining_string_solver'  78.38 ms
+'confining_string_solver'  113.00 ms
+'confining_string_solver'  77.47 ms
+'confining_string_solver'  163.67 ms
+'confining_string_solver'  138.60 ms
+'confining_string_solver'  87.86 ms
+'confining_string_solver'  76.35 ms
+'confining_string_solver'  119.11 ms
+'confining_string_solver'  73.14 ms
+'confining_string_solver'  71.48 ms
+'confining_string_solver'  121.21 ms
+'confining_string_solver'  106.17 ms
+'confining_string_solver'  108.12 ms
+'confining_string_solver'  82.27 ms
+'confining_string_solver'  98.05 ms
+'confining_string_solver'  136.93 ms
+'confining_string_solver'  84.88 ms
+'confining_string_solver'  111.36 ms
+'confining_string_solver'  133.18 ms
+'confining_string_solver'  76.08 ms
+'confining_string_solver'  99.75 ms
+'confining_string_solver'  82.56 ms
+'confining_string_solver'  91.74 ms
+'confining_string_solver'  96.14 ms
+'confining_string_solver'  99.41 ms
+'confining_string_solver'  120.51 ms
+'confining_string_solver'  129.08 ms
+'confining_string_solver'  108.18 ms
+'confining_string_solver'  118.15 ms
+'confining_string_solver'  130.52 ms
+'confining_string_solver'  125.62 ms
+'confining_string_solver'  73.76 ms
+'confining_string_solver'  103.66 ms
+'confining_string_solver'  81.57 ms
+'confining_string_solver'  79.14 ms
+'confining_string_solver'  71.29 ms
+'confining_string_solver'  77.53 ms
+'confining_string_solver'  76.97 ms
+'confining_string_solver'  70.15 ms
+'confining_string_solver'  152.24 ms
+'confining_string_solver'  79.84 ms
+'confining_string_solver'  124.86 ms
+'confining_string_solver'  133.10 ms
+'confining_string_solver'  78.40 ms
+'confining_string_solver'  82.29 ms
+'confining_string_solver'  107.75 ms
+'confining_string_solver'  146.38 ms
+'confining_string_solver'  110.09 ms
+'confining_string_solver'  137.92 ms
+'confining_string_solver'  124.03 ms
+'confining_string_solver'  90.21 ms
+'confining_string_solver'  80.97 ms
+'confining_string_solver'  112.95 ms
+'confining_string_solver'  92.46 ms
+'confining_string_solver'  134.65 ms
+'confining_string_solver'  102.76 ms
+'confining_string_solver'  99.39 ms
+'confining_string_solver'  84.79 ms
+'confining_string_solver'  93.61 ms
+'confining_string_solver'  94.39 ms
+'confining_string_solver'  78.75 ms
+'confining_string_solver'  73.48 ms
+'confining_string_solver'  123.67 ms
+'confining_string_solver'  74.40 ms
+'confining_string_solver'  84.39 ms
+'confining_string_solver'  121.51 ms
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Submitted batch job 3845362
+
+scontrol show jobid 3844700
+JobId=3844700 JobName=CS_k_1
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=1587311 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:58:06 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-08-02T11:46:08 EligibleTime=2020-08-02T11:46:08
+   AccrueTime=2020-08-02T11:46:08
+   StartTime=2020-08-02T11:46:27 EndTime=2020-08-02T12:44:33 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-08-02T11:46:27
+   Partition=compute AllocNode:Sid=nia-login01:42237
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia1835
+   BatchHost=nia1835
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/trial_run_script.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3844700.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3844700.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3844700
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3844700          CS_k_1 def-epopp+   00:58:06                         01:12:59 1-03:42:14      0:0 
+3844700.bat+      batch def-epopp+   00:58:06  62628768K   5849052K   01:12:59 1-03:42:14      0:0 
+3844700.ext+     extern def-epopp+   00:58:06    137232K      1048K   00:00:00   00:00:00      0:0 

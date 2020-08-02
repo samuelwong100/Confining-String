@@ -1,0 +1,239 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  16.45 ms
+'confining_string_solver'  11.63 ms
+'confining_string_solver'  15.74 ms
+'confining_string_solver'  12.63 ms
+'confining_string_solver'  15.96 ms
+'confining_string_solver'  10.70 ms
+'confining_string_solver'  10.63 ms
+'confining_string_solver'  12.17 ms
+'confining_string_solver'  15.68 ms
+'confining_string_solver'  20.32 ms
+'confining_string_solver'  13.40 ms
+'confining_string_solver'  19.26 ms
+'confining_string_solver'  20.47 ms
+'confining_string_solver'  11.83 ms
+'confining_string_solver'  13.72 ms
+'confining_string_solver'  10.78 ms
+'confining_string_solver'  15.98 ms
+'confining_string_solver'  16.06 ms
+'confining_string_solver'  15.67 ms
+'confining_string_solver'  13.20 ms
+'confining_string_solver'  21.14 ms
+'confining_string_solver'  12.15 ms
+'confining_string_solver'  19.12 ms
+'confining_string_solver'  11.89 ms
+'confining_string_solver'  12.18 ms
+'confining_string_solver'  14.59 ms
+'confining_string_solver'  16.64 ms
+'confining_string_solver'  10.82 ms
+'confining_string_solver'  23.52 ms
+'confining_string_solver'  22.32 ms
+'confining_string_solver'  23.77 ms
+'confining_string_solver'  21.78 ms
+'confining_string_solver'  22.23 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  88856.97 ms
+'confining_string_solver'  437310.54 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  163355.32 ms
+'confining_string_solver'  685866.11 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  37672.62 ms
+'confining_string_solver'  995685.45 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  152655.80 ms
+'confining_string_solver'  703655.21 ms
+'confining_string_solver'  1261355.81 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  294933.92 ms
+'confining_string_solver'  1258170.63 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  199107.59 ms
+'confining_string_solver'  580457.23 ms
+'confining_string_solver'  963343.22 ms
+'confining_string_solver'  1355389.54 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  793159.12 ms
+'confining_string_solver'  1724748.61 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  128769.96 ms
+'confining_string_solver'  734533.83 ms
+'confining_string_solver'  1319680.52 ms
+'confining_string_solver'  1888007.20 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  330098.59 ms
+'confining_string_solver'  727457.09 ms
+'confining_string_solver'  1116228.24 ms
+'confining_string_solver'  1506490.30 ms
+'confining_string_solver'  1891089.38 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  499285.95 ms
+'confining_string_solver'  1208066.52 ms
+'confining_string_solver'  1929689.67 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  64625.51 ms
+'confining_string_solver'  740029.42 ms
+'confining_string_solver'  1417078.73 ms
+'confining_string_solver'  2093905.89 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  86779.03 ms
+'confining_string_solver'  484710.23 ms
+'confining_string_solver'  878281.12 ms
+'confining_string_solver'  1279115.62 ms
+'confining_string_solver'  1667507.16 ms
+'confining_string_solver'  2055884.38 ms
+'confining_string_solver'  2440355.17 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  298715.70 ms
+'confining_string_solver'  1070092.61 ms
+'confining_string_solver'  1843618.30 ms
+'confining_string_solver'  2605359.30 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  675307.33 ms
+'confining_string_solver'  1657599.90 ms
+'confining_string_solver'  2623619.83 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  668251.58 ms
+'confining_string_solver'  1363564.59 ms
+'confining_string_solver'  2061063.11 ms
+'confining_string_solver'  2725086.46 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  148954.62 ms
+'confining_string_solver'  757062.31 ms
+'confining_string_solver'  1376793.15 ms
+'confining_string_solver'  2005292.89 ms
+'confining_string_solver'  2617772.69 ms
+'confining_string_solver'  3233901.61 ms
+'solve_BPS'  49562.71 ms
+'solve_BPS'  41023.42 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  773440.96 ms
+'confining_string_solver'  2066669.31 ms
+'solve_BPS'  53835.97 ms
+'solve_BPS'  45835.91 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  795382.22 ms
+'confining_string_solver'  2100902.01 ms
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Submitted batch job 3831805
+
+scontrol show jobid 3831499
+JobId=3831499 JobName=CS_k_1
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=1653616 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:58:05 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-07-31T13:35:40 EligibleTime=2020-07-31T13:35:40
+   AccrueTime=2020-07-31T13:35:40
+   StartTime=2020-07-31T13:35:45 EndTime=2020-07-31T14:33:50 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-07-31T13:35:45
+   Partition=compute AllocNode:Sid=nia-login01:95369
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia0529
+   BatchHost=nia0529
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/trial_run_script.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3831499.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3831499.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3831499
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3831499          CS_k_1 def-epopp+   00:58:05                         02:57:16 3-01:57:47      0:0 
+3831499.bat+      batch def-epopp+   00:58:05 258004180K  27198968K   02:57:16 3-01:57:47      0:0 
+3831499.ext+     extern def-epopp+   00:58:05    137232K      1048K   00:00:00   00:00:00      0:0 

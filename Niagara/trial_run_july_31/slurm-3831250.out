@@ -1,0 +1,341 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  62.87 ms
+'confining_string_solver'  59.51 ms
+'confining_string_solver'  66.47 ms
+'confining_string_solver'  59.46 ms
+'confining_string_solver'  75.91 ms
+restore checkpoint
+'confining_string_solver'  127591.57 ms
+restore checkpoint
+'confining_string_solver'  140712.35 ms
+restore checkpoint
+'confining_string_solver'  172713.15 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  71635.52 ms
+'confining_string_solver'  267458.64 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  15416.67 ms
+'confining_string_solver'  395408.62 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  198509.58 ms
+'confining_string_solver'  413282.12 ms
+'confining_string_solver'  615178.30 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  265587.16 ms
+'confining_string_solver'  652365.56 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  23691.98 ms
+'confining_string_solver'  239282.21 ms
+'confining_string_solver'  462258.90 ms
+'confining_string_solver'  665728.69 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  142684.45 ms
+'confining_string_solver'  565439.45 ms
+'confining_string_solver'  958414.78 ms
+'solve_BPS'  16031.64 ms
+'solve_BPS'  14615.18 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  439758.63 ms
+'confining_string_solver'  1057186.13 ms
+'solve_BPS'  17522.76 ms
+'solve_BPS'  15503.30 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  438005.80 ms
+'confining_string_solver'  1058005.46 ms
+'solve_BPS'  16442.97 ms
+'solve_BPS'  14072.86 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  449771.33 ms
+'confining_string_solver'  1062243.58 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  14737.34 ms
+'confining_string_solver'  449895.53 ms
+'confining_string_solver'  858889.10 ms
+'confining_string_solver'  1242195.21 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  181668.06 ms
+'confining_string_solver'  423734.53 ms
+'confining_string_solver'  662294.68 ms
+'confining_string_solver'  898385.98 ms
+'confining_string_solver'  1125230.93 ms
+'confining_string_solver'  1335938.98 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  361208.83 ms
+'confining_string_solver'  795755.25 ms
+'confining_string_solver'  1224607.00 ms
+'confining_string_solver'  1615071.63 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  205059.96 ms
+'confining_string_solver'  474554.81 ms
+'confining_string_solver'  744613.88 ms
+'confining_string_solver'  1013089.07 ms
+'confining_string_solver'  1273378.92 ms
+'confining_string_solver'  1515339.22 ms
+'confining_string_solver'  1736479.57 ms
+'solve_BPS'  15991.45 ms
+'solve_BPS'  13236.47 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  538906.62 ms
+'confining_string_solver'  1176503.58 ms
+'confining_string_solver'  1810008.06 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  268758.15 ms
+'confining_string_solver'  713038.15 ms
+'confining_string_solver'  1138833.23 ms
+'confining_string_solver'  1566284.42 ms
+'confining_string_solver'  1957898.94 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  225945.86 ms
+'confining_string_solver'  513988.28 ms
+'confining_string_solver'  809628.26 ms
+'confining_string_solver'  1103016.61 ms
+'confining_string_solver'  1379349.14 ms
+'confining_string_solver'  1642959.50 ms
+'confining_string_solver'  1902721.62 ms
+'confining_string_solver'  2140214.61 ms
+'solve_BPS'  39095.92 ms
+'solve_BPS'  28190.26 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  471320.87 ms
+'confining_string_solver'  1486336.25 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  210727.93 ms
+'confining_string_solver'  698338.67 ms
+'confining_string_solver'  1171072.81 ms
+'confining_string_solver'  1613560.83 ms
+'confining_string_solver'  2047946.37 ms
+'confining_string_solver'  2462127.91 ms
+'solve_BPS'  35669.84 ms
+'solve_BPS'  32550.80 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  491742.29 ms
+'confining_string_solver'  1493623.84 ms
+'solve_BPS'  36239.75 ms
+'solve_BPS'  30189.13 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  14848.36 ms
+'confining_string_solver'  956223.92 ms
+'confining_string_solver'  1943025.93 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  276409.39 ms
+'confining_string_solver'  590254.92 ms
+'confining_string_solver'  912062.80 ms
+'confining_string_solver'  1217482.67 ms
+'confining_string_solver'  1526439.32 ms
+'confining_string_solver'  1820329.08 ms
+'confining_string_solver'  2099549.77 ms
+'confining_string_solver'  2375667.14 ms
+'confining_string_solver'  2629370.43 ms
+'solve_BPS'  35006.04 ms
+'solve_BPS'  35638.20 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  517412.27 ms
+'confining_string_solver'  1569213.38 ms
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  13575.42 ms
+'confining_string_solver'  332366.99 ms
+'confining_string_solver'  657698.83 ms
+'confining_string_solver'  979540.65 ms
+'confining_string_solver'  1313352.92 ms
+'confining_string_solver'  1630468.43 ms
+'confining_string_solver'  1941469.94 ms
+'confining_string_solver'  2241607.37 ms
+'confining_string_solver'  2540486.70 ms
+'confining_string_solver'  2834057.29 ms
+'confining_string_solver'  3102731.74 ms
+'solve_BPS'  37592.73 ms
+'solve_BPS'  33691.89 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  594101.56 ms
+'confining_string_solver'  1505910.65 ms
+'confining_string_solver'  2478343.97 ms
+'solve_BPS'  16231.73 ms
+'solve_BPS'  14273.21 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+'confining_string_solver'  523610.80 ms
+'confining_string_solver'  1216701.19 ms
+'confining_string_solver'  1880505.89 ms
+'confining_string_solver'  2526217.02 ms
+'confining_string_solver'  3154338.93 ms
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Submitted batch job 3831499
+
+scontrol show jobid 3831250
+JobId=3831250 JobName=CS_k_1
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=1653616 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:58:04 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-07-31T12:37:30 EligibleTime=2020-07-31T12:37:30
+   AccrueTime=2020-07-31T12:37:30
+   StartTime=2020-07-31T12:37:36 EndTime=2020-07-31T13:35:40 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-07-31T12:37:36
+   Partition=compute AllocNode:Sid=nia-login06:369179
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia0529
+   BatchHost=nia0529
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/trial_run_script.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3831250.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3831250.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3831250
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3831250          CS_k_1 def-epopp+   00:58:04                         02:43:27 3-01:46:10      0:0 
+3831250.bat+      batch def-epopp+   00:58:04 276009060K  31887408K   02:43:27 3-01:46:10      0:0 
+3831250.ext+     extern def-epopp+   00:58:04    137232K       856K   00:00:00   00:00:00      0:0 

@@ -1,0 +1,58 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  76.25 ms
+'confining_string_solver'  61.45 ms
+'solve_BPS'  13791.72 ms
+'solve_BPS'  7906.74 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  155939.32 ms
+'confining_string_solver'  386319.01 ms
+'solve_BPS'  14016.50 ms
+'solve_BPS'  7706.69 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  155773.56 ms
+'confining_string_solver'  387837.84 ms
+'solve_BPS'  13564.07 ms
+'solve_BPS'  6630.32 ms
+save checkpoint
+restore checkpoint
+'confining_string_solver'  169031.57 ms
+'confining_string_solver'  396852.22 ms
+slurmstepd: error: *** JOB 3831189 ON nia0005 CANCELLED AT 2020-07-31T12:36:20 ***
+
+scontrol show jobid 3831189
+JobId=3831189 JobName=CS_k_1
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=11653616 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:15
+   RunTime=00:07:54 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-07-31T12:28:26 EligibleTime=2020-07-31T12:28:26
+   AccrueTime=2020-07-31T12:28:26
+   StartTime=2020-07-31T12:28:26 EndTime=2020-07-31T12:36:20 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-07-31T12:28:26
+   Partition=debug AllocNode:Sid=nia-login06:369179
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia0005
+   BatchHost=nia0005
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/trial_run_script.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3831189.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/trial_run_july_31/slurm-3831189.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3831189
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3831189          CS_k_1 def-epopp+   00:07:54                        17:13.343   08:50:20      0:0 
+3831189.bat+      batch def-epopp+   00:07:57 252875416K  27090316K  17:13.343   08:50:20     0:15 
+3831189.ext+     extern def-epopp+   00:07:54    137232K      1044K   00:00:00   00:00:00      0:0 
