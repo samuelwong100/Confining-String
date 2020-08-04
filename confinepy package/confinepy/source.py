@@ -1112,6 +1112,7 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
             sol = confining_string_solver(N,charge_arg,bound_arg,L,w,R,
                                           sor,h,tol,initial_kw,use_half_grid,
                                           check_point_limit,diagnose)
+    sol.display_all()
     return sol
 
 def max_Nality(N):
