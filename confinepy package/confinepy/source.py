@@ -1053,10 +1053,35 @@ def _diagnostic_plot(error,grid,x,period=100):
                           Confining String Solver
 ===============================================================================
 """
+""" ============== subsection: Solver-Related Function ===================="""
+def get_canonical_Lw(N,R):
+    #note this is a continually developing function that might get changed
+    #as we implement quantum correction and as we probe more.
+    if N<7:
+        w=25
+    else:
+        w=35
+    if R<=20:
+        L = 30 #minimum L
+    else:
+        L = R + 10 #at least 5 space on each side
+    return L,w
+
+""" ============== subsection: Solver ==================================="""
 @timeit
 def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
                             initial_kw="BPS",use_half_grid=True,
-                            check_point_limit=1000,diagnose=False):
+                            check_point_limit=1000, ignore_bad_w=True,
+                            diagnose=False):
+    if ignore_bad_w:
+        #when running mass computation on Niagara, will need to input either
+        #nonsensical charge arg w_k (where k> N for example), or unnecessary
+        #ones (where k > N/2). ignore this without giving error
+        if charge_arg[0]=='w':
+            k_string = charge_arg.replace('w','')
+            k = int(k_string)
+        if k > max_Nality(N):
+            return None        
     sor = _get_sor(sor,N) #process the given sor to get the actual sor
     #create the title of the folder with all parameters in name
     title = get_title(N,charge_arg,bound_arg,L,w,h,R,sor,tol,initial_kw,
@@ -1088,7 +1113,10 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,sor=0,h=0.1,tol=1e-9,
                                           sor,h,tol,initial_kw,use_half_grid,
                                           check_point_limit,diagnose)
     return sol
-        
+
+def max_Nality(N):
+    return int(N/2) #round down for odd N
+
 def get_solution_status(path):
     if os.path.exists(path): #if solution folder exists
         if checkpoint_exists(path):
@@ -1331,20 +1359,6 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,DFG,path):
                      kw="kink with predicted width",plot=True,save_plot=True,
                      save_result=True,folder=path,separation_R=DFG.R,top=top)
 
-""" ============== subsection: Solver-Related Function ===================="""
-def get_canonical_Lw(N,R):
-    #note this is a continually developing function that might get changed
-    #as we implement quantum correction and as we probe more.
-    if N<7:
-        w=25
-    else:
-        w=35
-    if R<=20:
-        L = 30 #minimum L
-    else:
-        L = R + 10 #at least 5 space on each side
-    return L,w
-    
 """
 ===============================================================================
                                     BPS
@@ -2253,6 +2267,28 @@ def _get_R_from_folder_title(folder):
     R = int(R_str)
     return R
 
+""" ============== subsection: Plot All ==================================="""
+def plot_all_solutions():
+    no_solution_list = []
+    folders = get_all_CS_folder_names()
+    for folder in folders:
+        try:
+            sol = Solution_Viewer(folder)
+            sol.display_all()
+        except:
+            no_solution_list.append(folder)
+    return no_solution_list
+
+def get_no_solution_list():
+    no_solution_list = []
+    folders = get_all_CS_folder_names()
+    for folder in folders:
+        try:
+            sol = Solution_Viewer(folder)
+        except:
+            no_solution_list.append(folder)
+    return no_solution_list
+
 """ ============== subsection: Tensions ===================================="""
 def get_R_and_energy_array(N,charge_arg):
     #initialze lists
@@ -2269,27 +2305,20 @@ def get_R_and_energy_array(N,charge_arg):
     energy_array = np.array(energy_list)
     return R_array, energy_array
 
-#a dictionary that given N, gives the optimal L,w
-N_Lw_dict = {3:[30,30],
-             4:[30,30],
-             5:[30,30],
-             6:[30,30],
-             7:[30,30]}
-
-def get_R_and_energy_array_solve_new(N,charge_arg,L,w,R_min,R_max,R_interval):
-    #initialze lists
-    R_list = []
-    energy_list = []
-    for R in range(R_min,R_max,R_interval):
-        sol = confining_string_solver(N=N,charge_arg=charge_arg,
-                                      bound_arg="x1",L=L,
-                                      w=w,R=R)
-        R_list.append(R)
-        energy_list.append(sol.get_energy())
-    #convert back to array
-    R_array = np.array(R_list)
-    energy_array = np.array(energy_list)
-    return R_array, energy_array
+# def get_R_and_energy_array_solve_new(N,charge_arg,L,w,R_min,R_max,R_interval):
+#     #initialze lists
+#     R_list = []
+#     energy_list = []
+#     for R in range(R_min,R_max,R_interval):
+#         sol = confining_string_solver(N=N,charge_arg=charge_arg,
+#                                       bound_arg="x1",L=L,
+#                                       w=w,R=R)
+#         R_list.append(R)
+#         energy_list.append(sol.get_energy())
+#     #convert back to array
+#     R_array = np.array(R_list)
+#     energy_array = np.array(energy_list)
+#     return R_array, energy_array
 
 def plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L):
     plt.figure()
@@ -2323,30 +2352,22 @@ def plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L):
 def linear_model(x,m,b):
     return m*x + b
 
-def compute_tension(N,p,solve_new=False,R_min=None,R_max=None,R_interval=None):
+def compute_tension(N,p):
     #p is N-ality
     charge_arg='w'+str(p)
-    L,w = N_Lw_dict[N]
-    if solve_new:
-        _validate_R_arguments(R_min,R_max,R_interval)
-        R_array, energy_array = get_R_and_energy_array_solve_new(
-            N,charge_arg,L,w,R_min,R_max,R_interval)
-    else:
-        R_array, energy_array = get_R_and_energy_array(N,charge_arg)
+    R_array, energy_array = get_R_and_energy_array(N,charge_arg)
     potp, pcov = curve_fit(linear_model,xdata=R_array,ydata=energy_array)
     m,b = potp #slope and y-intercept
     dm = np.sqrt(pcov[0][0]) #standard deviation of slope
     db = np.sqrt(pcov[1][1])
+    L = np.max(R_array)+1
     plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L)
-    #write to file in append mode
-    # with open("Tensions/tensions.txt", "a") as text_file:
-    #     text_file.write("{} {} {} {}\n".format(str(N),str(p),str(m),str(dm)))
     return m, dm
 
-def _validate_R_arguments(R_min,R_max,R_interval):
-    if (R_min is None) or (R_max is None) or (R_interval is None):
-        raise Exception("If you want to solve new solutions,"+
-                        " you must specified R_min,R_max,R_interval.")
+# def _validate_R_arguments(R_min,R_max,R_interval):
+#     if (R_min is None) or (R_max is None) or (R_interval is None):
+#         raise Exception("If you want to solve new solutions,"+
+#                         " you must specified R_min,R_max,R_interval.")
 
 """ ============== subsection: String Separation Log Growth ===============""" 
 def plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L):
@@ -2410,8 +2431,8 @@ def log_model(x,a,b,c):
 def compute_string_separation(N,p):
     #p is N-ality
     charge_arg='w'+str(p)
-    L,w = N_Lw_dict[N]
     R_array, d_array = get_R_and_d_array(N,charge_arg)
+    L = np.max(R_array)+1
     if not p == 1:
         potp, pcov = curve_fit(log_model,xdata=R_array,ydata=d_array)
         a,b,c = potp
