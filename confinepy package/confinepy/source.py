@@ -1196,7 +1196,7 @@ def _get_sor(sor,N):
 def best_sor_for_N(N):
     #need to test using tol=e-5
     #still need to test 5, 6 for 1.97
-    sor_dict = {2:1.96,3:1.96,4:1.96,5:1.96,6:1.96,7:1.97} 
+    sor_dict = {2:1.96,3:1.96,4:1.96,5:1.96,6:1.96} 
     if N in sor_dict:
         return sor_dict[N]
     else:
