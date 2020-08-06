@@ -2290,6 +2290,13 @@ def get_no_solution_list():
             no_solution_list.append(folder)
     return no_solution_list
 
+def plot_all_tensions_and_separation():
+    for N in range(2,9+1):
+        p_max = max_Nality(N)
+        for p in range(1,p_max+1):
+            compute_tension(N,p)
+            compute_string_separation(N,p)
+
 """ ============== subsection: Tensions ===================================="""
 def get_R_and_energy_array(N,charge_arg):
     #initialze lists
@@ -2446,13 +2453,4 @@ def compute_string_separation(N,p):
     return R_array,d_array
 
 if __name__ == "__main__":
-    # sol = confining_string_solver(N=3,charge_arg="w1",bound_arg="x1",
-    #                               L=30,w=30,R=9,h=0.1,
-    #                               initial_kw="BPS",
-    #                               use_half_grid=True)
-    # Np_list = [(4,1),(4,2),(5,1),(5,2),(6,1),(6,2),(6,3),(7,1),(7,2),(7,3)]
-    # for tup in Np_list:
-    #     N,p = tup
-    #     compute_tension(N,p)
-    #     compute_string_separation(N,p)
     pass

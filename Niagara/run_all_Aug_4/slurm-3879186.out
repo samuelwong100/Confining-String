@@ -1,0 +1,2098 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.99252766229831e-10
+max loop = 2904
+initial keyword = BPS
+gradient energy = 174.75228345678832
+potential energy = 108.61872160958315
+energy = 283.3710050663715
+separation = 4.9
+
+'confining_string_solver'  37861.13 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.874369138291447e-10
+max loop = 1127
+initial keyword = BPS
+gradient energy = 114.7512042029219
+potential energy = 53.096602168293295
+energy = 167.84780637121514
+separation = 3.5
+
+'confining_string_solver'  38211.91 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 8.876348337293632e-10
+max loop = 841
+initial keyword = BPS
+gradient energy = 79.46844631361117
+potential energy = 26.34779837714075
+energy = 105.81624469075192
+separation = 2.3000000000000007
+
+'confining_string_solver'  38565.76 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986712436076266e-10
+max loop = 1947
+initial keyword = BPS
+gradient energy = 143.94671515744304
+potential energy = 80.7358511832973
+energy = 224.68256634074032
+separation = 4.300000000000001
+
+'confining_string_solver'  39526.58 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 35
+w = 25
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.994140145280934e-10
+max loop = 3969
+initial keyword = BPS
+gradient energy = 203.7670989762636
+potential energy = 136.65471083602029
+energy = 340.4218098122839
+separation = 5.300000000000001
+
+'confining_string_solver'  41620.36 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 8.848107104877201e-10
+max loop = 754
+initial keyword = BPS
+gradient energy = 90.13991290974798
+potential energy = 28.600853924919928
+energy = 118.74076683466788
+separation = 1.6999999999999993
+
+'confining_string_solver'  45740.08 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.963605722630922e-10
+max loop = 2104
+initial keyword = BPS
+gradient energy = 162.13373481056968
+potential energy = 84.31089150390069
+energy = 246.44462631447044
+separation = 4.699999999999999
+
+'confining_string_solver'  46706.07 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 40
+w = 25
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.980595611535173e-10
+max loop = 5120
+initial keyword = BPS
+gradient energy = 232.54103762977547
+potential energy = 164.7623013796282
+energy = 397.30333900940366
+separation = 5.699999999999999
+
+'confining_string_solver'  46286.15 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.981826693074032e-10
+max loop = 3136
+initial keyword = BPS
+gradient energy = 195.46408190971448
+potential energy = 113.01120848070569
+energy = 308.4752903904201
+separation = 5.5
+
+'confining_string_solver'  47520.47 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.964612398830532e-10
+max loop = 1213
+initial keyword = BPS
+gradient energy = 130.34197189173784
+potential energy = 56.005402629686905
+energy = 186.34737452142483
+separation = 3.5
+
+'confining_string_solver'  48351.79 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 45
+w = 25
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.987986868909024e-10
+max loop = 6311
+initial keyword = BPS
+gradient energy = 261.17310006304126
+potential energy = 192.91296086978844
+energy = 454.0860609328297
+separation = 6.1
+
+'confining_string_solver'  49201.38 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 50
+w = 25
+h = 0.1
+R = 40
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.989378357043458e-10
+max loop = 7562
+initial keyword = BPS
+gradient energy = 289.7146374729847
+potential energy = 221.09149914657726
+energy = 510.8061366195619
+separation = 6.300000000000001
+
+'confining_string_solver'  52511.78 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 35
+w = 25
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.983762175104067e-10
+max loop = 4295
+initial keyword = BPS
+gradient energy = 226.2798973421331
+potential energy = 141.96356945360182
+energy = 368.2434667957349
+separation = 6.1
+
+'confining_string_solver'  53604.17 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.994573850685737e-10
+max loop = 2160
+initial keyword = BPS
+gradient energy = 170.64453010558051
+potential energy = 86.98768790663101
+energy = 257.63221801221147
+separation = 4.300000000000001
+
+'confining_string_solver'  56235.01 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 55
+w = 25
+h = 0.1
+R = 45
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.997292291445028e-10
+max loop = 8783
+initial keyword = BPS
+gradient energy = 318.1949205272392
+potential energy = 249.2890987596012
+energy = 567.4840192868405
+separation = 6.5
+
+'confining_string_solver'  56887.83 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.981864031508012e-10
+max loop = 2769
+initial keyword = BPS
+gradient energy = 104.52989746573743
+potential energy = 32.89652628921533
+energy = 137.42642375495276
+separation = 0.09999999999999964
+
+'confining_string_solver'  57946.34 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.90737182604442e-10
+max loop = 1231
+initial keyword = BPS
+gradient energy = 137.31127848220513
+potential energy = 57.906894403912396
+energy = 195.21817288611757
+separation = 3.0999999999999996
+
+'confining_string_solver'  58282.15 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.993872240825216e-10
+max loop = 3401
+initial keyword = BPS
+gradient energy = 224.87243507568328
+potential energy = 115.41712882320589
+energy = 340.2895638988891
+separation = 6.300000000000001
+
+'confining_string_solver'  58320.65 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.955431071362057e-10
+max loop = 2302
+initial keyword = BPS
+gradient energy = 188.67826912071683
+potential energy = 86.57570450232281
+energy = 275.25397362303966
+separation = 5.300000000000001
+
+'confining_string_solver'  58446.64 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.950816090431501e-10
+max loop = 1334
+initial keyword = BPS
+gradient energy = 153.91642969279766
+potential energy = 58.378731684363146
+energy = 212.29516137716084
+separation = 3.9000000000000004
+
+'confining_string_solver'  60934.01 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.968881291248886e-10
+max loop = 3256
+initial keyword = BPS
+gradient energy = 205.96023237047083
+potential energy = 116.10059142565572
+energy = 322.06082379612656
+separation = 5.300000000000001
+
+'confining_string_solver'  61453.08 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.315032730339746e-10
+max loop = 828
+initial keyword = BPS
+gradient energy = 96.08902500617225
+potential energy = 28.778094374144683
+energy = 124.86711938031696
+separation = 1.0999999999999996
+
+'confining_string_solver'  61994.42 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 40
+w = 25
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.988789747139554e-10
+max loop = 5467
+initial keyword = BPS
+gradient energy = 256.6513210070532
+potential energy = 171.04016808119948
+energy = 427.6914890882527
+separation = 6.5
+
+'confining_string_solver'  61969.71 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 35
+w = 25
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.989832368146486e-10
+max loop = 4636
+initial keyword = BPS
+gradient energy = 257.43253404358694
+potential energy = 144.6594967054822
+energy = 402.0920307490692
+separation = 7.1
+
+'confining_string_solver'  64100.08 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 60
+w = 25
+h = 0.1
+R = 50
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.997600892590106e-10
+max loop = 9999
+initial keyword = BPS
+gradient energy = 346.6318427102826
+potential energy = 277.5002977555245
+energy = 624.1321404658072
+separation = 6.700000000000001
+
+'confining_string_solver'  64350.68 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 45
+w = 25
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.9944406519598e-10
+max loop = 6744
+initial keyword = BPS
+gradient energy = 286.75715430726297
+potential energy = 200.1926583731311
+energy = 486.949812680394
+separation = 6.9
+
+'confining_string_solver'  64778.63 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 35
+w = 25
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.98585922286324e-10
+max loop = 4500
+initial keyword = BPS
+gradient energy = 238.2353524644863
+potential energy = 145.47285430314938
+energy = 383.7082067676358
+separation = 5.9
+
+'confining_string_solver'  65655.70 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 50
+w = 25
+h = 0.1
+R = 40
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.988306119344255e-10
+max loop = 8318
+initial keyword = BPS
+gradient energy = 316.69168812125616
+potential energy = 229.39475560584728
+energy = 546.0864437271034
+separation = 7.300000000000001
+
+'confining_string_solver'  68668.70 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 40
+w = 25
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.996376043475467e-10
+max loop = 5984
+initial keyword = BPS
+gradient energy = 289.26316024179795
+potential energy = 174.08006543024896
+energy = 463.3432256720469
+separation = 7.900000000000002
+
+'confining_string_solver'  70860.44 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 40
+w = 25
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.988070747950597e-10
+max loop = 5871
+initial keyword = BPS
+gradient energy = 269.8774154021059
+potential energy = 174.98556871759556
+energy = 444.86298411970154
+separation = 6.700000000000001
+
+'confining_string_solver'  71826.81 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 55
+w = 25
+h = 0.1
+R = 45
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.995937973110383e-10
+max loop = 9780
+initial keyword = BPS
+gradient energy = 346.50943716766517
+potential energy = 258.6309097847183
+energy = 605.1403469523834
+separation = 7.700000000000001
+
+'confining_string_solver'  75285.01 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 45
+w = 25
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986200696002663e-10
+max loop = 7351
+initial keyword = BPS
+gradient energy = 301.12926849998104
+potential energy = 204.58854679737496
+energy = 505.717815297356
+separation = 7.1
+
+'confining_string_solver'  76314.87 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 45
+w = 25
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.994457129303818e-10
+max loop = 7422
+initial keyword = BPS
+gradient energy = 320.6641201663159
+potential energy = 203.6014671205075
+energy = 524.2655872868232
+separation = 8.499999999999998
+
+'confining_string_solver'  76868.38 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 60
+w = 25
+h = 0.1
+R = 50
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.99307456803358e-10
+max loop = 11261
+initial keyword = BPS
+gradient energy = 376.2441544825814
+potential energy = 287.891309500299
+energy = 664.1354639828804
+separation = 7.900000000000002
+
+'confining_string_solver'  78736.45 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 50
+w = 25
+h = 0.1
+R = 40
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.997435254353193e-10
+max loop = 8918
+initial keyword = BPS
+gradient energy = 332.12870315704373
+potential energy = 234.24851175134913
+energy = 566.3772149083928
+separation = 7.700000000000001
+
+'confining_string_solver'  81632.44 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 50
+w = 25
+h = 0.1
+R = 40
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.994997857241541e-10
+max loop = 8920
+initial keyword = BPS
+gradient energy = 351.7971342923699
+potential energy = 233.17986515297963
+energy = 584.9769994453494
+separation = 8.900000000000002
+
+'confining_string_solver'  83168.34 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 55
+w = 25
+h = 0.1
+R = 45
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.997139550413003e-10
+max loop = 10549
+initial keyword = BPS
+gradient energy = 362.95884164408767
+potential energy = 263.943842651724
+energy = 626.9026842958118
+separation = 8.1
+
+'confining_string_solver'  89504.06 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 55
+w = 25
+h = 0.1
+R = 45
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.992292573728927e-10
+max loop = 10440
+initial keyword = BPS
+gradient energy = 382.75785568211427
+potential energy = 262.7881649393285
+energy = 645.5460206214427
+separation = 9.3
+
+'confining_string_solver'  89419.22 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.994744083966087e-10
+max loop = 3348
+initial keyword = BPS
+gradient energy = 209.8187906398141
+potential energy = 117.33004394441767
+energy = 327.14883458423174
+separation = 4.500000000000002
+
+'confining_string_solver'  88147.92 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.890670695239623e-10
+max loop = 1009
+initial keyword = BPS
+gradient energy = 115.88915257162071
+potential energy = 31.704904177767705
+energy = 147.5940567493884
+separation = 0.09999999999999787
+
+'confining_string_solver'  87780.42 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.921229817766838e-10
+max loop = 804
+initial keyword = BPS
+gradient energy = 100.87925982501046
+potential energy = 27.874324620471633
+energy = 128.75358444548215
+separation = 0.09999999999999787
+
+'confining_string_solver'  88622.88 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.938890947202415e-10
+max loop = 1400
+initial keyword = BPS
+gradient energy = 166.56214057863238
+potential energy = 61.31716603487024
+energy = 227.87930661350268
+separation = 3.3000000000000007
+
+'confining_string_solver'  89286.86 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.9729558552341e-10
+max loop = 2466
+initial keyword = BPS
+gradient energy = 204.51106659125
+potential energy = 89.3293494141556
+energy = 293.8404160054056
+separation = 5.300000000000001
+
+'confining_string_solver'  89221.21 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.900868405471947e-10
+max loop = 1302
+initial keyword = BPS
+gradient energy = 141.56293178099702
+potential energy = 57.38729885474362
+energy = 198.95023063574064
+separation = 2.6999999999999993
+
+'confining_string_solver'  89101.50 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 60
+w = 25
+h = 0.1
+R = 50
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.997450460649046e-10
+max loop = 12214
+initial keyword = BPS
+gradient energy = 393.6727846578178
+potential energy = 293.6600362085911
+energy = 687.332820866409
+separation = 8.499999999999998
+
+'confining_string_solver'  95720.84 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.96649510025441e-10
+max loop = 3667
+initial keyword = BPS
+gradient energy = 243.61351097498022
+potential energy = 118.02687825254844
+energy = 361.64038922752866
+separation = 6.500000000000002
+
+'confining_string_solver'  91770.56 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 60
+w = 25
+h = 0.1
+R = 50
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.99190976205412e-10
+max loop = 11940
+initial keyword = BPS
+gradient energy = 413.60669644614404
+potential energy = 292.4086564466021
+energy = 706.015352892746
+separation = 9.7
+
+'confining_string_solver'  96423.04 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.938428602525447e-10
+max loop = 2230
+initial keyword = BPS
+gradient energy = 174.16439805853125
+potential energy = 87.47326807336809
+energy = 261.6376661318994
+separation = 3.6999999999999993
+
+'confining_string_solver'  92391.39 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.981059179638443e-10
+max loop = 4664
+initial keyword = BPS
+gradient energy = 242.46018615588596
+potential energy = 147.32269833865064
+energy = 389.7828844945368
+separation = 5.300000000000001
+
+'confining_string_solver'  95298.13 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.979223113321053e-10
+max loop = 5038
+initial keyword = BPS
+gradient energy = 277.90970260464735
+potential energy = 147.34684534362066
+energy = 425.2565479482681
+separation = 7.500000000000002
+
+'confining_string_solver'  95652.05 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.984802577795608e-10
+max loop = 2251
+initial keyword = BPS
+gradient energy = 177.02543979407358
+potential energy = 85.66727236867277
+energy = 262.6927121627464
+separation = 3.3000000000000007
+
+'confining_string_solver'  99435.26 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.633824080166887e-10
+max loop = 865
+initial keyword = BPS
+gradient energy = 125.07884969525452
+potential energy = 30.173434500405346
+energy = 155.25228419565983
+separation = 0.09999999999999787
+
+'confining_string_solver'  99948.18 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.96642054331308e-10
+max loop = 1395
+initial keyword = BPS
+gradient energy = 174.10288496001206
+potential energy = 62.62151708659214
+energy = 236.7244020466042
+separation = 2.5
+
+'confining_string_solver'  99746.79 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.979471067796597e-10
+max loop = 6148
+initial keyword = BPS
+gradient energy = 274.59836717061
+potential energy = 177.34014720917358
+energy = 451.9385143797836
+separation = 5.900000000000002
+
+'confining_string_solver'  105030.42 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.964533017792548e-10
+max loop = 3312
+initial keyword = BPS
+gradient energy = 212.2579619513396
+potential energy = 115.52863804754799
+energy = 327.78659999888754
+separation = 3.900000000000002
+
+'confining_string_solver'  100925.61 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.973254990159102e-10
+max loop = 1364
+initial keyword = BPS
+gradient energy = 145.34442607397332
+potential energy = 55.76863158791666
+energy = 201.11305766188994
+separation = 2.5
+
+'confining_string_solver'  101173.13 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.909352275360857e-10
+max loop = 844
+initial keyword = BPS
+gradient energy = 104.83920607253398
+potential energy = 27.009654802051728
+energy = 131.84886087458574
+separation = 0.09999999999999787
+
+'confining_string_solver'  99844.01 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.985398160807984e-10
+max loop = 3628
+initial keyword = BPS
+gradient energy = 254.56209730819796
+potential energy = 120.28574423721489
+energy = 374.84784154541296
+separation = 6.1
+
+'confining_string_solver'  101697.86 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.956359618914743e-10
+max loop = 2446
+initial keyword = BPS
+gradient energy = 213.23000225330327
+potential energy = 91.44774177364064
+energy = 304.67774402694397
+separation = 4.699999999999999
+
+'confining_string_solver'  101446.86 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.998912618947717e-10
+max loop = 6557
+initial keyword = BPS
+gradient energy = 311.0815521349698
+potential energy = 176.93688597845207
+energy = 488.018438113422
+separation = 8.500000000000002
+
+'confining_string_solver'  108235.96 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.995402276795094e-10
+max loop = 4570
+initial keyword = BPS
+gradient energy = 244.20880562463802
+potential energy = 145.79691598874564
+energy = 390.0057216133837
+separation = 4.500000000000002
+
+'confining_string_solver'  109288.17 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 45
+w = 35
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.99880845607357e-10
+max loop = 7788
+initial keyword = BPS
+gradient energy = 306.37777693986857
+potential energy = 207.3967197535269
+energy = 513.7744966933953
+separation = 6.500000000000002
+
+'confining_string_solver'  114366.81 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 45
+w = 35
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.991565779756344e-10
+max loop = 8222
+initial keyword = BPS
+gradient energy = 343.560788527699
+potential energy = 206.69868369473278
+energy = 550.2594722224318
+separation = 9.1
+
+'confining_string_solver'  115866.15 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.977935943481183e-10
+max loop = 4996
+initial keyword = BPS
+gradient energy = 290.42589610230743
+potential energy = 149.6789174989267
+energy = 440.104813601234
+separation = 7.300000000000001
+
+'confining_string_solver'  110796.01 ms
+
+Attributes:
+N = 7
+charge_arg = w3
+bound_arg = x1
+L = 50
+w = 35
+h = 0.1
+R = 40
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.998918969499038e-10
+max loop = 10024
+initial keyword = BPS
+gradient energy = 375.5835110692432
+potential energy = 236.57542293655825
+energy = 612.1589340058015
+separation = 9.900000000000002
+
+'confining_string_solver'  122043.22 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.995630329785184e-10
+max loop = 5985
+initial keyword = BPS
+gradient energy = 275.81273807101013
+potential energy = 176.12758375679994
+energy = 451.94032182781007
+separation = 4.900000000000002
+
+'confining_string_solver'  117776.53 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.996361526339144e-10
+max loop = 6492
+initial keyword = BPS
+gradient energy = 324.9774937210337
+potential energy = 179.27655955978614
+energy = 504.25405328081973
+separation = 8.3
+
+'confining_string_solver'  119104.19 ms
+
+Attributes:
+N = 7
+charge_arg = w2
+bound_arg = x1
+L = 50
+w = 35
+h = 0.1
+R = 40
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.989251056556893e-10
+max loop = 9579
+initial keyword = BPS
+gradient energy = 337.89563237970503
+potential energy = 237.49169188304998
+energy = 575.387324262755
+separation = 6.900000000000002
+
+'confining_string_solver'  124706.47 ms
+
+Attributes:
+N = 8
+charge_arg = w2
+bound_arg = x1
+L = 45
+w = 35
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.996541625550307e-10
+max loop = 7543
+initial keyword = BPS
+gradient energy = 307.1927899262426
+potential energy = 206.5037450188606
+energy = 513.6965349451032
+separation = 5.300000000000001
+
+'confining_string_solver'  126924.90 ms
+
+Attributes:
+N = 8
+charge_arg = w3
+bound_arg = x1
+L = 45
+w = 35
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.996387666115075e-10
+max loop = 8099
+initial keyword = BPS
+gradient energy = 358.67418964316136
+potential energy = 209.02831300734093
+energy = 567.7025026505022
+separation = 9.3
+
+'confining_string_solver'  129181.85 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.972933566782385e-10
+max loop = 3752
+initial keyword = BPS
+gradient energy = 269.024728699725
+potential energy = 120.60051517753567
+energy = 389.6252438772607
+separation = 6.900000000000002
+
+'confining_string_solver'  92637.79 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.983492271798148e-10
+max loop = 4058
+initial keyword = BPS
+gradient energy = 180.39870704180493
+potential energy = 67.41988376836169
+energy = 247.8185908101666
+separation = 1.3000000000000007
+
+'confining_string_solver'  91096.97 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.978697830461297e-10
+max loop = 2522
+initial keyword = BPS
+gradient energy = 225.58782267809158
+potential energy = 92.75233774790209
+energy = 318.3401604259937
+separation = 5.1
+
+'confining_string_solver'  93859.12 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.66991286998273e-10
+max loop = 851
+initial keyword = BPS
+gradient energy = 131.9503397686093
+potential energy = 30.507247197707656
+energy = 162.4575869663169
+separation = 0.09999999999999787
+
+'confining_string_solver'  91931.18 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.9779727143785e-10
+max loop = 5141
+initial keyword = BPS
+gradient energy = 305.716570914365
+potential energy = 149.57618432433233
+energy = 455.2927552386973
+separation = 8.1
+
+'confining_string_solver'  101427.21 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986546513098758e-10
+max loop = 6642
+initial keyword = BPS
+gradient energy = 340.7227393803495
+potential energy = 178.95079391317637
+energy = 519.6735332935257
+separation = 9.3
+
+'confining_string_solver'  108136.16 ms
+
+Attributes:
+N = 9
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.94094549386317e-10
+max loop = 2292
+initial keyword = BPS
+gradient energy = 180.02766054995664
+potential energy = 83.2215810006838
+energy = 263.2492415506405
+separation = 3.3000000000000007
+
+'confining_string_solver'  96850.05 ms
+
+Attributes:
+N = 9
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.904637959381022e-10
+max loop = 1449
+initial keyword = BPS
+gradient energy = 148.80266059876664
+potential energy = 54.14271859975979
+energy = 202.94537919852644
+separation = 2.5
+
+'confining_string_solver'  96206.94 ms
+
+Attributes:
+N = 8
+charge_arg = w4
+bound_arg = x1
+L = 45
+w = 35
+h = 0.1
+R = 35
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.99569655346779e-10
+max loop = 8241
+initial keyword = BPS
+gradient energy = 374.7190360810935
+potential energy = 208.55347481258372
+energy = 583.2725108936771
+separation = 10.1
+
+'confining_string_solver'  117215.38 ms
+
+Attributes:
+N = 9
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.961052531119417e-10
+max loop = 3304
+initial keyword = BPS
+gradient energy = 215.1188784488049
+potential energy = 112.35288568006433
+energy = 327.47176412886927
+separation = 3.6999999999999993
+
+'confining_string_solver'  98426.34 ms
+
+Attributes:
+N = 9
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.965945977927138e-10
+max loop = 1028
+initial keyword = BPS
+gradient energy = 108.07574753962909
+potential energy = 26.400124871906804
+energy = 134.4758724115359
+separation = 0.09999999999999787
+
+'confining_string_solver'  96076.05 ms
+
+Attributes:
+N = 9
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.950914371944961e-10
+max loop = 1590
+initial keyword = BPS
+gradient energy = 180.73877844291644
+potential energy = 61.90872694138431
+energy = 242.64750538430076
+separation = 2.099999999999998
+
+'confining_string_solver'  90325.98 ms
+
+Attributes:
+N = 9
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.989511608278673e-10
+max loop = 2426
+initial keyword = BPS
+gradient energy = 219.42211923888362
+potential energy = 91.44645084597829
+energy = 310.8685700848619
+separation = 4.1
+
+'confining_string_solver'  92105.41 ms
+
+Attributes:
+N = 9
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.968243886850535e-10
+max loop = 3534
+initial keyword = BPS
+gradient energy = 261.48040034146004
+potential energy = 120.84695745624391
+energy = 382.3273577977038
+separation = 5.500000000000002
+
+'confining_string_solver'  94169.66 ms
+
+Attributes:
+N = 9
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.85680348867924e-10
+max loop = 1014
+initial keyword = BPS
+gradient energy = 132.4195135328294
+potential energy = 29.096513096555135
+energy = 161.5160266293845
+separation = 0.09999999999999787
+
+'confining_string_solver'  92942.40 ms
+
+Attributes:
+N = 9
+charge_arg = w2
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.99023168711454e-10
+max loop = 4518
+initial keyword = BPS
+gradient energy = 246.41798763145476
+potential energy = 142.1568944493355
+energy = 388.5748820807903
+separation = 4.1
+
+'confining_string_solver'  106973.46 ms
+
+Attributes:
+N = 9
+charge_arg = w3
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.994783131017894e-10
+max loop = 4847
+initial keyword = BPS
+gradient energy = 297.87981469686383
+potential energy = 150.70970737257733
+energy = 448.5895220694411
+separation = 6.699999999999999
+
+'confining_string_solver'  102869.52 ms
+
+Attributes:
+N = 9
+charge_arg = w2
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.989567409390514e-10
+max loop = 5874
+initial keyword = BPS
+gradient energy = 277.3943771397694
+potential energy = 172.07448956908007
+energy = 449.4688667088494
+separation = 4.500000000000002
+
+'confining_string_solver'  113538.49 ms
+
+Attributes:
+N = 9
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.966378863974013e-10
+max loop = 2496
+initial keyword = BPS
+gradient energy = 237.153187799882
+potential energy = 96.6896360123509
+energy = 333.84282381223295
+separation = 4.1
+
+'confining_string_solver'  83798.58 ms
+
+Attributes:
+N = 9
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.954256905343866e-10
+max loop = 3085
+initial keyword = BPS
+gradient energy = 192.24447689982776
+potential energy = 67.0392359470332
+energy = 259.28371284686096
+separation = 0.09999999999999787
+
+'confining_string_solver'  81631.81 ms
+
+Attributes:
+N = 9
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 20
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.984457903883357e-10
+max loop = 3688
+initial keyword = BPS
+gradient energy = 285.11543061414557
+potential energy = 123.60450989574052
+energy = 408.7199405098862
+separation = 6.300000000000001
+
+'confining_string_solver'  84002.81 ms
+
+Attributes:
+N = 9
+charge_arg = w4
+bound_arg = x1
+L = 30
+w = 35
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.985628061824457e-10
+max loop = 958
+initial keyword = BPS
+gradient energy = 144.74512228294014
+potential energy = 29.272087413528723
+energy = 174.01720969646885
+separation = 0.09999999999999787
+
+'confining_string_solver'  81319.93 ms
+
+Attributes:
+N = 9
+charge_arg = w3
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.992108768590142e-10
+max loop = 6279
+initial keyword = BPS
+gradient energy = 333.22026830229834
+potential energy = 180.53468766631667
+energy = 513.7549559686151
+separation = 7.699999999999999
+
+'confining_string_solver'  111187.11 ms
+
+Attributes:
+N = 9
+charge_arg = w4
+bound_arg = x1
+L = 35
+w = 35
+h = 0.1
+R = 25
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.998240428145912e-10
+max loop = 5077
+initial keyword = BPS
+gradient energy = 324.47532291189526
+potential energy = 152.1040043123853
+energy = 476.57932722428063
+separation = 7.900000000000002
+
+'confining_string_solver'  95538.84 ms
+
+Attributes:
+N = 9
+charge_arg = w4
+bound_arg = x1
+L = 40
+w = 35
+h = 0.1
+R = 30
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.996173773501979e-10
+max loop = 6536
+initial keyword = BPS
+gradient energy = 361.6346128814952
+potential energy = 181.06657918295898
+energy = 542.7011920644541
+separation = 9.3
+
+'confining_string_solver'  103237.63 ms
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Submitted batch job 3879903
+
+scontrol show jobid 3879186
+JobId=3879186 JobName=CS_all
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=1627624 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:58:09 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-08-05T20:11:08 EligibleTime=2020-08-05T20:11:08
+   AccrueTime=2020-08-05T20:11:08
+   StartTime=2020-08-05T20:11:11 EndTime=2020-08-05T21:09:20 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-08-05T20:11:11
+   Partition=compute AllocNode:Sid=nia-login01:347090
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia0018
+   BatchHost=nia0018
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4/run_all_aug_4.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4/slurm-3879186.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4/slurm-3879186.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3879186
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3879186          CS_all def-epopp+   00:58:09                         02:06:42 2-11:06:32      0:0 
+3879186.bat+      batch def-epopp+   00:58:09 182767852K  29271536K   02:06:42 2-11:06:32      0:0 
+3879186.ext+     extern def-epopp+   00:58:09    137232K       852K   00:00:00   00:00:00      0:0 
+
+kernel messages produced during job executions:
+[Aug 5 20:09] CIFS PidTable: buckets 64
+[  +0.004301] CIFS BufTable: buckets 64

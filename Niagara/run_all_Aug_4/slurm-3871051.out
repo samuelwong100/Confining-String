@@ -1,0 +1,605 @@
+Restoring modules from user's confine_module
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.02 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'confining_string_solver'  0.01 ms
+'solve_BPS'  14877.07 ms
+'solve_BPS'  12139.13 ms
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 8.876348337293632e-10
+max loop = 841
+initial keyword = BPS
+gradient energy = 79.46844631361117
+potential energy = 26.34779837714075
+energy = 105.81624469075192
+separation = 2.3000000000000007
+
+'confining_string_solver'  508118.14 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 8.876348337293632e-10
+max loop = 841
+initial keyword = BPS
+gradient energy = 79.46844631361117
+potential energy = 26.34779837714075
+energy = 105.81624469075192
+separation = 2.3000000000000007
+
+'confining_string_solver'  1245222.67 ms
+'solve_BPS'  18767.11 ms
+'solve_BPS'  17255.26 ms
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 8.848107104877201e-10
+max loop = 754
+initial keyword = BPS
+gradient energy = 90.13991290974798
+potential energy = 28.600853924919928
+energy = 118.74076683466788
+separation = 1.6999999999999993
+
+'confining_string_solver'  561714.74 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 8.848107104877201e-10
+max loop = 754
+initial keyword = BPS
+gradient energy = 90.13991290974798
+potential energy = 28.600853924919928
+energy = 118.74076683466788
+separation = 1.6999999999999993
+
+'confining_string_solver'  1647197.93 ms
+'solve_BPS'  14856.89 ms
+'solve_BPS'  11883.99 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.874369138291447e-10
+max loop = 1127
+initial keyword = BPS
+gradient energy = 114.7512042029219
+potential energy = 53.096602168293295
+energy = 167.84780637121514
+separation = 3.5
+
+'confining_string_solver'  235702.75 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.874369138291447e-10
+max loop = 1127
+initial keyword = BPS
+gradient energy = 114.7512042029219
+potential energy = 53.096602168293295
+energy = 167.84780637121514
+separation = 3.5
+
+'confining_string_solver'  967217.99 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.874369138291447e-10
+max loop = 1127
+initial keyword = BPS
+gradient energy = 114.7512042029219
+potential energy = 53.096602168293295
+energy = 167.84780637121514
+separation = 3.5
+
+'confining_string_solver'  1726846.51 ms
+'solve_BPS'  24499.73 ms
+'solve_BPS'  21412.85 ms
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.315032730339746e-10
+max loop = 828
+initial keyword = BPS
+gradient energy = 96.08902500617225
+potential energy = 28.778094374144683
+energy = 124.86711938031696
+separation = 1.0999999999999996
+
+'confining_string_solver'  875818.13 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 5
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.315032730339746e-10
+max loop = 828
+initial keyword = BPS
+gradient energy = 96.08902500617225
+potential energy = 28.778094374144683
+energy = 124.86711938031696
+separation = 1.0999999999999996
+
+'confining_string_solver'  2187780.23 ms
+'solve_BPS'  18276.25 ms
+'solve_BPS'  17454.20 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.964612398830532e-10
+max loop = 1213
+initial keyword = BPS
+gradient energy = 130.34197189173784
+potential energy = 56.005402629686905
+energy = 186.34737452142483
+separation = 3.5
+
+'confining_string_solver'  465577.19 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.964612398830532e-10
+max loop = 1213
+initial keyword = BPS
+gradient energy = 130.34197189173784
+potential energy = 56.005402629686905
+energy = 186.34737452142483
+separation = 3.5
+
+'confining_string_solver'  1477938.58 ms
+
+Attributes:
+N = 5
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.964612398830532e-10
+max loop = 1213
+initial keyword = BPS
+gradient energy = 130.34197189173784
+potential energy = 56.005402629686905
+energy = 186.34737452142483
+separation = 3.5
+
+'confining_string_solver'  2544253.97 ms
+'solve_BPS'  15122.53 ms
+'solve_BPS'  12344.27 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986712436076266e-10
+max loop = 1947
+initial keyword = BPS
+gradient energy = 143.94671515744304
+potential energy = 80.7358511832973
+energy = 224.68256634074032
+separation = 4.300000000000001
+
+'confining_string_solver'  654590.82 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986712436076266e-10
+max loop = 1947
+initial keyword = BPS
+gradient energy = 143.94671515744304
+potential energy = 80.7358511832973
+energy = 224.68256634074032
+separation = 4.300000000000001
+
+'confining_string_solver'  1399560.35 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986712436076266e-10
+max loop = 1947
+initial keyword = BPS
+gradient energy = 143.94671515744304
+potential energy = 80.7358511832973
+energy = 224.68256634074032
+separation = 4.300000000000001
+
+'confining_string_solver'  2132184.95 ms
+
+Attributes:
+N = 4
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 15
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.986712436076266e-10
+max loop = 1947
+initial keyword = BPS
+gradient energy = 143.94671515744304
+potential energy = 80.7358511832973
+energy = 224.68256634074032
+separation = 4.300000000000001
+
+'confining_string_solver'  2899670.42 ms
+'solve_BPS'  24507.75 ms
+'solve_BPS'  22034.63 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.90737182604442e-10
+max loop = 1231
+initial keyword = BPS
+gradient energy = 137.31127848220513
+potential energy = 57.906894403912396
+energy = 195.21817288611757
+separation = 3.0999999999999996
+
+'confining_string_solver'  635646.34 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.90737182604442e-10
+max loop = 1231
+initial keyword = BPS
+gradient energy = 137.31127848220513
+potential energy = 57.906894403912396
+energy = 195.21817288611757
+separation = 3.0999999999999996
+
+'confining_string_solver'  1904512.03 ms
+
+Attributes:
+N = 6
+charge_arg = w2
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.90737182604442e-10
+max loop = 1231
+initial keyword = BPS
+gradient energy = 137.31127848220513
+potential energy = 57.906894403912396
+energy = 195.21817288611757
+separation = 3.0999999999999996
+
+'confining_string_solver'  3241131.02 ms
+'solve_BPS'  23978.14 ms
+'solve_BPS'  20689.41 ms
+save checkpoint
+restore checkpoint
+save checkpoint
+restore checkpoint
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.950816090431501e-10
+max loop = 1334
+initial keyword = BPS
+gradient energy = 153.91642969279766
+potential energy = 58.378731684363146
+energy = 212.29516137716084
+separation = 3.9000000000000004
+
+'confining_string_solver'  862053.74 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.950816090431501e-10
+max loop = 1334
+initial keyword = BPS
+gradient energy = 153.91642969279766
+potential energy = 58.378731684363146
+energy = 212.29516137716084
+separation = 3.9000000000000004
+
+'confining_string_solver'  2109160.96 ms
+
+Attributes:
+N = 6
+charge_arg = w3
+bound_arg = x1
+L = 30
+w = 25
+h = 0.1
+R = 10
+use_half_grid = True
+sor = 1.96
+tolerance = 1e-09
+error = 9.950816090431501e-10
+max loop = 1334
+initial keyword = BPS
+gradient energy = 153.91642969279766
+potential energy = 58.378731684363146
+energy = 212.29516137716084
+separation = 3.9000000000000004
+
+'confining_string_solver'  3399010.16 ms
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Submitted batch job 3871071
+
+scontrol show jobid 3871051
+JobId=3871051 JobName=CS_all
+   UserId=wongsun4(3095934) GroupId=epoppitz(6003021) MCS_label=N/A
+   Priority=1642426 Nice=0 Account=def-epoppitz QOS=normal
+   JobState=COMPLETING Reason=None Dependency=(null)
+   Requeue=0 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0
+   RunTime=00:58:05 TimeLimit=01:00:00 TimeMin=N/A
+   SubmitTime=2020-08-05T02:13:43 EligibleTime=2020-08-05T02:13:43
+   AccrueTime=2020-08-05T02:13:43
+   StartTime=2020-08-05T02:16:23 EndTime=2020-08-05T03:14:28 Deadline=N/A
+   SuspendTime=None SecsPreSuspend=0 LastSchedEval=2020-08-05T02:16:23
+   Partition=compute AllocNode:Sid=nia-login03:52893
+   ReqNodeList=(null) ExcNodeList=(null)
+   NodeList=nia1916
+   BatchHost=nia1916
+   NumNodes=1 NumCPUs=80 NumTasks=80 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
+   TRES=cpu=80,node=1,billing=40
+   Socks/Node=* NtasksPerN:B:S:C=80:0:*:* CoreSpec=*
+   MinCPUsNode=80 MinMemoryNode=0 MinTmpDiskNode=0
+   Features=[skylake|cascade] DelayBoot=00:00:00
+   OverSubscribe=NO Contiguous=0 Licenses=(null) Network=(null)
+   Command=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4/run_all_aug_4.sh
+   WorkDir=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4
+   StdErr=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4/slurm-3871051.out
+   StdIn=/dev/null
+   StdOut=/gpfs/fs0/scratch/e/epoppitz/wongsun4/Confining-String/Niagara/run_all_Aug_4/slurm-3871051.out
+   Power=
+   MailUser=samuelsy.wong@mail.utoronto.ca MailType=BEGIN,END,FAIL,REQUEUE,STAGE_OUT
+
+sacct -j 3871051
+       JobID    JobName    Account    Elapsed  MaxVMSize     MaxRSS  SystemCPU    UserCPU ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- ---------- ---------- -------- 
+3871051          CS_all def-epopp+   00:58:05                         04:13:37 3-00:27:30      0:0 
+3871051.bat+      batch def-epopp+   00:58:05 308385496K  35062820K   04:13:37 3-00:27:30      0:0 
+3871051.ext+     extern def-epopp+   00:58:05    137232K       856K   00:00:00   00:00:00      0:0 
