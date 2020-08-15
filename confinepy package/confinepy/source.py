@@ -14,6 +14,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from scipy.integrate import simps, trapz
 from scipy.optimize import curve_fit
+from scipy.special import digamma
 from numba import jit
 import sympy
 from sympy import init_printing
@@ -287,6 +288,29 @@ class SU():
                 summation += self.w.row(A)
             return summation
 
+""" ============== subsection: Kahler ====================================="""
+def Kahler(N,epsilon):
+    #return the inverse Kahler metric (K^ij) with quantum correction
+    #this is a N-1 by N-1 matrix
+    return np.identity(N-1) + epsilon * QC(N) #delta + quantum correction
+
+def QC(N):
+    S = SU(N)
+    result = np.zeros(shape=(N-1,N-1))
+    for i in range(0,N-1):
+        for j in range(0,N-1):
+            result[i][j] = QCsum(S,N,i,j)
+    return result/N
+            
+def QCsum(S,N,i,j):
+    summation = 0
+    for B in range(0,N): #mathmatically, from 1 to N, but now in python language
+        for A in range(0,B): #A < B
+            beta_AB = S.nu[A] - S.nu[B]
+            summation += beta_AB[i]*beta_AB[j]*(
+                digamma((B-A)/N) + digamma(1- (B-A)/N) )
+    return summation
+    
 """ ============== subsection: Superpotential ============================="""
 class Superpotential():
     """
@@ -1305,8 +1329,8 @@ def get_random_initial_field(N,DFG):
     
 def random_mp_one(*arg):
     #convert numpy random to range between -1 and 1
-    #return -1+2*np.random.rand(*arg)
-    return np.random.rand(*arg)
+    return -1+2*np.random.rand(*arg)
+    #return np.random.rand(*arg)
     
 def _BPS_initial_field(N,DFG,charge,bound,path):
     #solve for the two BPS equations
@@ -1962,10 +1986,16 @@ class Solution_Viewer():
     
     def plot_potential_energy_density(self):
         self._quick_plot(self.get_potential_energy_density(),
-                         "Potential Energy Density (E={})".format(
-                             str(round(self.get_energy(),3))),
-                         "Potential_Energy_Density",
-                         cmap='jet')
+                          "Potential Energy Density (E={})".format(
+                              str(round(self.get_energy(),3))),
+                          "Potential_Energy_Density",
+                          cmap='jet')
+        
+        #no energy value version:
+        # self._quick_plot(self.get_potential_energy_density(),
+        #                  "Potential Energy Density",
+        #                  "Potential_Energy_Density",
+        #                  cmap='jet')
         
     def get_energy_density(self):
         return self.get_potential_energy_density() \
