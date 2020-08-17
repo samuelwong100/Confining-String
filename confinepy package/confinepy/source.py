@@ -1969,7 +1969,7 @@ class Solution_Viewer():
         return gradient_energy
     
     def plot_gradient_energy_density(self):
-        self._quick_plot(self.get_gradient_energy_density(),
+        self._quick_plot_imshow(self.get_gradient_energy_density(),
                          "Gradient Energy Density",
                          "Gradient_Energy_Density",
                          cmap='jet')
@@ -2007,7 +2007,7 @@ class Solution_Viewer():
     
     
     def plot_energy_density(self):
-        self._quick_plot(self.get_energy_density(),
+        self._quick_plot_imshow(self.get_energy_density(),
                          "Energy Density (E={})".format(
                              str(round(self.get_energy(),3))),
                          "Energy_Density",
@@ -2072,14 +2072,14 @@ class Solution_Viewer():
             ax1.plot(y_linspace,phi_cross[i],
                      label=r"$\phi_{}$".format(str(i+1)))
         ax1.legend(fontsize=15)
-        ax1.set_title("$\phi$ Cross Section at z=0",size=20)
+        ax1.set_title("$\phi$ Cross Section",size=20)
 
         ax2 = fig.add_subplot(222)
         for i in range(self.m):
             ax2.plot(y_linspace,sigma_cross[i],
                      label=r"$\sigma_{}$".format(str(i+1)))
         ax2.legend(fontsize=15)
-        ax2.set_title("$\sigma$ Cross Section at z=0",size=20)
+        ax2.set_title("$\sigma$ Cross Section",size=20)
         
         ax3 = fig.add_subplot(223)
         for i in range(self.m):
@@ -2143,6 +2143,17 @@ class Solution_Viewer():
         plt.title(plot_title)
         plt.savefig(self.path+file_title+".png")
         plt.show()
+        
+        
+    def _quick_plot_imshow(self,field,plot_title,file_title,cmap=None):
+        plt.figure()
+        plt.imshow(field, cmap=cmap, extent=[self.grid.z0,self.grid.zf,
+                                             self.grid.y0,self.grid.yf])
+        plt.colorbar()
+        plt.title(plot_title)
+        plt.savefig(self.path+file_title+".png")
+        plt.show()
+        
         
     # def _quick_plot_laplacian(self,field,ax,title,fig):
     #     im = ax.pcolormesh(self.grid.zv,self.grid.yv,field)
