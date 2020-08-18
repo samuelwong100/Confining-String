@@ -296,6 +296,7 @@ class Kahler():
         self.epsilon = epsilon
         self.S = SU(N)
         self.matrix = self.define_Kahler()
+        self.eigenvalues = LA.eig(self.matrix)[0]
         
     def define_Kahler(self):
         #return the inverse Kahler metric (K^ij) with quantum correction
@@ -318,6 +319,9 @@ class Kahler():
                 summation += beta_AB[i]*beta_AB[j]*(
                     digamma((B-A)/self.N) + digamma(1- (B-A)/self.N) )
         return summation
+    
+    def is_positive_definite(self):
+        return np.all(self.eigenvalues>0)
     
 """ ============== subsection: Superpotential ============================="""
 class Superpotential():
