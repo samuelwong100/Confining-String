@@ -1984,18 +1984,18 @@ class Solution_Viewer():
         return simps(simps(self.get_potential_energy_density(),self.grid.z_linspace),
                      self.grid.y_linspace)
     
-    def plot_potential_energy_density(self):
-        self._quick_plot(self.get_potential_energy_density(),
-                          "Potential Energy Density (E={})".format(
-                              str(round(self.get_energy(),3))),
-                          "Potential_Energy_Density",
-                          cmap='jet')
-        
-        #no energy value version:
-        # self._quick_plot(self.get_potential_energy_density(),
-        #                  "Potential Energy Density",
-        #                  "Potential_Energy_Density",
-        #                  cmap='jet')
+    def plot_potential_energy_density(self,no_value_displayed):
+        if no_value_displayed:
+            self._quick_plot(self.get_potential_energy_density(),
+                              "Potential Energy Density",
+                              "Potential_Energy_Density",
+                              cmap='jet')
+        else:
+            self._quick_plot(self.get_potential_energy_density(),
+                              "Potential Energy Density (E={})".format(
+                                  str(round(self.get_energy(),3))),
+                              "Potential_Energy_Density (value displayed)",
+                              cmap='jet')
         
     def get_energy_density(self):
         return self.get_potential_energy_density() \
