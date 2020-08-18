@@ -10,6 +10,7 @@ import dill
 from copy import deepcopy
 import time
 import numpy as np
+from numpy import linalg as LA
 import matplotlib
 import matplotlib.pyplot as plt
 from scipy.integrate import simps, trapz
@@ -289,27 +290,34 @@ class SU():
             return summation
 
 """ ============== subsection: Kahler ====================================="""
-def Kahler(N,epsilon):
-    #return the inverse Kahler metric (K^ij) with quantum correction
-    #this is a N-1 by N-1 matrix
-    return np.identity(N-1) + epsilon * QC(N) #delta + quantum correction
+class Kahler():
+    def __init__(self,N,epsilon):
+        self.N = N
+        self.epsilon = epsilon
+        self.S = SU(N)
+        self.matrix = self.define_Kahler()
+        
+    def define_Kahler(self):
+        #return the inverse Kahler metric (K^ij) with quantum correction
+        #this is a N-1 by N-1 matrix
+        # delta + quantum correction
+        return np.identity(self.N-1) + self.epsilon * self.QC()
 
-def QC(N):
-    S = SU(N)
-    result = np.zeros(shape=(N-1,N-1))
-    for i in range(0,N-1):
-        for j in range(0,N-1):
-            result[i][j] = QCsum(S,N,i,j)
-    return result/N
+    def QC(self):
+        result = np.zeros(shape=(self.N-1,self.N-1))
+        for i in range(0,self.N-1):
+            for j in range(0,self.N-1):
+                result[i][j] = self.QCsum(i,j)
+        return result/self.N
             
-def QCsum(S,N,i,j):
-    summation = 0
-    for B in range(0,N): #mathmatically, from 1 to N, but now in python language
-        for A in range(0,B): #A < B
-            beta_AB = S.nu[A] - S.nu[B]
-            summation += beta_AB[i]*beta_AB[j]*(
-                digamma((B-A)/N) + digamma(1- (B-A)/N) )
-    return summation
+    def QCsum(self,i,j):
+        summation = 0
+        for B in range(0,self.N): #mathmatically, from 1 to N, but now in python language
+            for A in range(0,B): #A < B
+                beta_AB = self.S.nu[A] - self.S.nu[B]
+                summation += beta_AB[i]*beta_AB[j]*(
+                    digamma((B-A)/self.N) + digamma(1- (B-A)/self.N) )
+        return summation
     
 """ ============== subsection: Superpotential ============================="""
 class Superpotential():
