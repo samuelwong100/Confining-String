@@ -1217,8 +1217,8 @@ def confining_string_solver(N,charge_arg,bound_arg,L,w,R,epsilon=0,sor=0,h=0.1,
             error,tol,x,x_initial,laplacian_function,DFG,path)
         if finished_solution:
             #store all the parameters and results that are not user-defined objects
-            store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
-                           initial_kw,use_half_grid,error)
+            store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,
+                           epsilon,sor,tol,initial_kw,use_half_grid,error)
             sol = Solution_Viewer(title)
         else: #recursion
             sol = confining_string_solver(N,charge_arg,bound_arg,L,w,R,epsilon,
@@ -1363,8 +1363,8 @@ def canonical_length_num_conversion(L,w,R,h):
     else:
         raise Exception("length arguments not canonical.")
 
-def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
-                   initial_kw,use_half_grid,error):
+def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,epsilon,sor,
+                   tol,initial_kw,use_half_grid,error):
     #store the core result in a dictionary
     #notice we avoid self created object and only store arrays, numbers, and 
     #strings, and booleans
@@ -1373,6 +1373,7 @@ def store_solution(path,N,x,x_initial,charge_arg,bound_arg,L,w,h,R,sor,tol,
                  "initial field":x_initial,
                  "charge_arg":charge_arg, "bound_arg":bound_arg,
                  "L":L,"w":w,"h":h,"R":R,
+                 "epsilon":epsilon,
                  "sor":sor,
                  "tol":tol,
                  "initial_kw":initial_kw,
