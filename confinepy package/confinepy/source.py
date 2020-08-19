@@ -355,8 +355,11 @@ class Superpotential():
         self.N = N
         self.N_minus_1 = self.N-1
         self.s = SU(N)
-        self.epsilon = epsilon #parameter in quantum correction in Kahler metric
         self.x_min = self._define_x_min() # minimum of superpotential
+        self.epsilon = epsilon #parameter in quantum correction in Kahler metric
+        if not epsilon == 0:
+            #this prevents ever using Kahler matrix if no correction
+            self.K = Kahler(N,epsilon)
 
     def __call__(self,x):
         # x is an num by N-1 array, where num is the number of points
@@ -460,12 +463,12 @@ class Superpotential():
         return summation/4
     
     def potential_term_on_grid_with_epsilon(self,x):
-        K=Kahler(self.N,self.epsilon)
         #use Einstein summation to contract two kahler matrix with first 
         #derivative vector field and second derivative 2-tensor field
-        contract = np.einsum('ab...,cd...,c...,bd...->a...',K.matrix,K.matrix,
-                         self.dWdx_on_grid(x), self.ddW_conj_on_grid(x),
-                         optimize=True)
+        contract = np.einsum('ab...,cd...,c...,bd...->a...',
+                             self.K.matrix,self.K.matrix,
+                             self.dWdx_on_grid(x), self.ddW_conj_on_grid(x),
+                             optimize=True)
         return contract/4
         
     @jit(nopython=False)    
@@ -530,19 +533,35 @@ class Superpotential():
     #     return summation/4
     
     def dWdx_absolute_square_on_grid(self,x):
+        if self.epsilon == 0:
+            #use delta function trick
+            return self.dWdx_absolute_square_on_grid_without_epsilon(x)
+            #testing code: (compare epsilon=0 with without-epsilon code)
+            # x_conj = np.conj(x)
+            # K = Kahler(self.N,self.epsilon)
+            # return np.einsum("a...,ab...,b...",self.dWdx_on_grid(x),
+            #                  K.matrix,self.dWdx_on_grid(x_conj),
+            #                  optimize=True)
+        else:
+            #return the contraction between derivative and complex conjugate
+            #of derivative, with a Kahler metric
+            x_conj = np.conj(x)
+            return np.einsum("a...,ab...,b...",self.dWdx_on_grid(x),
+                             self.K.matrix,self.dWdx_on_grid(x_conj),
+                             optimize=True)
+            
+    def dWdx_absolute_square_on_grid_without_epsilon(self,x):
         #use the formula for dot product of alpha in terms of 3 delta function
         x_conj = np.conjugate(x)
         m,n = (x.shape[1],x.shape[2])
         summation = np.zeros(shape=(m,n),dtype=complex)
         for a in range(self.N):
-            exp_alpha_a_x = exponentiate_scalar_field_numba(
-                dot_vec_with_vec_field_numba(self.s.alpha[a],x))
-            exp_alpha_a_x_conj = exponentiate_scalar_field_numba(
-                dot_vec_with_vec_field_numba(self.s.alpha[a],x_conj))
-            exp_alpha_a_plus1_x_conj = exponentiate_scalar_field_numba(
-                dot_vec_with_vec_field_numba(self.s.alpha[(a+1) % self.N],x_conj))
-            exp_alpha_a_minus1_x_conj = exponentiate_scalar_field_numba(
-                dot_vec_with_vec_field_numba(self.s.alpha[(a-1) % self.N],x_conj))
+            exp_alpha_a_x = self._exp_alpha_a_dot_x(a,x)
+            exp_alpha_a_x_conj = self._exp_alpha_a_dot_x(a,x_conj)
+            exp_alpha_a_plus1_x_conj = self._exp_alpha_a_dot_x(
+                (a+1) % self.N,x_conj)
+            exp_alpha_a_minus1_x_conj = self._exp_alpha_a_dot_x(
+                (a-1) % self.N,x_conj)
             summation += exp_alpha_a_x * (
                 2*exp_alpha_a_x_conj
                 - exp_alpha_a_plus1_x_conj
@@ -1892,6 +1911,7 @@ class Solution_Viewer():
                 core_dict["field"], core_dict["initial field"]
             self.bound_arg, self.charge_arg = \
                 core_dict["bound_arg"],core_dict["charge_arg"]
+            self.epsilon = core_dict["epsilon"]
             # m is number of components of field
             self.N, self.m = core_dict["N"], self.x.shape[0]
             #unload all grid related parameters
@@ -1928,6 +1948,7 @@ class Solution_Viewer():
         print("N =", str(self.N))
         print("charge_arg =", self.charge_arg)
         print("bound_arg =", self.bound_arg)
+        print("epsilon =", str(self.epsilon))
         print("L =", str(self.L))
         print("w =", str(self.w))
         print("h =", str(self.h))
@@ -2044,9 +2065,20 @@ class Solution_Viewer():
                                  an array of shape (grid.num_y,grid.num_z).
         """
         dxdz,dxdy = self._get_derivative() #derivative in each direction
-        dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
-        gradient_energy_density = dx_squared.sum(axis=0) #sum over components
-        return gradient_energy_density
+        if self.epsilon == 0:
+            dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
+            gradient_energy_density = dx_squared.sum(axis=0) #sum over components
+            return gradient_energy_density
+        else:
+            #with quantum correction, the gradient energy density is
+            #K_ab grad x^a grad x^b
+            K = Kahler(self.N,self.epsilon)
+            Dx = np.array([dxdz,dxdy])
+            #contract using einstein summation. The repeated index 'r'
+            #correspond to the 2 spatial component z and y. The repeated
+            #indices 'a' and 'b' are Cartan algebra vector. The ellipses 
+            #represent the field.
+            return np.einsum("ra...,ab...,rb...",Dx,K.matrix,Dx,optimize=True)
 
     def get_gradient_energy(self):
         """
@@ -2069,8 +2101,9 @@ class Solution_Viewer():
                          "Gradient_Energy_Density",
                          cmap='jet')
 
-    def get_potential_energy_density(self): #TODO: add epsilon
-        W = Superpotential(self.N)
+    def get_potential_energy_density(self):
+        W = Superpotential(self.N,self.epsilon)
+        #the absolute square function already takes epsilon into account
         ped = (1/4)*W.dWdx_absolute_square_on_grid(self.x)
         ped = np.real(ped) #it is real anyway, doing this for plotting
         return ped
@@ -2099,7 +2132,6 @@ class Solution_Viewer():
     def get_energy(self):
         return simps(simps(self.get_energy_density(),
                            self.grid.z_linspace),self.grid.y_linspace)
-    
     
     def plot_energy_density(self):
         self._quick_plot_imshow(self.get_energy_density(),
@@ -2148,7 +2180,6 @@ class Solution_Viewer():
 
         fig.suptitle("Cross Section at z={}".format(str(z)),size=20)
         fig.savefig(self.path+"Cross_Section_at_z={}.png".format(str(z)), dpi=300)
-        
             
     def plot_middle_cross_section_comparison(self):
         y_linspace = self.grid.y_linspace
@@ -2229,7 +2260,6 @@ class Solution_Viewer():
     #         plt.savefig(self.folder_title +
     #                 "compare_slice_with_BPS_sigma_{}.png".format(str(n+1)))
     #         plt.show()
-            
 
     def _quick_plot(self,field,plot_title,file_title,cmap=None):
         plt.figure()
@@ -2238,8 +2268,7 @@ class Solution_Viewer():
         plt.title(plot_title)
         plt.savefig(self.path+file_title+".png")
         plt.show()
-        
-        
+          
     def _quick_plot_imshow(self,field,plot_title,file_title,cmap=None):
         plt.figure()
         plt.imshow(field, cmap=cmap, extent=[self.grid.z0,self.grid.zf,
