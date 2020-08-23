@@ -146,7 +146,7 @@ def scalar_field_times_2tensor_field(scalar_field,tensor_field):
     return result
 
 def vector_to_vector_field(vec,row,col):
-    return np.tile(vec,(row,col,1)).T
+    return np.tile(vec,(col,row,1)).T
 
 @jit(nopython=False)
 def matrix_to_tensor_field(matrix,row,col):
@@ -1933,11 +1933,12 @@ class Solution_Viewer():
             
     def display_all(self):
         self.print_attributes()
-        self.plot_potential_energy_density()
         self.plot_error()
         self.plot_x_all()
         self.plot_x_initial()
         self.plot_gradient_energy_density()
+        self.plot_potential_energy_density(False)
+        self.plot_potential_energy_density(True)
         self.plot_energy_density()
         self.plot_middle_cross_section_comparison()
         #self.plot_laplacian_all() #implementation needs to be updated
@@ -2067,18 +2068,21 @@ class Solution_Viewer():
         dxdz,dxdy = self._get_derivative() #derivative in each direction
         if self.epsilon == 0:
             dx_squared = np.abs(dxdz)**2 + np.abs(dxdy)**2 #square of the gradient
-            gradient_energy_density = dx_squared.sum(axis=0) #sum over components
-            return gradient_energy_density
+            ged = dx_squared.sum(axis=0) #sum over components
         else:
             #with quantum correction, the gradient energy density is
             #K_ab grad x^a grad x^b
             K = Kahler(self.N,self.epsilon)
+            K_inv = LA.inv(K.matrix)
             Dx = np.array([dxdz,dxdy])
             #contract using einstein summation. The repeated index 'r'
             #correspond to the 2 spatial component z and y. The repeated
             #indices 'a' and 'b' are Cartan algebra vector. The ellipses 
             #represent the field.
-            return np.einsum("ra...,ab...,rb...",Dx,K.matrix,Dx,optimize=True)
+            ged = np.einsum("ra...,ab...,rb...",Dx,K_inv,Dx,optimize=True)
+            print(np.max(np.imag(ged)))
+        ged = np.real(ged)
+        return ged
 
     def get_gradient_energy(self):
         """
@@ -2096,7 +2100,7 @@ class Solution_Viewer():
         return gradient_energy
     
     def plot_gradient_energy_density(self):
-        self._quick_plot_imshow(self.get_gradient_energy_density(),
+        self._quick_plot(self.get_gradient_energy_density(),
                          "Gradient Energy Density",
                          "Gradient_Energy_Density",
                          cmap='jet')
@@ -2112,7 +2116,7 @@ class Solution_Viewer():
         return simps(simps(self.get_potential_energy_density(),self.grid.z_linspace),
                      self.grid.y_linspace)
     
-    def plot_potential_energy_density(self,no_value_displayed):
+    def plot_potential_energy_density(self,no_value_displayed=True):
         if no_value_displayed:
             self._quick_plot(self.get_potential_energy_density(),
                               "Potential Energy Density",
@@ -2134,7 +2138,7 @@ class Solution_Viewer():
                            self.grid.z_linspace),self.grid.y_linspace)
     
     def plot_energy_density(self):
-        self._quick_plot_imshow(self.get_energy_density(),
+        self._quick_plot(self.get_energy_density(),
                          "Energy Density (E={})".format(
                              str(round(self.get_energy(),3))),
                          "Energy_Density",
@@ -2260,16 +2264,8 @@ class Solution_Viewer():
     #         plt.savefig(self.folder_title +
     #                 "compare_slice_with_BPS_sigma_{}.png".format(str(n+1)))
     #         plt.show()
-
+       
     def _quick_plot(self,field,plot_title,file_title,cmap=None):
-        plt.figure()
-        plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
-        plt.colorbar()
-        plt.title(plot_title)
-        plt.savefig(self.path+file_title+".png")
-        plt.show()
-          
-    def _quick_plot_imshow(self,field,plot_title,file_title,cmap=None):
         plt.figure()
         plt.imshow(field, cmap=cmap, extent=[self.grid.z0,self.grid.zf,
                                              self.grid.y0,self.grid.yf])
@@ -2277,6 +2273,13 @@ class Solution_Viewer():
         plt.title(plot_title)
         plt.savefig(self.path+file_title+".png")
         plt.show()
+        #old code:
+        # plt.figure()
+        # plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
+        # plt.colorbar()
+        # plt.title(plot_title)
+        # plt.savefig(self.path+file_title+".png")
+        # plt.show()
         
         
     # def _quick_plot_laplacian(self,field,ax,title,fig):
@@ -2403,6 +2406,7 @@ def list_all_N_p_results(N,charge_arg,R_greater_than_five=False):
         print(item)
 
 def get_all_fully_solved_N_p_folder_names(N,charge_arg,R_greater_than_five=False):
+
     folders = get_all_CS_folder_names()
     unwanted_folders = []
     important_strings = ["tol=1e-09",
@@ -2421,6 +2425,39 @@ def get_all_fully_solved_N_p_folder_names(N,charge_arg,R_greater_than_five=False
     #the fullly solved folders are the set difference
     result = list(set(folders) - set(unwanted_folders))
     return result
+
+def min_R_dictionary(N,p,epsilon):
+    #the minimum R below which we don't use it to compute tension
+    #for double string, this is the R before which the string collapse
+    #for single string, we look for the R at which the string separation settles
+    #to a constant
+    dictionary_epsilon_0 = {(2,1):10,
+                            (3,1):10,
+                            (4,1):20,
+                            (4,2):10,
+                            (5,1):10,
+                            (5,2):10,
+                            (6,1):10,
+                            (6,2):10,
+                            (6,3):10,
+                            (7,1):10,
+                            (7,2):10,
+                            (7,3):10,
+                            (8,1):15,
+                            (8,2):10,
+                            (8,3):10,
+                            (8,4):15,
+                            (9,1):15,
+                            (9,2):10,
+                            (9,3):15,
+                            (9,4):15,
+                            (10,1):15, #need to verify
+                            (10,2):15,
+                            (10,3):15,
+                            (10,4):20,
+                            (10,5):20}
+    if epsilon == 0:
+        R = dictionary_epsilon_0[N,p]
 
 def _get_R_from_folder_title(folder):
     #the index of the letter 'R' in 'R='
