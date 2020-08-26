@@ -1911,7 +1911,10 @@ class Solution_Viewer():
                 core_dict["field"], core_dict["initial field"]
             self.bound_arg, self.charge_arg = \
                 core_dict["bound_arg"],core_dict["charge_arg"]
-            self.epsilon = core_dict["epsilon"]
+            try:
+                self.epsilon = core_dict["epsilon"]
+            except: 
+                self.epsilon = 0
             # m is number of components of field
             self.N, self.m = core_dict["N"], self.x.shape[0]
             #unload all grid related parameters
@@ -1949,7 +1952,10 @@ class Solution_Viewer():
         print("N =", str(self.N))
         print("charge_arg =", self.charge_arg)
         print("bound_arg =", self.bound_arg)
-        print("epsilon =", str(self.epsilon))
+        try:
+            print("epsilon =", str(self.epsilon))
+        except:
+            print("epsilon = 0")
         print("L =", str(self.L))
         print("w =", str(self.w))
         print("h =", str(self.h))
@@ -2163,7 +2169,7 @@ class Solution_Viewer():
         #get all fields, at all rows, at a fixed column
         return self.x[:,:,n_z]
     
-    def plot_cross_section_from_z_position(self,z):
+    def plot_cross_section_from_z_position(self,z): 
         x_cross = self.get_cross_section_from_z_position(z)
         phi_cross = np.real(x_cross)
         sigma_cross = np.imag(x_cross)
@@ -2399,34 +2405,44 @@ def get_all_CS_folder_names():
     folders.remove("Confinement Solutions") #remove big folder name
     return folders
 
-def list_all_N_p_results(N,charge_arg,R_greater_than_five=False):
-    result_list = get_all_fully_solved_N_p_folder_names(N,charge_arg,
-                                                        R_greater_than_five)
+def list_all_N_p_results(N,p,epsilon=0):
+    result_list = get_all_fully_solved_N_p_folder_names(N,p,epsilon)
     for item in result_list:
         print(item)
 
-def get_all_fully_solved_N_p_folder_names(N,charge_arg,R_greater_than_five=False):
-
+def get_all_fully_solved_N_p_folder_names(N,p,epsilon=0):
     folders = get_all_CS_folder_names()
     unwanted_folders = []
+    charge_arg = 'w'+str(p)
     important_strings = ["tol=1e-09",
                         "N={},".format(str(N)),
                         "charge={},".format(charge_arg)]
+    if not epsilon == 0: #only require epsilon in title if not 0
+        important_strings.append("epsilon={},".format(str(epsilon)))
+    
     for folder in folders:
+        #add a folder into garbage list if it doesn't contain
+        #important key phrase
         for string in important_strings:
             if string not in folder:
-                #add a folder into garbage list if it doesn't contain
-                #important key phrase
                 unwanted_folders.append(folder)
-            if R_greater_than_five:
-                if _get_R_from_folder_title(folder) <= 5:
-                    #add folder to grabage list if R is too small
+                #this takes out no-epsilon when there is epsilon
+                
+        if epsilon == 0: #need to get rid of folders with wrong epsilon
+            if "epsilon=" in folder:
+                epsilon_str = _get_epsilon_str_from_folder_title(folder)
+                if not epsilon_str == "0":
                     unwanted_folders.append(folder)
+                
+        #add folder to grabage list if R is too small
+        if _get_R_from_folder_title(folder) < min_R_dictionary(N,p,epsilon):
+            unwanted_folders.append(folder)            
+            
     #the fullly solved folders are the set difference
     result = list(set(folders) - set(unwanted_folders))
     return result
 
-def min_R_dictionary(N,p,epsilon):
+def min_R_dictionary(N,p,epsilon=0):
     #the minimum R below which we don't use it to compute tension
     #for double string, this is the R before which the string collapse
     #for single string, we look for the R at which the string separation settles
@@ -2457,7 +2473,8 @@ def min_R_dictionary(N,p,epsilon):
                             (10,4):20,
                             (10,5):20}
     if epsilon == 0:
-        R = dictionary_epsilon_0[N,p]
+        R = dictionary_epsilon_0[(N,p)]
+    return R
 
 def _get_R_from_folder_title(folder):
     #the index of the letter 'R' in 'R='
@@ -2469,6 +2486,12 @@ def _get_R_from_folder_title(folder):
     R_str = folder[index_equal_sign+1:index_comma]
     R = int(R_str)
     return R
+
+def _get_epsilon_str_from_folder_title(folder):
+    index_epsilon = folder.find("epsilon=")+8
+    index_equal_sign = index_epsilon-1
+    index_comma = folder.find(",",index_equal_sign)
+    return folder[index_epsilon:index_comma]
 
 """ ============== subsection: Plot All ==================================="""
 def plot_all_solutions():
@@ -2493,19 +2516,24 @@ def get_no_solution_list():
     return no_solution_list
 
 def plot_all_tensions_and_separation():
-    for N in range(2,9+1):
+    tension_list = []
+    separation_param_list = []
+    for N in range(2,10+1):
         p_max = max_Nality(N)
         for p in range(1,p_max+1):
-            compute_tension(N,p)
-            compute_string_separation(N,p)
+            m,dm = compute_tension(N,p)
+            tension_list.append((N,p,m,dm))
+            if not p == 1:
+                a,da,b,db = compute_string_separation(N,p)
+                separation_param_list.append((N,p,a,da,b,db))
+    return tension_list, separation_param_list
 
 """ ============== subsection: Tensions ===================================="""
-def get_R_and_energy_array(N,charge_arg):
+def get_R_and_energy_array(N,p,epsilon=0):
     #initialze lists
     R_list = []
     energy_list = []
-    folders = get_all_fully_solved_N_p_folder_names(N,charge_arg,
-                                                    R_greater_than_five=True)
+    folders = get_all_fully_solved_N_p_folder_names(N,p,epsilon)
     for folder in folders:
         sol = Solution_Viewer(folder)
         R_list.append(sol.R)
@@ -2530,7 +2558,7 @@ def get_R_and_energy_array(N,charge_arg):
 #     energy_array = np.array(energy_list)
 #     return R_array, energy_array
 
-def plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L):
+def plot_energy_vs_R(R_array,energy_array,epsilon,m,dm,b,db,N,p,L):
     plt.figure()
     plt.scatter(x=R_array,y=energy_array)
     x = np.linspace(1,L,1000)
@@ -2553,25 +2581,31 @@ def plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L):
     plt.xlabel("R")
     plt.ylabel("Energy")
     plt.legend()
-    plt.title("Energy vs Distance (N={}, p={})".format(str(N),str(p)))
-    plt.savefig(
-            "Tensions/Energy vs Distance (N={}, p={}).png".format(
-            str(N),str(p)))
+    if epsilon==0:
+        plt.title("Energy vs Distance (N={}, k={})".format(str(N),str(p)))
+        plt.savefig(
+                "Tensions/Energy vs Distance (N={}, k={}).png".format(
+                str(N),str(p)))
+    else:
+        plt.title("Energy vs Distance (N={}, k={}, epsilon={})".format(
+            str(N),str(p)),str(epsilon))
+        plt.savefig(
+                "Tensions/Energy vs Distance (N={}, k={}, epsilon={}).png".format(
+                str(N),str(p)),str(epsilon))
     plt.show()
     
 def linear_model(x,m,b):
     return m*x + b
 
-def compute_tension(N,p):
+def compute_tension(N,p,epsilon=0):
     #p is N-ality
-    charge_arg='w'+str(p)
-    R_array, energy_array = get_R_and_energy_array(N,charge_arg)
+    R_array, energy_array = get_R_and_energy_array(N,p,epsilon)
     potp, pcov = curve_fit(linear_model,xdata=R_array,ydata=energy_array)
     m,b = potp #slope and y-intercept
     dm = np.sqrt(pcov[0][0]) #standard deviation of slope
     db = np.sqrt(pcov[1][1])
     L = np.max(R_array)+1
-    plot_energy_vs_R(R_array,energy_array,m,dm,b,db,N,p,L)
+    plot_energy_vs_R(R_array,energy_array,epsilon,m,dm,b,db,N,p,L)
     return m, dm
 
 # def _validate_R_arguments(R_min,R_max,R_interval):
@@ -2606,6 +2640,30 @@ def plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L):
             str(N),str(p)))
     plt.show()
     
+def plot_d_vs_R_no_translation(R_array,d_array,a,da,b,db,N,p,L):
+    plt.figure()
+    #scatter plot of data
+    plt.scatter(x=R_array,y=d_array)
+    #plot best fit model
+    x = np.linspace(1,L,1000)
+    y = log_model2(x,a,b)
+    plt.plot(x,y,label=r"$d = a \cdot \ln(R) + b $")
+    #print parameters
+    y_min = np.nanmin(y)
+    y_max = np.nanmax(y)
+    plt.text(x=20,y=y_min+0.3*(y_max-y_min),s=r"a = {} $\pm$ {}".format(
+        str(round(a,3)),str(round(da,3))))
+    plt.text(x=20,y=y_min+0.2*(y_max-y_min),s=r"b = {} $\pm$ {}".format(
+        str(round(b,3)),str(round(db,3))))
+    plt.xlabel("R")
+    plt.ylabel("d")
+    plt.legend()
+    plt.title("String Separation vs Distance (N={}, p={})".format(str(N),str(p)))
+    plt.savefig(
+            "String Separation/String Separation vs Distance (N={}, p={}) no translation.png".format(
+            str(N),str(p)))
+    plt.show()
+    
 def plot_d_vs_R_for_p1(R_array,d_array,N,p):
     plt.figure()
     #scatter plot of data
@@ -2618,15 +2676,13 @@ def plot_d_vs_R_for_p1(R_array,d_array,N,p):
             str(N),str(p)))
     plt.show()
     
-def get_R_and_d_array(N,charge_arg):
+def get_R_and_d_array(N,p,epsilon=0):
     #initialze lists
     R_list = []
     d_list = []
-    folders = get_all_fully_solved_N_p_folder_names(N,charge_arg)
+    folders = get_all_fully_solved_N_p_folder_names(N,p,epsilon)
     for folder in folders:
         sol = Solution_Viewer(folder)
-        print(sol.R)
-        print(sol.get_string_separation())
         R_list.append(sol.R)
         d_list.append(sol.get_string_separation())
     #convert back to array
@@ -2637,21 +2693,32 @@ def get_R_and_d_array(N,charge_arg):
 def log_model(x,a,b,c):
     return a*np.log(x-b) + c
 
-def compute_string_separation(N,p):
+def log_model2(x,a,b):
+    return a*np.log(x) + b
+
+def compute_string_separation(N,p,epsilon=0,no_translation=True):
     #p is N-ality
-    charge_arg='w'+str(p)
-    R_array, d_array = get_R_and_d_array(N,charge_arg)
+    R_array, d_array = get_R_and_d_array(N,p,epsilon)
     L = np.max(R_array)+1
     if not p == 1:
-        potp, pcov = curve_fit(log_model,xdata=R_array,ydata=d_array)
-        a,b,c = potp
-        da = np.sqrt(pcov[0][0])
-        db = np.sqrt(pcov[1][1])
-        dc = np.sqrt(pcov[2][2])
-        plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L)
+        if not no_translation:
+            potp, pcov = curve_fit(log_model,xdata=R_array,ydata=d_array)
+            a,b,c = potp
+            da = np.sqrt(pcov[0][0])
+            db = np.sqrt(pcov[1][1])
+            dc = np.sqrt(pcov[2][2])
+            plot_d_vs_R(R_array,d_array,a,da,b,db,c,dc,N,p,L)
+        else:
+            potp, pcov = curve_fit(log_model2,xdata=R_array,ydata=d_array)
+            a,b = potp
+            da = np.sqrt(pcov[0][0])
+            db = np.sqrt(pcov[1][1])
+            plot_d_vs_R_no_translation(R_array,d_array,a,da,b,db,N,p,L)
+        return a,da,b,db
     else:
         plot_d_vs_R_for_p1(R_array,d_array,N,p)
-    return R_array,d_array
+        return None
 
 if __name__ == "__main__":
-    pass
+    tension_list, separation_param_list = plot_all_tensions_and_separation()
+    print(separation_param_list)
