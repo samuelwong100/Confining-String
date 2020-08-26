@@ -2081,12 +2081,12 @@ class Solution_Viewer():
             K = Kahler(self.N,self.epsilon)
             K_inv = LA.inv(K.matrix)
             Dx = np.array([dxdz,dxdy])
+            Dx_conj = np.conj(Dx)
             #contract using einstein summation. The repeated index 'r'
             #correspond to the 2 spatial component z and y. The repeated
             #indices 'a' and 'b' are Cartan algebra vector. The ellipses 
             #represent the field.
-            ged = np.einsum("ra...,ab...,rb...",Dx,K_inv,Dx,optimize=True)
-            print(np.max(np.imag(ged)))
+            ged = np.einsum("ra...,ab...,rb...",Dx,K_inv,Dx_conj,optimize=True)
         ged = np.real(ged)
         return ged
 
@@ -2720,5 +2720,4 @@ def compute_string_separation(N,p,epsilon=0,no_translation=True):
         return None
 
 if __name__ == "__main__":
-    tension_list, separation_param_list = plot_all_tensions_and_separation()
-    print(separation_param_list)
+    pass
