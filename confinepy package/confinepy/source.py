@@ -182,6 +182,34 @@ def dot_vec_with_vec_field_1D_numba(vec,vec_field):
                 summation[point] += vec[comp]*vec_field[point][comp]
     return summation
 
+@jit(nopython=False)
+def scalar_field_times_vector_field_1D_numba(scalar_field,vec_field):
+    num,comp = vec_field.shape
+    result = np.zeros(shape=vec_field.shape,dtype=complex)
+    for c in range(comp):
+        for n in range(num):
+            result[n][c] = scalar_field[n] * vec_field[n][c]
+    return result
+
+def vector_to_vector_field_1_D(vec,num):
+    return np.tile(vec,(num,1))
+
+@jit(nopython=False)
+def matrix_to_1D_tensor_field(matrix,num):
+    a,b = matrix.shape
+    tensor = np.zeros(shape=(num,a,b),dtype=complex)
+    for n in range(num):
+        tensor[n,:] = matrix
+    return tensor
+
+@jit(nopython=False)
+def scalar_field_times_2tensor_field_1D(scalar_field,tensor_field):
+    num,a,b = tensor_field.shape
+    result = np.zeros(shape=tensor_field.shape,dtype=complex)
+    for n in range(num):
+        result[n,:] = scalar_field[n] * tensor_field[n,:]
+    return result
+
 """ ============== subsection: SU(N) ======================================="""
 def delta(i,j):
     #kronecker delta
@@ -486,7 +514,7 @@ class Superpotential():
             summation += scalar_field_times_vector_field_numba(exp_coeff,
                                                                alpha_a_grid)
         return summation
-    
+
     @jit(nopython=False)
     def ddW_conj_on_grid(self,x):
         m,row,col = x.shape
@@ -589,6 +617,85 @@ class Superpotential():
                 - exp_alpha_a_minus1_x_conj)
         return summation
     
+    def potential_term_on_points(self,x):
+        if self.epsilon == 0:
+            return self.potential_term_on_points_without_epsilon(x)
+        else:
+            return self.potential_term_on_points_with_epsilon(x)
+    
+    @jit(nopython=False) 
+    def potential_term_on_points_without_epsilon(self,x):
+        #returns the second derivative function:
+        #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
+        # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
+        exp_alpha_x = np.exp(self.dot_field_with_all_alpha_1D(x))
+        exp_alpha_x_conj = np.exp(self.dot_field_with_all_alpha_1D(np.conj(x)))
+        summation = 0
+        for a in range(0,self.N):
+            a_minus_1 = (a-1) % self.N
+            a_plus_1 = (a+1) % self.N
+            a_term = list_of_costants_times_vector(
+                    exp_alpha_x_conj[:,a], self.s.alpha[a])
+            a_minus_1_term = list_of_costants_times_vector(
+                    exp_alpha_x_conj[:,a_minus_1],self.s.alpha[a_minus_1])
+            a_plus_1_term = list_of_costants_times_vector(
+                    exp_alpha_x_conj[:,a_plus_1],self.s.alpha[a_plus_1])
+            summation += list_of_costants_times_vector(exp_alpha_x[:,a],
+                                (2*a_term - a_minus_1_term - a_plus_1_term))
+        return summation/4
+    
+    def dot_field_with_all_alpha_1D(self,x):
+        #take a vector field of shape (num,N-1), dot it with each of alpha[a],
+        #where a goes from 1 to N
+        #return result of shape (num,N), each row is a point, each column is a 
+        #result with corresponding alpha
+        return np.dot(self.s.alpha, x.T).T
+    
+    def potential_term_on_points_with_epsilon(self,x):
+        #use Einstein summation to contract two kahler matrix with first 
+        #derivative vector field and second derivative 2-tensor field
+        contract = np.einsum('...ab,...cd,...c,...bd->...a',
+                             self.K.matrix,self.K.matrix,
+                             self.dWdx_on_points(x), self.ddW_conj_on_points(x),
+                             optimize=True)
+        return contract/4
+    
+    @jit(nopython=False)    
+    def dWdx_on_points(self,x):
+        #the gradient vector evaluated on grid
+        # as usual for 1D, the convention is that the first component of x
+        # is the points, and second are the vector component
+        num, comp = x.shape
+        summation = np.zeros(shape=x.shape,dtype=complex)
+        for a in range(self.N):
+            #the exponential coefficient in each term: e^(alpha.x)
+            exp_coeff = self._exp_alpha_a_dot_x_on_points(a,x)
+            #broadcast the vector alpha_a to a field
+            alpha_a_field = vector_to_vector_field_1_D(self.s.alpha[a],num)
+            summation += scalar_field_times_vector_field_1D_numba(
+                exp_coeff,alpha_a_field)
+        return summation
+
+    def _exp_alpha_a_dot_x_on_points(self,a,x):
+        #the exponential coefficient: e^(alpha_a.x)
+        return exponentiate_scalar_field_1D_numba(
+            dot_vec_with_vec_field_1D_numba(self.s.alpha[a],x))
+
+    @jit(nopython=False)
+    def ddW_conj_on_points(self,x):
+        num, comp = x.shape
+        x_conj = np.conjugate(x)
+        #initialize the 2-tensor field
+        summation = np.zeros(shape=(num,comp,comp),dtype=complex)
+        for a in range(self.N):
+            exp_coeff = self._exp_alpha_a_dot_x_on_points(a,x_conj)
+            alpha_a_square_matrix = np.outer(self.s.alpha[a],self.s.alpha[a])
+            alpha_a_tensor_field = matrix_to_1D_tensor_field(
+                alpha_a_square_matrix,num)
+            summation += scalar_field_times_2tensor_field_1D(
+                exp_coeff,alpha_a_tensor_field)
+        return summation
+    
     """" Note: do not delete below code of old implementation of absolute square
     They are used for testing against the new one."""
     # def dWdx_absolute_square_on_grid_old(self,x):
@@ -629,7 +736,7 @@ class Superpotential():
     #     dWdx_conj = np.conjugate(dWdx)
     #     return np.sum(dWdx*dWdx_conj,axis=1)
     
-    def dWdx_on_points(self,x):
+    def dWdx_on_points_old_version(self,x):
         """
         First derivative vector, ie. gradient
         
@@ -1503,7 +1610,6 @@ def _call_BPS(top,vac0_arg,vacf_arg,N,epsilon,DFG,path):
 ===============================================================================
 """
 """ ============== subsection: solve BPS ==================================="""
-#TODO:implement epsilon in BPS
 @timeit
 def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,epsilon=0,tol=1e-9,sor=1.5,
               plot=True,save_plot=True,save_result=True,folder="",
@@ -1520,7 +1626,8 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,epsilon=0,tol=1e-9,sor=1.5,
     x0 = set_x0(vac0.imaginary_vector,vacf.imaginary_vector,num,N-1,z0,zf,
                  kink_bd_distance,separation_R,top,kw=kw,x0_given=x0_given)
     #generate second derivative function for relaxation
-    BPS_second_derivative_function = generate_BPS_second_derivative_function(N)
+    W = Superpotential(N,epsilon)
+    BPS_second_derivative_function = W.potential_term_on_points
     #generate continue condition that checks energy as well as error for
     #whether to continue relaxation loop
     if continue_kw == "BPS_Energy":
@@ -1563,35 +1670,36 @@ def get_z_linspace(num,h):
     z_linspace = np.linspace(start=z0,stop=zf,num=num)
     return z0,zf,z_linspace
 
-def generate_BPS_second_derivative_function(N):
-    S = SU(N)
-    def BPS_second_derivative_function(x):
-        #returns the second derivative function:
-        #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
-        # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
-        exp_alpha_x = np.exp(dot_field_with_all_alpha(S.alpha,x))
-        exp_alpha_x_conj = np.exp(dot_field_with_all_alpha(S.alpha,np.conj(x)))
-        summation = 0
-        for a in range(0,N):
-            a_minus_1 = (a-1) % N
-            a_plus_1 = (a+1) % N
-            a_term = list_of_costants_times_vector(
-                    exp_alpha_x_conj[:,a], S.alpha[a])
-            a_minus_1_term = list_of_costants_times_vector(
-                    exp_alpha_x_conj[:,a_minus_1],S.alpha[a_minus_1])
-            a_plus_1_term = list_of_costants_times_vector(
-                    exp_alpha_x_conj[:,a_plus_1],S.alpha[a_plus_1])
-            summation += list_of_costants_times_vector(exp_alpha_x[:,a],
-                                (2*a_term - a_minus_1_term - a_plus_1_term))
-        return summation/4
-    return BPS_second_derivative_function
-
-def dot_field_with_all_alpha(alpha,x):
-    #take a vector field of shape (num,N-1), dot it with each of alpha[a],
-    #where a goes from 1 to N
-    #return result of shape (num,N), each row is a point, each column is a 
-    #result with corresponding alpha
-    return np.dot(alpha, x.T).T
+# def generate_BPS_second_derivative_function(N,epsilon=0):
+#     S = SU(N)
+#     def BPS_second_derivative_function_without_epsilon(x):
+#         #returns the second derivative function:
+#         #(1/4) Sum_{a=1}^{N} e^{alpha.x} (2e^{alpha[a].x*}alpha[a] 
+#         # - e^{alpha[a-1].x*}alpha[a-1] - e^{alpha[a+1].x*}alpha[a+1])
+#         exp_alpha_x = np.exp(dot_field_with_all_alpha(S.alpha,x))
+#         exp_alpha_x_conj = np.exp(dot_field_with_all_alpha(S.alpha,np.conj(x)))
+#         summation = 0
+#         for a in range(0,N):
+#             a_minus_1 = (a-1) % N
+#             a_plus_1 = (a+1) % N
+#             a_term = list_of_costants_times_vector(
+#                     exp_alpha_x_conj[:,a], S.alpha[a])
+#             a_minus_1_term = list_of_costants_times_vector(
+#                     exp_alpha_x_conj[:,a_minus_1],S.alpha[a_minus_1])
+#             a_plus_1_term = list_of_costants_times_vector(
+#                     exp_alpha_x_conj[:,a_plus_1],S.alpha[a_plus_1])
+#             summation += list_of_costants_times_vector(exp_alpha_x[:,a],
+#                                 (2*a_term - a_minus_1_term - a_plus_1_term))
+#         return summation/4
+    
+#     def BPS_second_derivative_function_with_epsilon(x):
+#         W = Superpotential(N=N,epsilon=epsilon)
+#         return W.potential_term_on_points_with_epsilon(x)
+    
+#     if epsilon == 0:
+#         return BPS_second_derivative_function_without_epsilon
+#     else:
+#         return BPS_second_derivative_function_with_epsilon
 
 #Warning: for some reasons the numba version of this is very slow.
 # def numba_generate_BPS_second_derivative_function(N):
