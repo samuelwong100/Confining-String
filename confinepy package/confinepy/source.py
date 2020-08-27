@@ -596,7 +596,19 @@ class Superpotential():
                 - exp_alpha_a_minus1_x_conj)
         return summation
     
-    def dWdx_absolute_square(self,x):
+    def dWdx_absolute_square_on_points(self,x):
+        if self.epsilon == 0:
+            return self.dWdx_absolute_square_on_points_without_epsilon(x)
+        else:
+            return self.dWdx_absolute_square_on_points_with_epsilon(x)
+    
+    def dWdx_absolute_square_on_points_with_epsilon(self,x):
+        dWdx = self.dWdx_on_points(x)
+        dWdx_conj = np.conj(dWdx)
+        contract = np.einsum("...ab,...a,...b",self.K.matrix,dWdx,dWdx_conj)
+        return contract
+    
+    def dWdx_absolute_square_on_points_without_epsilon(self,x):
         #the same function as above but for BPS 1D field
         #use the formula for dot product of alpha in terms of 3 delta function
         x_conj = np.conjugate(x)
@@ -1641,11 +1653,12 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,epsilon=0,tol=1e-9,sor=1.5,
             continue_condition=continue_condition)
     #if folder is unspecified, save it in designated BPS solitons folder
     if folder == "":
-        folder = "BPS Solitons/N={},vac0={},vacf={},num={},h={},tol={},sor={},final_error={}/".format(
-                str(N),vac0_arg,vacf_arg,str(num),str(h),str(tol),str(sor),
-                '{:0.1e}'.format(error[-1]))
+        folder = \
+            "BPS Solitons/N={},vac0={},vacf={},num={},h={},epsilon={},tol={},sor={},final_error={}/".format(
+                str(N),vac0_arg,vacf_arg,str(num),str(h),str(epsilon),str(tol),
+                str(sor),'{:0.1e}'.format(error[-1]))
     if plot:
-        plot_BPS(N,z_linspace,x,num,h,vac0,vacf,save_plot,folder)
+        plot_BPS(N,z_linspace,x,num,h,vac0,vacf,epsilon,save_plot,folder)
         plot_error(error,folder)
     if save_result:
         BPS_dict={"x":x,"z":z_linspace,"vac0":str(vac0),"vacf":str(vacf),
@@ -1873,7 +1886,7 @@ def _realxation_1D_update_with_sor(g,f_old,num,h_squared,sor,one_minus_sor):
     return f_new
 
 """ ============== subsection: plot BPS ===================================="""
-def plot_BPS(N,z,f,num,h,vac0,vacf,save_plot,folder):
+def plot_BPS(N,z,f,num,h,vac0,vacf,epsilon,save_plot,folder):
     phi = []
     sigma = []
     for i in range(N-1):
@@ -1932,7 +1945,7 @@ def plot_BPS(N,z,f,num,h,vac0,vacf,save_plot,folder):
     fig.subplots_adjust(wspace=0.7)
     
     #get and print energy
-    theoretic_energy,numeric_energy = BPS_Energy(N,num,vac0,vacf,f,z,h)
+    theoretic_energy,numeric_energy = BPS_Energy(N,num,vac0,vacf,f,z,h,epsilon)
     fig.text(x=0,y=0.05,s= r"$E_{theoretic}$= "+str(round(theoretic_energy,4))+
              "; $E_{numeric}$= "+str(round(numeric_energy,4)),size=16)
     
@@ -1955,9 +1968,9 @@ def BPS_dx(N,x,vac0,vacf):
     alpha = numerator/denominator
     return (alpha/2)*dWdx_
 
-def BPS_Energy(N,num,vac0,vacf,x,z,h):
+def BPS_Energy(N,num,vac0,vacf,x,z,h,epsilon):
     theoretic_energy = get_BPS_theoretic_energy(N,vac0,vacf)
-    numeric_energy = get_BPS_numeric_energy(N,x,z,h)
+    numeric_energy = get_BPS_numeric_energy(N,x,z,h,epsilon)
     return (theoretic_energy,numeric_energy)
 
 def get_BPS_theoretic_energy(N,vac0,vacf):
@@ -1966,21 +1979,33 @@ def get_BPS_theoretic_energy(N,vac0,vacf):
                               W(np.array([vac0.imaginary_vector])))[0][0]
     return theoretic_energy
 
-def get_BPS_numeric_energy(N,x,z,h):
-    W=Superpotential(N)    
+def get_BPS_numeric_energy(N,x,z,h,epsilon):
+    W=Superpotential(N,epsilon)    
     #get the derivaitve of field
     dxdz = derivative_sample(x,h)
-    # initialize first term
-    kin_sum = 0
-    dxdz_absolute_square = np.abs(dxdz**2)
-    for i in range(N-1):
-        # integrate the absolute square of each complex field and sum them up
-        kin_sum += trapz(dxdz_absolute_square[:,i],z)
-    # initialize second term
-    dWdx_absolute_square = np.real(W.dWdx_absolute_square(x))
-    int_dWdx_absolute_square = trapz(dWdx_absolute_square,z)
-    numeric_energy = kin_sum + int_dWdx_absolute_square/4
-    return numeric_energy
+    if epsilon == 0:   
+        # initialize first term
+        kin_sum = 0
+        dxdz_absolute_square = np.abs(dxdz**2)
+        for i in range(N-1):
+            # integrate the absolute square of each complex field and sum them up
+            kin_sum += trapz(dxdz_absolute_square[:,i],z)
+        # initialize second term
+        dWdx_absolute_square = np.real(W.dWdx_absolute_square_on_points(x))
+        int_dWdx_absolute_square = trapz(dWdx_absolute_square,z)
+        numeric_energy = kin_sum + int_dWdx_absolute_square/4
+        return numeric_energy
+    else:
+        dxdz_conj = np.conj(dxdz)
+        #compute kinetic term
+        K_inv = LA.inv(W.K.matrix)
+        dxdz_absolute_square = np.einsum("...ab,...a,...b",K_inv,dxdz,dxdz_conj)
+        kin = trapz(dxdz_absolute_square,z)
+        # initialize second term
+        dWdx_absolute_square = np.real(W.dWdx_absolute_square_on_points(x))
+        int_dWdx_absolute_square = trapz(dWdx_absolute_square,z)
+        numeric_energy = kin + int_dWdx_absolute_square/4
+        return numeric_energy
 
 def plot_error(error,folder):
     """
