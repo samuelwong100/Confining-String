@@ -22,6 +22,7 @@ from sympy import init_printing
 from sympy.matrices import Matrix
 import warnings
 warnings.filterwarnings('ignore') #ignore numba warnings
+plt.style.use('tableau-colorblind10')
 
 """
 ===============================================================================
@@ -1644,7 +1645,7 @@ def solve_BPS(N,vac0_arg,vacf_arg,num,h=0.1,epsilon=0,tol=1e-9,sor=1.5,
     #whether to continue relaxation loop
     if continue_kw == "BPS_Energy":
         continue_condition = generate_BPS_energy_continue_condition(
-                N,num,vac0,vacf,z_linspace,h)
+                N,num,vac0,vacf,z_linspace,h,epsilon)
     elif continue_kw == "default":
         continue_condition = default_continue_condition
     #call everything in relaxation algorithm
@@ -1784,7 +1785,7 @@ def set_x0(vac0_vec,vacf_vec,num,m,z0,zf,kink_bd_distance,R=0,top=True,
         x0 = x0_given
     return x0
 
-def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
+def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h,epsilon):
     def BPS_energy_continue_condition(error,tol,x):
         greater_than_tol = default_continue_condition(error,tol)
         loop = len(error)
@@ -1793,7 +1794,7 @@ def generate_BPS_energy_continue_condition(N,num,vac0,vacf,z,h):
             #after 10,000 loops, check energy condition once every 1000 loops
             #this ensures we don't stop prematurely and don't waste time
             #computing energy too foten
-            theoretic_energy, numeric_energy = BPS_Energy(N,num,vac0,vacf,x,z,h)
+            theoretic_energy, numeric_energy = BPS_Energy(N,num,vac0,vacf,x,z,h,epsilon)
             energy_too_far = (np.abs(theoretic_energy - numeric_energy) > 0.005)
             #only continue loop if error is too large and energy too far from
             #theoretical energy

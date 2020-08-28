@@ -292,6 +292,7 @@ def plot_f_vs_p(N):
         plt.show()
     
 if __name__ == "__main__":
+    plt.style.use('tableau-colorblind10')
     #create dictionaries as global variables (used by functions)
     tension_dict = get_tension_dict()
     f_dict, df_dict = get_f_df_dict()
@@ -308,7 +309,7 @@ if __name__ == "__main__":
     N5_list, T5_list, dT5_list, f5_list, df5_list = get_T_dT_f_df_by_p(5)
 
     # plot_tensions()
-    plot_f()
+    #plot_f()
     # plot_f_compare_sine()
     # plot_f_compare_sine_side_by_side()
     #plot_f_compare_casimir()
@@ -327,5 +328,5 @@ if __name__ == "__main__":
     p10_ls, T10_ls, dT10_ls, f10_ls, df10_ls = get_T_dT_f_df_by_N(10)
     
     plot_f_vs_p(N=10)
-    plot_f_vs_p(N=4)
+    #plot_f_vs_p(N=4)
 
