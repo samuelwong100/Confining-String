@@ -1313,15 +1313,19 @@ def get_canonical_Lw(N,R,epsilon=0):
     else:
         L = R + 10 #at least 5 space on each side
     #determine w based on N
-    if N<7:
-        w=25
-    else:
-        if epsilon == 0:
+    if epsilon == 0:
+        if N<7:
+            w=25
+        else:
             w=35
-        elif epsilon == 0.09:
-            w=50
-        elif epsilon == 0.12:
-            w=60 #need to test
+    elif epsilon == 0.09:
+        if N<7:
+            w=40
+        else:
+            w=100
+    elif epsilon == 0.12:
+        eps_dict={2:40,3:60,4:80,5:100,6:120,7:140,8:160,9:160,10:180}
+        w=eps_dict[N]
     return L,w
 
 """ ============== subsection: Solver ==================================="""

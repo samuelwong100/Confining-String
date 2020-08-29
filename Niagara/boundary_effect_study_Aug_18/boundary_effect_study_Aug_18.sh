@@ -3,8 +3,6 @@
 #SBATCH --ntasks-per-node=40 #could be 80
 #SBATCH --time=1:00:00
 #SBATCH	--job-name=boundary
-#SBATCH --mail-user=samuelsy.wong@mail.utoronto.ca
-#SBATCH --mail-type=ALL #email you everything
 
 cd $SLURM_SUBMIT_DIR
 module restore confine_module #python, gnu parrallel
