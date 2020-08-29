@@ -17,7 +17,7 @@ k = int(sys.argv[2])
 # Quark-antiquark separation from the command line
 R = int(sys.argv[3])
 # epsilon for quantum correction from the command line
-epsilon = int(sys.argv[4])
+epsilon = float(sys.argv[4])
 
 #get appropriate size of grid
 L,w = get_canonical_Lw(N,R,epsilon)

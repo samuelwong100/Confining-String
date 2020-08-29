@@ -1,3 +1,0 @@
-Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
-2	:	1598674579.329	    13.309	0	0	1	0	python main_script.py '{10::28}' 60
-1	:	1598674579.327	    13.361	0	0	1	0	python main_script.py '{10::28}' 30

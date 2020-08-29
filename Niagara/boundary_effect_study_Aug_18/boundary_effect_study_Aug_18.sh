@@ -8,7 +8,7 @@ cd $SLURM_SUBMIT_DIR
 module restore confine_module #python, gnu parrallel
 source ~/.virtualenvs/confine_envs/bin/activate #confinepy
 
-timeout 58m parallel --joblog "$SLURM_JOBID.log" -j $SLURM_TASKS_PER_NODE "python main_script.py {1} {2}" ::: {10::28} ::: {30,60}
+timeout 58m parallel --joblog "$SLURM_JOBID.log" -j $SLURM_TASKS_PER_NODE "python main_script.py {1} {2}" ::: {10..28} ::: {30,60}
 EXIT=$?
 
 if [ $EXIT -eq 124 ]
