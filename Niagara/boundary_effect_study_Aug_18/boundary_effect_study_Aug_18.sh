@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=40 #could be 80
+#SBATCH --ntasks-per-node=80 #could be 40
 #SBATCH --time=1:00:00
 #SBATCH	--job-name=boundary
 
