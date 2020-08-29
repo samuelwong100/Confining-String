@@ -1304,17 +1304,24 @@ def _diagnostic_plot(error,grid,x,period=100):
 ===============================================================================
 """
 """ ============== subsection: Solver-Related Function ===================="""
-def get_canonical_Lw(N,R):
+def get_canonical_Lw(N,R,epsilon=0):
     #note this is a continually developing function that might get changed
     #as we implement quantum correction and as we probe more.
-    if N<7:
-        w=25
-    else:
-        w=35
+    #determine L based on R
     if R<=20:
         L = 30 #minimum L
     else:
         L = R + 10 #at least 5 space on each side
+    #determine w based on N
+    if N<7:
+        w=25
+    else:
+        if epsilon == 0:
+            w=35
+        elif epsilon == 0.09:
+            w=50
+        elif epsilon == 0.12:
+            w=60 #need to test
     return L,w
 
 """ ============== subsection: Solver ==================================="""
@@ -1449,7 +1456,6 @@ def _get_sor(sor,N):
     
 def best_sor_for_N(N):
     #need to test using tol=e-5
-    #still need to test 5, 6 for 1.97
     sor_dict = {2:1.96,3:1.96,4:1.96,5:1.96,6:1.96} 
     if N in sor_dict:
         return sor_dict[N]
