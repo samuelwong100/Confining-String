@@ -2741,9 +2741,10 @@ def plot_energy_vs_R(R_array,energy_array,epsilon,m,dm,b,db,N,p,L):
 def linear_model(x,m,b):
     return m*x + b
 
-def compute_tension(N,p,epsilon=0):
+def compute_tension(N,p,epsilon=0,R_array=None,energy_array=None):
     #p is N-ality
-    R_array, energy_array = get_R_and_energy_array(N,p,epsilon)
+    if (R_array is None) or (energy_array is None):
+        R_array, energy_array = get_R_and_energy_array(N,p,epsilon)
     potp, pcov = curve_fit(linear_model,xdata=R_array,ydata=energy_array)
     m,b = potp #slope and y-intercept
     dm = np.sqrt(pcov[0][0]) #standard deviation of slope
