@@ -2289,8 +2289,7 @@ class Solution_Viewer():
     
     def plot_energy_density(self):
         self._quick_plot(self.get_energy_density(),
-                         "Energy Density (E={})".format(
-                             str(round(self.get_energy(),3))),
+                         "Energy Density",
                          "Energy_Density",
                          cmap='jet')
         
@@ -2416,20 +2415,21 @@ class Solution_Viewer():
     #         plt.show()
        
     def _quick_plot(self,field,plot_title,file_title,cmap=None):
-        plt.figure()
-        plt.imshow(field, cmap=cmap, extent=[self.grid.z0,self.grid.zf,
-                                             self.grid.y0,self.grid.yf])
-        plt.colorbar()
-        plt.title(plot_title)
-        plt.savefig(self.path+file_title+".png")
-        plt.show()
-        #old code:
         # plt.figure()
-        # plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
+        # plt.imshow(field, cmap=cmap, extent=[self.grid.z0,self.grid.zf,
+        #                                       self.grid.y0,self.grid.yf])
         # plt.colorbar()
         # plt.title(plot_title)
-        # plt.savefig(self.path+file_title+".png")
+        # plt.savefig(self.path+file_title+".png",dpi=500)
         # plt.show()
+        #old code:
+        plt.figure()
+        plt.pcolormesh(self.grid.zv,self.grid.yv,field,cmap=cmap)
+        plt.colorbar()
+        plt.title(plot_title)
+        plt.savefig(self.path+file_title+".png",dpi=500)
+        #plt.savefig(self.path+file_title+".pdf")
+        plt.show()
         
         
     # def _quick_plot_laplacian(self,field,ax,title,fig):
@@ -2729,7 +2729,7 @@ def plot_energy_vs_R(R_array,energy_array,epsilon,m,dm,b,db,N,p,L):
         plt.title("Energy vs Distance (N={}, k={})".format(str(N),str(p)))
         plt.savefig(
                 "Tensions/Energy vs Distance (N={}, k={}).png".format(
-                str(N),str(p)))
+                str(N),str(p)),dpi=500)
     else:
         plt.title("Energy vs Distance (N={}, k={}, epsilon={})".format(
             str(N),str(p)),str(epsilon))
@@ -2818,7 +2818,7 @@ def plot_d_vs_R_for_p1(R_array,d_array,N,p):
     plt.title("String Separation vs Distance (N={}, p={})".format(str(N),str(p)))
     plt.savefig(
             "String Separation/String Separation vs Distance (N={}, p={}).png".format(
-            str(N),str(p)))
+            str(N),str(p)),dpi=500)
     plt.show()
     
 def get_R_and_d_array(N,p,epsilon=0):
